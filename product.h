@@ -39,6 +39,7 @@ extern bool ready2exit;
 extern short int total_mem;
 extern short int total_swap;
 extern pid_t mypid;
+extern Petri *petri;
 void  sig_handler(int num);
 template <class rgnode>
 class Product;
@@ -56,32 +57,40 @@ public:
 
     //non-recursion extra information
     ArcNode *pba;
-    index_t *firable;
-    NUM_t firesize;
-    NUM_t fireptr;
+    int fireptr;
 
     Pstacknode();
-    ~Pstacknode();
+    int NEXTFIREABLE(bool &deadmark);
+    ~Pstacknode(){};
 };
 template <class rgnode>
 Pstacknode<rgnode>::Pstacknode() {
     RGname_ptr = NULL;
     next = UNREACHABLE;
     pba = NULL;
-    firable = NULL;
-    firesize = 0;
     fireptr = 0;
 }
-template <class rgnode>
-Pstacknode<rgnode>::~Pstacknode() {
-    if(firable!=NULL)
-    {
-        delete [] firable;
-        firable = NULL;
+
+template<class rgnode>
+int Pstacknode<rgnode>::NEXTFIREABLE(bool &deadmark) {
+    deadmark = (fireptr == 0);
+    if(fireptr==0) {
+        if(RGname_ptr->isFirable(petri->transition[0])) {
+            deadmark = false;
+            return fireptr;
+        }
+        fireptr++;
     }
 
-    MallocExtension::instance()->ReleaseFreeMemory();
+    for(fireptr;fireptr<petri->transitioncount;++fireptr) {
+        if(RGname_ptr->isFirable(petri->transition[fireptr])) {
+            deadmark = false;
+            return fireptr;
+        }
+    }
+    return -1;
 }
+
 /*====================================================*/
 template <class rgnode>
 class PStack
@@ -580,7 +589,6 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
             init->RGname_ptr = initial_status[i].RGname_ptr;
             init->BAname_id = initial_status[i].BAname_id;
             init->pba = ba->vertics[init->BAname_id].firstarc;
-            rg->getFireableTranx(init->RGname_ptr, &(init->firable), init->firesize);
             TCHECK(init);
             if (ready2exit)  //如果已经出结果或超时，则退出
             {
@@ -593,73 +601,72 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
 
 template <class rgnode, class rg_T>
 Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnode> *q) {
-       if(q->firesize == 0)
-       {
-           //当前节点所对应的可达图标识是死标识
-           while(q->pba)
-           {
-               if(isLabel(q->RGname_ptr,q->pba->destination))
-               {
-                   //可以生成交状态
-                   Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
-                   qs->RGname_ptr = q->RGname_ptr;
-                   qs->BAname_id = q->pba->destination;
-                   qs->pba = ba->vertics[qs->BAname_id].firstarc;
+    bool deadmark;
+    int firenum;
+    while((firenum=q->NEXTFIREABLE(deadmark))!=-1) {
+        bool exist;
+        rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,firenum,exist);
+        if(rgseed == NULL)
+        {
+            data_flag = false;
+            return NULL;
+        }
+        while(q->pba)
+        {
+            if(isLabel(rgseed,q->pba->destination))
+            {
+                Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
+                qs->RGname_ptr = rgseed;
+                qs->BAname_id = q->pba->destination;
+                qs->pba = ba->vertics[qs->BAname_id].firstarc;
 
-                   /*print*/
-//                   qs->RGname_ptr->printMarking(placecount);
-//                   cout<<qs->BAname_id<<endl;
-
-                   if(qs->pba == NULL) {
-                       cerr<<"detect non-sense sba state!"<<endl;
-                       exit(6);
-                   }
-                   rg->getFireableTranx(qs->RGname_ptr, &(qs->firable), qs->firesize);
-
-                   q->pba = q->pba->next;
-                   return qs;
-               }
-               q->pba = q->pba->next;
-           }
-           return NULL;
-       } else{
-           for(q->fireptr;q->fireptr<q->firesize;++(q->fireptr))
-           {
-               bool exist;
-               rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,q->firable[q->fireptr],exist);
-               if(rgseed == NULL)
-               {
-                   data_flag = false;
-                   return NULL;
-               }
-               while(q->pba)
-               {
-                   if(isLabel(rgseed,q->pba->destination))
-                   {
-                       Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
-                       qs->RGname_ptr = rgseed;
-                       qs->BAname_id = q->pba->destination;
-                       qs->pba = ba->vertics[qs->BAname_id].firstarc;
-
-                       /*print*/
+                /*print*/
 //                       qs->RGname_ptr->printMarking(placecount);
 //                       cout<<qs->BAname_id<<endl;
 
-                       if(qs->pba == NULL) {
-                           cerr<<"detect non-sense sba state!"<<endl;
-                           exit(6);
-                       }
-                       rg->getFireableTranx(qs->RGname_ptr, &(qs->firable), qs->firesize);
+                if(qs->pba == NULL) {
+                    cerr<<"detect non-sense sba state!"<<endl;
+                    exit(6);
+                }
 
-                       q->pba = q->pba->next;
-                       return qs;
-                   }
-                   q->pba = q->pba->next;
-               }
-               q->pba = ba->vertics[q->BAname_id].firstarc;
-           }
-           return NULL;
-       }
+                q->pba = q->pba->next;
+                return qs;
+            }
+            q->pba = q->pba->next;
+        }
+        q->fireptr++;
+        q->pba = ba->vertics[q->BAname_id].firstarc;
+    }
+    if(deadmark) {
+        while(q->pba)
+        {
+            if(isLabel(q->RGname_ptr,q->pba->destination))
+            {
+                //可以生成交状态
+                Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
+                qs->RGname_ptr = q->RGname_ptr;
+                qs->BAname_id = q->pba->destination;
+                qs->pba = ba->vertics[qs->BAname_id].firstarc;
+
+                /*print*/
+//                   qs->RGname_ptr->printMarking(placecount);
+//                   cout<<qs->BAname_id<<endl;
+
+                if(qs->pba == NULL) {
+                    cerr<<"detect non-sense sba state!"<<endl;
+                    exit(6);
+                }
+
+                q->pba = q->pba->next;
+                return qs;
+            }
+            q->pba = q->pba->next;
+        }
+        return NULL;
+    }
+    else {
+        return NULL;
+    }
 }
 
 template <class rgnode, class rg_T>
@@ -673,29 +680,38 @@ void Product_Automata<rgnode,rg_T>::TCHECK(Pstacknode<rgnode> *p0) {
             {
                 if(!data_flag)
                     return;
-                if(q->firable!=NULL)
-                {
-                    delete q->firable;
-                    q->firable = NULL;
-                }
                 POP();
                 continue;
-            } else{
+            }
+            else{
+                if(h.search(qs)!=NULL) {
+                    delete qs;
+                    qs=NULL;
+                    continue;
+                }
                 Pstacknode<rgnode> *existpos = cstack.search(qs);
-                if(existpos!=NULL)
-                {
+                if(existpos!=NULL) {
                     UPDATE(existpos);
                     delete qs;
                     qs = NULL;
                     continue;
                 }
-                if(h.search(qs)==NULL)
-                {
-                    PUSH(qs);
-                    continue;
-                }
-                delete qs;
-                qs = NULL;
+                PUSH(qs);
+//                Pstacknode<rgnode> *existpos = cstack.search(qs);
+//                if(existpos!=NULL)
+//                {
+//                    UPDATE(existpos);
+//                    delete qs;
+//                    qs = NULL;
+//                    continue;
+//                }
+//                if(h.search(qs)==NULL)
+//                {
+//                    PUSH(qs);
+//                    continue;
+//                }
+//                delete qs;
+//                qs = NULL;
             }
         }
 }
@@ -711,34 +727,51 @@ void Product_Automata<rgnode,rg_T>::TCHECK_BOUND(Pstacknode<rgnode> *p0) {
         {
             if(!data_flag)
                 return;
-            if(q->firable!=NULL)
-            {
-                delete q->firable;
-                q->firable = NULL;
-            }
             POP();
             continue;
-        } else{
+        }
+        else
+        {
+            if(h.search(qs)!=NULL) {
+                /*this node exists in hash table, it means the scc
+                 * which includes this node doesn't have a counterexample,
+                 * so there is no need to search qs again*/
+                delete qs;
+                qs=NULL;
+                continue;
+            }
             Pstacknode<rgnode> *existpos = cstack.search(qs);
-            if(existpos!=NULL)
-            {
+            if(existpos!=NULL) {
                 UPDATE(existpos);
                 delete qs;
                 qs=NULL;
                 continue;
             }
-            if(h.search(qs)==NULL)
-            {
-                if(dstack.size()>=bound) {
-                    reachbound = true;
-                    continue;
-                }
-
-                PUSH(qs);
+            if(dstack.size()>=bound) {
+                reachbound = true;
                 continue;
             }
-            delete qs;
-            qs=NULL;
+            PUSH(qs);
+//            Pstacknode<rgnode> *existpos = cstack.search(qs);
+//            if(existpos!=NULL)
+//            {
+//                UPDATE(existpos);
+//                delete qs;
+//                qs=NULL;
+//                continue;
+//            }
+//            if(h.search(qs)==NULL)
+//            {
+//                if(dstack.size()>=bound) {
+//                    reachbound = true;
+//                    continue;
+//                }
+//
+//                PUSH(qs);
+//                continue;
+//            }
+//            delete qs;
+//            qs=NULL;
         }
     }
 }
@@ -823,7 +856,6 @@ void Product_Automata<rgnode,rg_T>::getProduct_Bound() {
             init->RGname_ptr = initial_status[i].RGname_ptr;
             init->BAname_id = initial_status[i].BAname_id;
             init->pba = ba->vertics[init->BAname_id].firstarc;
-            rg->getFireableTranx(init->RGname_ptr, &(init->firable), init->firesize);
             TCHECK_BOUND(init);
             if(ready2exit || !data_flag)  //如果已经出结果或超时，则退出
                 break;
@@ -849,319 +881,6 @@ void Product_Automata<rgnode,rg_T>::getProduct_Bound() {
         cout<<"out of the bound"<<endl;
     detect_mem_thread.join();
 }
-//
-//template <class rgnode, class rg_T>
-//void Product_Automata<rgnode,rg_T>::simplified_dfs_bound(Product<rgnode> *q, int recurdepth, int CBANid) {
-//
-//    outcurdepth<<recurdepth<<endl;
-//    if(maxdepth < recurdepth)
-//        maxdepth = recurdepth;
-//    if( ready2exit || recurdepth>bound){
-//        return ;
-//    }
-//
-//    int cban;
-//    if((ba->svertics[q->BAname_id].accepted == true) && (q->id > CBANid))
-//        cban = q->id;
-//    else
-//        cban = CBANid;
-//
-//    h.insert(q);
-//    dfs_stack.insert(q);
-//    SArcNode *pba = ba->svertics[q->BAname_id].firstarc;
-//
-//    //遍历BA的后继结点
-//    while(pba != NULL) {
-//
-//        if(ready2exit || recurdepth>bound){
-//            return ;
-//        }
-//
-//        index_t *isFirable;
-//        unsigned short firecount;
-//        rg->getFireableTranx(q->RGname_ptr,&isFirable,firecount);
-//
-//        int rg_i = 0;
-//        if(firecount == 0)
-//        {
-//            if(ready2exit || recurdepth>bound){
-//                return ;
-//            }
-//
-//            rgnode *rgseed = q->RGname_ptr;
-//            if(isLabel(rgseed, pba->destination))
-//            {
-//                Product<rgnode> *qs = new Product<rgnode>;
-//                qs->id = recurdepth + 1;
-//                qs->BAname_id = pba->destination;
-//                qs->RGname_ptr = rgseed;
-//
-//                Product<rgnode> *existpos = dfs_stack.search(qs);
-//                if(existpos != NULL)
-//                {
-//                    if(existpos->id <= cban)
-//                    {
-//                        result = false;
-//                        ready2exit = true;
-//                        delete qs;
-//                        return;
-//                    }
-//                }
-//                if(h.search(qs) == NULL)
-//                {
-//                    simplified_dfs_bound(qs,recurdepth+1,cban);
-//                }
-//                delete qs;
-//            }
-//        }
-//        for(rg_i; rg_i<firecount; rg_i++)
-//        {
-//            if( ready2exit || recurdepth>bound){
-//                return ;
-//            }
-//
-//            bool exist;
-//            rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,isFirable[rg_i],exist);
-//            if(isLabel(rgseed, pba->destination))
-//            {
-//                Product<rgnode> *qs = new Product<rgnode>;
-//                qs->id = recurdepth + 1;
-//                qs->BAname_id = pba->destination;
-//                qs->RGname_ptr = rgseed;
-//
-//                Product<rgnode> *existpos = dfs_stack.search(qs);
-//                if(existpos != NULL)
-//                {
-//                    if(existpos->id <= cban)
-//                    {
-//                        result = false;
-//                        ready2exit = true;
-//                        delete qs;
-//                        return;
-//                    }
-//                }
-//                if(h.search(qs) == NULL)
-//                {
-//                    simplified_dfs_bound(qs,recurdepth+1,cban);
-//                }
-//                delete qs;
-//            }
-//        }
-//        if(firecount>0)
-//            delete [] isFirable;
-//        pba = pba->nextarc;
-//    }
-//    dfs_stack.pop(q);
-//    MallocExtension::instance()->ReleaseFreeMemory();
-//}
-//
-//
-//
-//template <class rgnode, class rg_T>
-//void Product_Automata<rgnode,rg_T>::simplified_dfs(Product<rgnode> *q, int recurdepth, int CBANid) {
-//
-//    if(ready2exit){
-//        return ;
-//    }
-//
-//    int cban;    //current biggest accepteded node
-//    if((ba->svertics[q->BAname_id].accepted == true) && (q->id > CBANid))
-//        cban = q->id;
-//    else
-//        cban = CBANid;
-//
-//    h.insert(q);
-//    dfs_stack.insert(q);
-//    SArcNode *pba = ba->svertics[q->BAname_id].firstarc;
-//
-//    //遍历BA的后继结点
-//    while(pba != NULL) {
-//
-//        if(ready2exit){
-//            return ;
-//        }
-//
-//        index_t *isFirable;
-//        unsigned short firecount;
-//        rg->getFireableTranx(q->RGname_ptr,&isFirable,firecount);
-//
-//        int rg_i = 0;
-//        if(firecount == 0)
-//        {
-//            if(ready2exit){
-//                return ;
-//            }
-//
-//            rgnode *rgseed = q->RGname_ptr;
-//            if(isLabel(rgseed, pba->destination))
-//            {
-//                Product<rgnode> *qs = new Product<rgnode>;
-//                qs->id = recurdepth + 1;
-//                qs->BAname_id = pba->destination;
-//                qs->RGname_ptr = rgseed;
-//
-//                Product<rgnode> *existpos = dfs_stack.search(qs);
-//                if(existpos != NULL)
-//                {
-//                    if(existpos->id <= cban)
-//                    {
-//                        result = false;
-//                        ready2exit = true;
-//                        delete qs;
-//                        return;
-//                    }
-//                }
-//                if(h.search(qs) == NULL)
-//                {
-//                    simplified_dfs(qs,recurdepth+1,cban);
-//                }
-//                delete qs;
-//            }
-//        }
-//        for(rg_i; rg_i<firecount; rg_i++)
-//        {
-//            if(ready2exit){
-//                return ;
-//            }
-//
-//            bool exist;
-//            rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,isFirable[rg_i],exist);
-//            if(isLabel(rgseed, pba->destination))
-//            {
-//                Product<rgnode> *qs = new Product<rgnode>;
-//                qs->id = recurdepth + 1;
-//                qs->BAname_id = pba->destination;
-//                qs->RGname_ptr = rgseed;
-//
-//                Product<rgnode> *existpos = dfs_stack.search(qs);
-//                if(existpos != NULL)
-//                {
-//                    if(existpos->id <= cban)
-//                    {
-//                        result = false;
-//                        ready2exit = true;
-//                        delete qs;
-//                        return;
-//                    }
-//                }
-//                if(h.search(qs) == NULL)
-//                {
-//                    simplified_dfs(qs,recurdepth+1,cban);
-//                }
-//                delete qs;
-//            }
-//        }
-//        if(firecount>0)
-//            delete [] isFirable;
-//        pba = pba->nextarc;
-//    }
-//    dfs_stack.pop(q);
-//    MallocExtension::instance()->ReleaseFreeMemory();
-//}
-//
-//template <class rgnode, class rg_T>
-//void Product_Automata<rgnode,rg_T>::stubborn_dfs(Product<rgnode> *q, int recurdepth, int CBANid) {
-//
-//    if(maxdepth < recurdepth)
-//        maxdepth = recurdepth;
-//
-//    if(ready2exit || recurdepth>bound){
-//        return ;
-//    }
-//
-//    int cban;
-//    if((ba->svertics[q->BAname_id].accepted == true) && (q->id > CBANid))
-//        cban = q->id;
-//    else
-//        cban = CBANid;
-//
-//    h.insert(q);
-//    dfs_stack.insert(q);
-//    SArcNode *pba = ba->svertics[q->BAname_id].firstarc;
-//
-//    //遍历BA的后继结点
-//    while(pba != NULL) {
-//
-//        if(ready2exit){
-//            return ;
-//        }
-//
-//        //计算顽固集合
-//        vector<int> stbset;
-//        rg->genStbnSet(q->RGname_ptr,stbset);
-//
-//        if(stbset.size() == 0)                //如果约减后的可达图终止，那么原可达图也会终止
-//        {
-//            if(ready2exit || recurdepth>bound){
-//                return ;
-//            }
-//
-//            rgnode *rgseed = q->RGname_ptr;
-//            if(isLabel(rgseed, pba->destination))
-//            {
-//                Product<rgnode> *qs = new Product<rgnode>;
-//                qs->id = recurdepth + 1;
-//                qs->BAname_id = pba->destination;
-//                qs->RGname_ptr = rgseed;
-//
-//                Product<rgnode> *existpos = dfs_stack.search(qs);
-//                if(existpos != NULL)          //找到了环
-//                {
-//                    if(existpos->id <= cban)
-//                    {
-//                        result = false;
-//                        ready2exit = true;
-//                        delete qs;
-//                        return;
-//                    }
-//                }
-//                if(h.search(qs) == NULL)
-//                {
-//                    stubborn_dfs(qs,recurdepth+1,cban);
-//                }
-//                delete qs;
-//            }
-//        }
-//        vector<int>::iterator rg_i = stbset.begin();
-//        for(rg_i; rg_i!=stbset.end(); ++rg_i)
-//        {
-//            if(ready2exit || recurdepth>bound){
-//                return ;
-//            }
-//
-//            bool exist;
-//            rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,*rg_i,exist);
-//            if(isLabel(rgseed, pba->destination))
-//            {
-//                Product<rgnode> *qs = new Product<rgnode>;
-//                qs->id = recurdepth + 1;
-//                qs->BAname_id = pba->destination;
-//                qs->RGname_ptr = rgseed;
-//
-//                Product<rgnode> *existpos = dfs_stack.search(qs);
-//                if(existpos != NULL)             //找到了环
-//                {
-//                    if(existpos->id <= cban)
-//                    {
-//                        //如果找到了一个环
-//                        result = false;
-//                        ready2exit = true;
-//                        delete qs;
-//                        return;
-//                    }
-//                }
-//                if(h.search(qs) == NULL)
-//                {
-//                    stubborn_dfs(qs,recurdepth+1,cban);
-//                }
-//                delete qs;
-//            }
-//        }
-//        pba = pba->nextarc;
-//    }
-//    dfs_stack.pop(q);
-//    MallocExtension::instance()->ReleaseFreeMemory();
-//}
 
 /*void Product_Automata::addinitial_status(RGNode *initnode)
  * function: 生成交自动机的初始状态，并加入到initial_status数组中
@@ -1274,12 +993,6 @@ bool Product_Automata<rgnode,rg_T>::isLabel(rgnode *state, int sj) {
  * */
 template <class rgnode, class rg_T>
 bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
-
-    index_t *isFirable;
-    NUM_t firecount = 0;
-    rg->getFireableTranx(state,&isFirable,firecount);
-
-
     if(s[0] == '!') //前面带有'!'的is-fireable{}
     {
         /*!{t1 || t2 || t3}：
@@ -1300,31 +1013,12 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
                 exit(0);
             }
 
-            //遍历当前节点的可放生变迁
-
-            int j = 0;
-            for(j;j<firecount;j++)
-            {
-                if(idex == isFirable[j]){
-                    //取出的变迁在当前状态下可发生, 满足false条件
-                    if(firecount>0)
-                    {
-                        delete [] isFirable;
-                        isFirable=NULL;
-                    }
-
-                    return false;
-                }
+            if(state->isFirable(ptnet->transition[idex])) {
+                return false;
             }
 
             s = s.substr(pos + 1, s.length() - pos);
         }
-        if(firecount>0)
-        {
-            delete [] isFirable;
-            isFirable=NULL;
-        }
-
         return true;
 
     } else{         //单纯的is-fireable{}原子命题
@@ -1342,31 +1036,18 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
             string subs = s.substr(0, pos);  //取出一个变迁
 
             int idex = ptnet->getTPosition(subs);  //变迁的序列号
-            //遍历当前状态的可发生变迁
-            int j=0;
-            for(j;j<firecount;j++)
-            {
-                if(idex == isFirable[j]){
-                    if(firecount>0)
-                    {
-                        delete [] isFirable;
-                        isFirable=NULL;
-                    }
-
-                    //取出的状态可发生
-                    return true;
-                }
+            if(idex == INDEX_ERROR){
+                cerr<<"Can not find transition:"<<subs<<endl;
+                exit(0);
             }
+
+            if(state->isFirable(ptnet->transition[idex])) {
+                return true;
+            }
+
             //走到这里表示取出来的变迁不可发生
             s = s.substr(pos + 1, s.length() - pos);
         }
-        if(firecount>0)
-        {
-            //走到这里表示所有的变迁都不能发生
-            delete [] isFirable;
-            isFirable=NULL;
-        }
-
         return false;
     }
 }

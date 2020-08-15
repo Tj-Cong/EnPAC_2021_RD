@@ -91,6 +91,7 @@ void CONSTRUCTPETRI() {
     ptnet->printGraph();
     ptnet->printPlace();
     ptnet->printTransition();
+//    ptnet->printTransition2CSV();
 }
 void CHECKLTL(Petri *ptnet, bool cardinality) {
     BitRG *bitgraph;
@@ -212,7 +213,7 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     BitRG *bitgraph;
     RG *graph;
 
-    unsigned short each_run_time=300;
+    unsigned short each_run_time=3000;
 
     string propertyid;
     char ff[]="LTLFireability.xml";
@@ -265,6 +266,15 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     SBA.self_check();
     SBA.PrintStateBuchi();
 
+//    StateBuchi SBA;
+//    SBA.state_num = SBA.vex_num = 1;
+//    SBA.vertics[0].initial = true;
+//    SBA.vertics[0].label = "true";
+//    SBA.vertics[0].id = 0;
+//    ArcNode *p = new ArcNode;
+//    p->destination = 0;
+//    SBA.vertics[0].firstarc=p;
+
     if (NUPN || SAFE) {
         bitgraph = new BitRG(ptnet);
 //        BitRGNode *initnode = bitgraph->RGinitialnode();
@@ -277,13 +287,14 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
 //        cout<<"STATE SPACE:"<<graph->nodecount<<endl;
     }
 
+
     ready2exit = false;
     if (NUPN || SAFE) {
         Product_Automata<BitRGNode, BitRG> *product;
         product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, &SBA);
         product->ModelChecker(propertyid,each_run_time);
         cout<<endl;
-        //cout<<" "<<bitgraph->nodecount<<endl;
+        cout<<" "<<bitgraph->nodecount<<endl;
         int ret = product->getresult();
         //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
         delete product;
@@ -292,7 +303,7 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
         product = new Product_Automata<RGNode, RG>(ptnet, graph, &SBA);
         product->ModelChecker(propertyid,each_run_time);
         cout<<endl;
-        //cout<<" "<<graph->nodecount<<endl;
+        cout<<" "<<graph->nodecount<<endl;
         int ret = product->getresult();
 
         //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;

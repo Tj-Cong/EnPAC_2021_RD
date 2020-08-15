@@ -87,7 +87,6 @@ public:
 public:
     RGNode();
 
-    //NUM_t tokensum();
     index_t Hash();
 
     bool isFirable(const Transition &t) const;
@@ -105,7 +104,6 @@ public:
 public:
     BitRGNode();
 
-    //NUM_t tokensum();
     index_t Hash();
 
     bool isFirable(const Transition &t) const;
@@ -127,8 +125,6 @@ public:
 public:
     RG(Petri *pt);
 
-    void isFirable();
-
     void addRGNode(RGNode *mark);
 
     index_t getHashIndex(RGNode *mark);
@@ -145,7 +141,7 @@ public:
 
     void Generate(RGNode *node);
 
-    void printRGNode(RGNode *node);
+//    void printRGNode(RGNode *node);
 
     ~RG();
 };
@@ -161,8 +157,6 @@ public:
     ofstream outRG;
 public:
     BitRG(Petri *pt);
-
-    void isFirable();
 
     void addRGNode(BitRGNode *mark);
 
@@ -180,7 +174,7 @@ public:
 
     void Generate(BitRGNode *node);
 
-    void printRGNode(BitRGNode *node);
+//    void printRGNode(BitRGNode *node);
 
     ~BitRG();
 };

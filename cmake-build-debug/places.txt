@@ -1,458 +1,314 @@
-Total places：57
-conflict times:55
+Total places：39
+conflict times:73
 
 0
-id:p0
-initialMarking:1
-myUnit:0
+id:AktP3
+initialMarking:0
+myUnit:1
 myOffset:0
-producer:
-consumer:t4 
+producer:k28 
+consumer:k29 k30 
 
 1
-id:p1
+id:DAG
 initialMarking:0
 myUnit:1
-myOffset:0
-producer:t19 t20 
-consumer:t29 
+myOffset:1
+producer:k48 k42 k36 k62 
+consumer:k61 
 
 2
-id:p2
+id:DAGE
 initialMarking:0
 myUnit:1
-myOffset:1
-producer:t24 
-consumer:t0 t18 
+myOffset:2
+producer:k61 
+consumer:k63 k62 
 
 3
-id:p3
+id:GStarP3
 initialMarking:0
 myUnit:1
-myOffset:2
-producer:t0 t4 t18 t29 
-consumer:t19 t20 t24 
+myOffset:3
+producer:k8 k13 k50 
+consumer:k9 k12 k49 
 
 4
-id:p4
+id:GStarP3kP3
 initialMarking:0
-myUnit:2
-myOffset:0
-producer:t16 t17 
-consumer:t35 
+myUnit:1
+myOffset:4
+producer:k12 k15 
+consumer:k13 k14 
 
 5
-id:p5
+id:GStarPgP3
+initialMarking:0
+myUnit:1
+myOffset:5
+producer:k49 k52 
+consumer:k50 k51 
+
+6
+id:KdStarGStarP3
+initialMarking:0
+myUnit:1
+myOffset:6
+producer:k7 k10 k9 k44 k23 
+consumer:k11 k8 k43 k22 
+
+7
+id:KdStarGStarP3kP3
+initialMarking:0
+myUnit:1
+myOffset:7
+producer:k22 k14 k27 
+consumer:k23 k15 k24 
+
+8
+id:KdStarGStarP3kStarP2
+initialMarking:0
+myUnit:1
+myOffset:8
+producer:k19 
+consumer:k20 k21 
+
+9
+id:KdStarGStarP3kStarP3
+initialMarking:0
+myUnit:1
+myOffset:9
+producer:k24 k26 
+consumer:k25 
+
+10
+id:KdStarGStarPgP3
+initialMarking:0
+myUnit:1
+myOffset:10
+producer:k51 k43 k48 
+consumer:k52 k44 k45 
+
+11
+id:KdStarGStarPgStarP2
+initialMarking:0
+myUnit:1
+myOffset:11
+producer:k40 
+consumer:k41 k42 
+
+12
+id:KdStarGStarPgStarP3
+initialMarking:0
+myUnit:1
+myOffset:12
+producer:k45 k47 
+consumer:k46 
+
+13
+id:KdStarPgStarP2
+initialMarking:0
+myUnit:1
+myOffset:13
+producer:k34 
+consumer:k35 k36 
+
+14
+id:Pip2
+initialMarking:1
+myUnit:1
+myOffset:14
+producer:k26 k35 k57 k60 k63 k55 k20 k47 k41 
+consumer:k25 k34 k56 k19 k46 k40 
+
+15
+id:Pip3
+initialMarking:0
+myUnit:1
+myOffset:15
+producer:k27 k21 k29 k30 k54 k4 k11 k59 
+consumer:k28 k53 k3 k10 k58 
+
+16
+id:PtP2
+initialMarking:0
+myUnit:1
+myOffset:16
+producer:k56 k59 k60 
+consumer:k57 k58 
+
+17
+id:PtP3
+initialMarking:0
+myUnit:1
+myOffset:17
+producer:k53 
+consumer:k55 k54 
+
+18
+id:GP3
+initialMarking:0
+myUnit:1
+myOffset:18
+producer:k3 k6 
+consumer:k4 k5 
+
+19
+id:KdStarGP3
+initialMarking:0
+myUnit:1
+myOffset:19
+producer:k5 
+consumer:k6 k7 
+
+20
+id:KdStarGStarP3kStarP3P2
+initialMarking:0
+myUnit:1
+myOffset:20
+producer:k25 
+consumer:k26 k27 
+
+21
+id:KdStarGStarPgStarP3P2
+initialMarking:0
+myUnit:1
+myOffset:21
+producer:k46 
+consumer:k47 k48 
+
+22
+id:PtP3P2
+initialMarking:0
+myUnit:1
+myOffset:22
+producer:k58 
+consumer:k59 k60 
+
+23
+id:KdStar
+initialMarking:1
+myUnit:2
+myOffset:0
+producer:k32 k15 k52 t1 k6 k8 
+consumer:k31 k14 k51 t0 k5 k9 
+
+24
+id:KdStarG
 initialMarking:0
 myUnit:2
 myOffset:1
-producer:t23 
-consumer:t1 t15 
+producer:t0 
+consumer:t1 k2 
 
-6
-id:p6
+25
+id:KdStarGStar
 initialMarking:0
 myUnit:2
 myOffset:2
-producer:t1 t4 t15 t35 
-consumer:t16 t17 t23 
+producer:k2 k11 k38 k17 
+consumer:k10 k37 k16 
 
-7
-id:p7
+26
+id:KdStarGStarP3k
+initialMarking:0
+myUnit:2
+myOffset:3
+producer:k16 k21 
+consumer:k17 k18 
+
+27
+id:KdStarGStarP3kStar
+initialMarking:0
+myUnit:2
+myOffset:4
+producer:k18 k20 
+consumer:k19 
+
+28
+id:KdStarGStarPg
+initialMarking:0
+myUnit:2
+myOffset:5
+producer:k37 k42 
+consumer:k38 k39 
+
+29
+id:KdStarGStarPgStar
+initialMarking:0
+myUnit:2
+myOffset:6
+producer:k39 k41 
+consumer:k40 
+
+30
+id:KdStarPg
+initialMarking:0
+myUnit:2
+myOffset:7
+producer:k31 k36 
+consumer:k32 k33 
+
+31
+id:KdStarPgStar
+initialMarking:0
+myUnit:2
+myOffset:8
+producer:k33 k35 
+consumer:k34 
+
+32
+id:AktStar
 initialMarking:0
 myUnit:3
 myOffset:0
-producer:t4 t25 t27 t31 t33 
-consumer:t25 t27 t31 t33 
-
-8
-id:p8
-initialMarking:0
-myUnit:4
-myOffset:0
-producer:t13 t14 
-consumer:t30 
-
-9
-id:p9
-initialMarking:0
-myUnit:4
-myOffset:1
-producer:t37 
-consumer:t2 t12 
-
-10
-id:p10
-initialMarking:0
-myUnit:4
-myOffset:2
-producer:t2 t4 t12 t30 
-consumer:t13 t14 t37 
-
-11
-id:p11
-initialMarking:0
-myUnit:5
-myOffset:0
-producer:t10 t11 
-consumer:t36 
-
-12
-id:p12
-initialMarking:0
-myUnit:5
-myOffset:1
-producer:t38 
-consumer:t3 t9 
-
-13
-id:p13
-initialMarking:0
-myUnit:5
-myOffset:2
-producer:t3 t4 t9 t36 
-consumer:t10 t11 t38 
-
-14
-id:p14
-initialMarking:0
-myUnit:6
-myOffset:0
-producer:t4 t26 t28 t32 t34 
-consumer:t26 t28 t32 t34 
-
-15
-id:p15
-initialMarking:0
-myUnit:7
-myOffset:0
-producer:t7 t8 
-consumer:t22 
-
-16
-id:p16
-initialMarking:0
-myUnit:7
-myOffset:1
-producer:t4 t22 
-consumer:t7 t8 
-
-17
-id:p17
-initialMarking:0
-myUnit:8
-myOffset:0
-producer:t4 t21 
-consumer:t21 
-
-18
-id:p18
-initialMarking:0
-myUnit:9
-myOffset:0
-producer:t5 t6 
-consumer:t39 
-
-19
-id:p19
-initialMarking:0
-myUnit:9
-myOffset:1
-producer:t4 t39 
-consumer:t5 t6 
-
-20
-id:p20
-initialMarking:0
-myUnit:10
-myOffset:0
-producer:t4 t40 
-consumer:t40 
-
-21
-id:p21
-initialMarking:0
-myUnit:11
-myOffset:0
-producer:t25 
-consumer:t49 
-
-22
-id:p22
-initialMarking:0
-myUnit:11
-myOffset:1
-producer:t26 
-consumer:t25 
-
-23
-id:p23
-initialMarking:0
-myUnit:11
-myOffset:2
-producer:t41 
-consumer:t26 
-
-24
-id:p24
-initialMarking:0
-myUnit:11
-myOffset:3
-producer:t42 
-consumer:t41 
-
-25
-id:p25
-initialMarking:0
-myUnit:11
-myOffset:4
-producer:t43 
-consumer:t42 
-
-26
-id:p26
-initialMarking:0
-myUnit:11
-myOffset:5
-producer:t44 
-consumer:t43 
-
-27
-id:p27
-initialMarking:0
-myUnit:11
-myOffset:6
-producer:t27 
-consumer:t44 
-
-28
-id:p28
-initialMarking:0
-myUnit:11
-myOffset:7
-producer:t28 
-consumer:t27 
-
-29
-id:p29
-initialMarking:0
-myUnit:11
-myOffset:8
-producer:t29 
-consumer:t28 
-
-30
-id:p30
-initialMarking:0
-myUnit:11
-myOffset:9
-producer:t30 
-consumer:t29 
-
-31
-id:p31
-initialMarking:0
-myUnit:11
-myOffset:10
-producer:t53 
-consumer:t30 
-
-32
-id:p32
-initialMarking:0
-myUnit:11
-myOffset:11
-producer:t4 t49 
-consumer:t53 
+producer:k30 
+consumer:
 
 33
-id:p33
-initialMarking:0
-myUnit:12
-myOffset:0
-producer:t31 
-consumer:t48 
+id:Gab1
+initialMarking:1
+myUnit:3
+myOffset:1
+producer:k4 t1 
+consumer:k3 t0 
 
 34
-id:p34
-initialMarking:0
-myUnit:12
-myOffset:1
-producer:t32 
-consumer:t31 
+id:Akt
+initialMarking:1
+myUnit:4
+myOffset:0
+producer:k29 
+consumer:k28 
 
 35
-id:p35
-initialMarking:0
-myUnit:12
-myOffset:2
-producer:t45 
-consumer:t32 
+id:Enz
+initialMarking:1
+myUnit:5
+myOffset:0
+producer:k63 k62 
+consumer:k61 
 
 36
-id:p36
-initialMarking:0
-myUnit:12
-myOffset:3
-producer:t46 
-consumer:t45 
+id:P3k
+initialMarking:1
+myUnit:6
+myOffset:0
+producer:k13 k17 k23 
+consumer:k12 k16 k22 
 
 37
-id:p37
-initialMarking:0
-myUnit:12
-myOffset:4
-producer:t33 
-consumer:t46 
+id:Pg
+initialMarking:1
+myUnit:7
+myOffset:0
+producer:k50 k44 k38 k32 
+consumer:k49 k43 k37 k31 
 
 38
-id:p38
-initialMarking:0
-myUnit:12
-myOffset:5
-producer:t34 
-consumer:t33 
-
-39
-id:p39
-initialMarking:0
-myUnit:12
-myOffset:6
-producer:t35 
-consumer:t34 
-
-40
-id:p40
-initialMarking:0
-myUnit:12
-myOffset:7
-producer:t36 
-consumer:t35 
-
-41
-id:p41
-initialMarking:0
-myUnit:12
-myOffset:8
-producer:t52 
-consumer:t36 
-
-42
-id:p42
-initialMarking:0
-myUnit:12
-myOffset:9
-producer:t4 t48 
-consumer:t52 
-
-43
-id:p43
-initialMarking:0
-myUnit:13
+id:Pten
+initialMarking:1
+myUnit:8
 myOffset:0
-producer:t24 
-consumer:t50 
-
-44
-id:p44
-initialMarking:0
-myUnit:13
-myOffset:1
-producer:t23 
-consumer:t24 
-
-45
-id:p45
-initialMarking:0
-myUnit:13
-myOffset:2
-producer:t22 
-consumer:t23 
-
-46
-id:p46
-initialMarking:0
-myUnit:13
-myOffset:3
-producer:t21 
-consumer:t22 
-
-47
-id:p47
-initialMarking:0
-myUnit:13
-myOffset:4
-producer:t54 
-consumer:t21 
-
-48
-id:p48
-initialMarking:0
-myUnit:13
-myOffset:5
-producer:t4 t50 
-consumer:t54 
-
-49
-id:p49
-initialMarking:0
-myUnit:14
-myOffset:0
-producer:t37 
-consumer:t47 
-
-50
-id:p50
-initialMarking:0
-myUnit:14
-myOffset:1
-producer:t38 
-consumer:t37 
-
-51
-id:p51
-initialMarking:0
-myUnit:14
-myOffset:2
-producer:t39 
-consumer:t38 
-
-52
-id:p52
-initialMarking:0
-myUnit:14
-myOffset:3
-producer:t40 
-consumer:t39 
-
-53
-id:p53
-initialMarking:0
-myUnit:14
-myOffset:4
-producer:t51 
-consumer:t40 
-
-54
-id:p54
-initialMarking:0
-myUnit:14
-myOffset:5
-producer:t4 t47 
-consumer:t51 
-
-55
-id:p55
-initialMarking:0
-myUnit:15
-myOffset:0
-producer:t4 t47 t48 t49 t50 
-consumer:t51 t52 t53 t54 
-
-56
-id:p56
-initialMarking:0
-myUnit:15
-myOffset:1
-producer:t51 t52 t53 t54 
-consumer:t47 t48 t49 t50 
+producer:k55 k57 k54 
+consumer:k56 k53 

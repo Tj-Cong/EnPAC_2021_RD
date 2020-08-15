@@ -1,276 +1,321 @@
-Total transitions:55
+Total transitions:64
 
 0
 id:t0
-producer:(1,p2) 
-consumer:(1,p3) 
+producer:(1,Gab1) (1,KdStar) 
+consumer:(1,KdStarG) 
 
 1
 id:t1
-producer:(1,p5) 
-consumer:(1,p6) 
+producer:(1,KdStarG) 
+consumer:(1,Gab1) (1,KdStar) 
 
 2
-id:t2
-producer:(1,p9) 
-consumer:(1,p10) 
+id:k10
+producer:(1,KdStarGStar) (1,Pip3) 
+consumer:(1,KdStarGStarP3) 
 
 3
-id:t3
-producer:(1,p12) 
-consumer:(1,p13) 
+id:k11
+producer:(1,KdStarGStarP3) 
+consumer:(1,KdStarGStar) (1,Pip3) 
 
 4
-id:t4
-producer:(1,p0) 
-consumer:(1,p55) (1,p54) (1,p48) (1,p42) (1,p32) (1,p20) (1,p19) (1,p17) (1,p16) (1,p14) (1,p13) (1,p10) (1,p7) (1,p6) (1,p3) 
+id:k12
+producer:(1,GStarP3) (1,P3k) 
+consumer:(1,GStarP3kP3) 
 
 5
-id:t5
-producer:(1,p19) 
-consumer:(1,p18) 
+id:k13
+producer:(1,GStarP3kP3) 
+consumer:(1,GStarP3) (1,P3k) 
 
 6
-id:t6
-producer:(1,p19) 
-consumer:(1,p18) 
+id:k14
+producer:(1,GStarP3kP3) (1,KdStar) 
+consumer:(1,KdStarGStarP3kP3) 
 
 7
-id:t7
-producer:(1,p16) 
-consumer:(1,p15) 
+id:k15
+producer:(1,KdStarGStarP3kP3) 
+consumer:(1,GStarP3kP3) (1,KdStar) 
 
 8
-id:t8
-producer:(1,p16) 
-consumer:(1,p15) 
+id:k16
+producer:(1,KdStarGStar) (1,P3k) 
+consumer:(1,KdStarGStarP3k) 
 
 9
-id:t9
-producer:(1,p12) 
-consumer:(1,p13) 
+id:k17
+producer:(1,KdStarGStarP3k) 
+consumer:(1,KdStarGStar) (1,P3k) 
 
 10
-id:t10
-producer:(1,p13) 
-consumer:(1,p11) 
+id:k18
+producer:(1,KdStarGStarP3k) 
+consumer:(1,KdStarGStarP3kStar) 
 
 11
-id:t11
-producer:(1,p13) 
-consumer:(1,p11) 
+id:k19
+producer:(1,KdStarGStarP3kStar) (1,Pip2) 
+consumer:(1,KdStarGStarP3kStarP2) 
 
 12
-id:t12
-producer:(1,p9) 
-consumer:(1,p10) 
+id:k2
+producer:(1,KdStarG) 
+consumer:(1,KdStarGStar) 
 
 13
-id:t13
-producer:(1,p10) 
-consumer:(1,p8) 
+id:k20
+producer:(1,KdStarGStarP3kStarP2) 
+consumer:(1,KdStarGStarP3kStar) (1,Pip2) 
 
 14
-id:t14
-producer:(1,p10) 
-consumer:(1,p8) 
+id:k21
+producer:(1,KdStarGStarP3kStarP2) 
+consumer:(1,KdStarGStarP3k) (1,Pip3) 
 
 15
-id:t15
-producer:(1,p5) 
-consumer:(1,p6) 
+id:k22
+producer:(1,KdStarGStarP3) (1,P3k) 
+consumer:(1,KdStarGStarP3kP3) 
 
 16
-id:t16
-producer:(1,p6) 
-consumer:(1,p4) 
+id:k23
+producer:(1,KdStarGStarP3kP3) 
+consumer:(1,KdStarGStarP3) (1,P3k) 
 
 17
-id:t17
-producer:(1,p6) 
-consumer:(1,p4) 
+id:k24
+producer:(1,KdStarGStarP3kP3) 
+consumer:(1,KdStarGStarP3kStarP3) 
 
 18
-id:t18
-producer:(1,p2) 
-consumer:(1,p3) 
+id:k25
+producer:(1,KdStarGStarP3kStarP3) (1,Pip2) 
+consumer:(1,KdStarGStarP3kStarP3P2) 
 
 19
-id:t19
-producer:(1,p3) 
-consumer:(1,p1) 
+id:k26
+producer:(1,KdStarGStarP3kStarP3P2) 
+consumer:(1,KdStarGStarP3kStarP3) (1,Pip2) 
 
 20
-id:t20
-producer:(1,p3) 
-consumer:(1,p1) 
+id:k27
+producer:(1,KdStarGStarP3kStarP3P2) 
+consumer:(1,KdStarGStarP3kP3) (1,Pip3) 
 
 21
-id:t21
-producer:(1,p17) (1,p47) 
-consumer:(1,p46) (1,p17) 
+id:k28
+producer:(1,Pip3) (1,Akt) 
+consumer:(1,AktP3) 
 
 22
-id:t22
-producer:(1,p15) (1,p46) 
-consumer:(1,p45) (1,p16) 
+id:k29
+producer:(1,AktP3) 
+consumer:(1,Pip3) (1,Akt) 
 
 23
-id:t23
-producer:(1,p6) (1,p45) 
-consumer:(1,p5) (1,p44) 
+id:k3
+producer:(1,Gab1) (1,Pip3) 
+consumer:(1,GP3) 
 
 24
-id:t24
-producer:(1,p3) (1,p44) 
-consumer:(1,p2) (1,p43) 
+id:k30
+producer:(1,AktP3) 
+consumer:(1,AktStar) (1,Pip3) 
 
 25
-id:t25
-producer:(1,p7) (1,p22) 
-consumer:(1,p21) (1,p7) 
+id:k31
+producer:(1,KdStar) (1,Pg) 
+consumer:(1,KdStarPg) 
 
 26
-id:t26
-producer:(1,p14) (1,p23) 
-consumer:(1,p22) (1,p14) 
+id:k32
+producer:(1,KdStarPg) 
+consumer:(1,KdStar) (1,Pg) 
 
 27
-id:t27
-producer:(1,p7) (1,p28) 
-consumer:(1,p27) (1,p7) 
+id:k33
+producer:(1,KdStarPg) 
+consumer:(1,KdStarPgStar) 
 
 28
-id:t28
-producer:(1,p14) (1,p29) 
-consumer:(1,p28) (1,p14) 
+id:k34
+producer:(1,KdStarPgStar) (1,Pip2) 
+consumer:(1,KdStarPgStarP2) 
 
 29
-id:t29
-producer:(1,p1) (1,p30) 
-consumer:(1,p29) (1,p3) 
+id:k35
+producer:(1,KdStarPgStarP2) 
+consumer:(1,KdStarPgStar) (1,Pip2) 
 
 30
-id:t30
-producer:(1,p8) (1,p31) 
-consumer:(1,p30) (1,p10) 
+id:k36
+producer:(1,KdStarPgStarP2) 
+consumer:(1,KdStarPg) (1,DAG) 
 
 31
-id:t31
-producer:(1,p7) (1,p34) 
-consumer:(1,p33) (1,p7) 
+id:k37
+producer:(1,KdStarGStar) (1,Pg) 
+consumer:(1,KdStarGStarPg) 
 
 32
-id:t32
-producer:(1,p14) (1,p35) 
-consumer:(1,p34) (1,p14) 
+id:k38
+producer:(1,KdStarGStarPg) 
+consumer:(1,KdStarGStar) (1,Pg) 
 
 33
-id:t33
-producer:(1,p7) (1,p38) 
-consumer:(1,p37) (1,p7) 
+id:k39
+producer:(1,KdStarGStarPg) 
+consumer:(1,KdStarGStarPgStar) 
 
 34
-id:t34
-producer:(1,p14) (1,p39) 
-consumer:(1,p38) (1,p14) 
+id:k4
+producer:(1,GP3) 
+consumer:(1,Gab1) (1,Pip3) 
 
 35
-id:t35
-producer:(1,p4) (1,p40) 
-consumer:(1,p39) (1,p6) 
+id:k40
+producer:(1,KdStarGStarPgStar) (1,Pip2) 
+consumer:(1,KdStarGStarPgStarP2) 
 
 36
-id:t36
-producer:(1,p11) (1,p41) 
-consumer:(1,p40) (1,p13) 
+id:k41
+producer:(1,KdStarGStarPgStarP2) 
+consumer:(1,KdStarGStarPgStar) (1,Pip2) 
 
 37
-id:t37
-producer:(1,p10) (1,p50) 
-consumer:(1,p9) (1,p49) 
+id:k42
+producer:(1,KdStarGStarPgStarP2) 
+consumer:(1,KdStarGStarPg) (1,DAG) 
 
 38
-id:t38
-producer:(1,p13) (1,p51) 
-consumer:(1,p12) (1,p50) 
+id:k43
+producer:(1,KdStarGStarP3) (1,Pg) 
+consumer:(1,KdStarGStarPgP3) 
 
 39
-id:t39
-producer:(1,p18) (1,p52) 
-consumer:(1,p51) (1,p19) 
+id:k44
+producer:(1,KdStarGStarPgP3) 
+consumer:(1,KdStarGStarP3) (1,Pg) 
 
 40
-id:t40
-producer:(1,p20) (1,p53) 
-consumer:(1,p52) (1,p20) 
+id:k45
+producer:(1,KdStarGStarPgP3) 
+consumer:(1,KdStarGStarPgStarP3) 
 
 41
-id:t41
-producer:(1,p24) 
-consumer:(1,p23) 
+id:k46
+producer:(1,KdStarGStarPgStarP3) (1,Pip2) 
+consumer:(1,KdStarGStarPgStarP3P2) 
 
 42
-id:t42
-producer:(1,p25) 
-consumer:(1,p24) 
+id:k47
+producer:(1,KdStarGStarPgStarP3P2) 
+consumer:(1,KdStarGStarPgStarP3) (1,Pip2) 
 
 43
-id:t43
-producer:(1,p26) 
-consumer:(1,p25) 
+id:k48
+producer:(1,KdStarGStarPgStarP3P2) 
+consumer:(1,KdStarGStarPgP3) (1,DAG) 
 
 44
-id:t44
-producer:(1,p27) 
-consumer:(1,p26) 
+id:k49
+producer:(1,GStarP3) (1,Pg) 
+consumer:(1,GStarPgP3) 
 
 45
-id:t45
-producer:(1,p36) 
-consumer:(1,p35) 
+id:k5
+producer:(1,GP3) (1,KdStar) 
+consumer:(1,KdStarGP3) 
 
 46
-id:t46
-producer:(1,p37) 
-consumer:(1,p36) 
+id:k50
+producer:(1,GStarPgP3) 
+consumer:(1,GStarP3) (1,Pg) 
 
 47
-id:t47
-producer:(1,p49) (1,p56) 
-consumer:(1,p55) (1,p54) 
+id:k51
+producer:(1,GStarPgP3) (1,KdStar) 
+consumer:(1,KdStarGStarPgP3) 
 
 48
-id:t48
-producer:(1,p33) (1,p56) 
-consumer:(1,p55) (1,p42) 
+id:k52
+producer:(1,KdStarGStarPgP3) 
+consumer:(1,GStarPgP3) (1,KdStar) 
 
 49
-id:t49
-producer:(1,p21) (1,p56) 
-consumer:(1,p55) (1,p32) 
+id:k53
+producer:(1,Pip3) (1,Pten) 
+consumer:(1,PtP3) 
 
 50
-id:t50
-producer:(1,p43) (1,p56) 
-consumer:(1,p55) (1,p48) 
+id:k54
+producer:(1,PtP3) 
+consumer:(1,Pip3) (1,Pten) 
 
 51
-id:t51
-producer:(1,p54) (1,p55) 
-consumer:(1,p53) (1,p56) 
+id:k55
+producer:(1,PtP3) 
+consumer:(1,Pip2) (1,Pten) 
 
 52
-id:t52
-producer:(1,p42) (1,p55) 
-consumer:(1,p41) (1,p56) 
+id:k56
+producer:(1,Pip2) (1,Pten) 
+consumer:(1,PtP2) 
 
 53
-id:t53
-producer:(1,p32) (1,p55) 
-consumer:(1,p31) (1,p56) 
+id:k57
+producer:(1,PtP2) 
+consumer:(1,Pip2) (1,Pten) 
 
 54
-id:t54
-producer:(1,p48) (1,p55) 
-consumer:(1,p47) (1,p56) 
+id:k58
+producer:(1,PtP2) (1,Pip3) 
+consumer:(1,PtP3P2) 
+
+55
+id:k59
+producer:(1,PtP3P2) 
+consumer:(1,PtP2) (1,Pip3) 
+
+56
+id:k6
+producer:(1,KdStarGP3) 
+consumer:(1,GP3) (1,KdStar) 
+
+57
+id:k60
+producer:(1,PtP3P2) 
+consumer:(1,PtP2) (1,Pip2) 
+
+58
+id:k61
+producer:(1,DAG) (1,Enz) 
+consumer:(1,DAGE) 
+
+59
+id:k62
+producer:(1,DAGE) 
+consumer:(1,DAG) (1,Enz) 
+
+60
+id:k63
+producer:(1,DAGE) 
+consumer:(1,Pip2) (1,Enz) 
+
+61
+id:k7
+producer:(1,KdStarGP3) 
+consumer:(1,KdStarGStarP3) 
+
+62
+id:k8
+producer:(1,KdStarGStarP3) 
+consumer:(1,GStarP3) (1,KdStar) 
+
+63
+id:k9
+producer:(1,GStarP3) (1,KdStar) 
+consumer:(1,KdStarGStarP3) 

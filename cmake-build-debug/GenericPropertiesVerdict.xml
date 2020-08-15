@@ -1,83 +1,83 @@
 <toolspecific tool="propertiesverdict" version="1.1">
-  <modelreference modelname="AutoFlight"/>
+  <modelreference modelname="Angiogenesis"/>
   <verdict category="GENERIC" reference="ORDINARY" value="true">
     <explanation>No explanation</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="SIMPLE_FREE_CHOICE" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>40 arcs are not simple free choice, e.g., the arc from place p6 (which has 2 outgoing transitions) to transition t0 (which has 2 input places)</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="EXTENDED_FREE_CHOICE" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>transitions t0 and t23 share a common input place p6, but only the former transition has input place p11</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="STATE_MACHINE" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>57 transitions are not of a state machine, e.g., transition t0</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="MARKED_GRAPH" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>38 places are not of a marked graph, e.g., place p5</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="CONNECTED" value="true">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>stated by CAESARBDD version 2.0 on all 7 instances</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="STRONGLY_CONNECTED" value="false">
-    <explanation>from place 1 one cannot reach place 0</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>from place p2 one cannot reach place p0</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="SOURCE_PLACE" value="true">
-    <explanation>place 0 is a source place</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="SOURCE_PLACE" value="false">
+    <explanation>stated by CAESARBDD version 2.0 on all 7 instances</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="SINK_PLACE" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="SINK_PLACE" value="true">
+    <explanation>place p2 is a sink place</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="SOURCE_TRANSITION" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>stated by CAESARBDD version 2.0 on all 7 instances</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="SINK_TRANSITION" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>stated by CAESARBDD version 2.0 on all 7 instances</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="LOOP_FREE" value="unknown">
-    <explanation>stated by CAESARBDD version 2.6 to be true on 10 instance(s) out of 20, and false on the remaining 10 instance(s)</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="LOOP_FREE" value="true">
+    <explanation>stated by CAESARBDD version 2.0 on all 7 instances</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="CONSERVATIVE" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>57 transitions are not conservative, e.g., transition t0</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
   <verdict category="GENERIC" reference="SUBCONSERVATIVE" value="false">
-    <explanation>stated by CAESARBDD version 2.6 on all 20 instances</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <explanation>33 transitions are not subconservative, e.g., transition t1</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="NESTED_UNITS" value="true">
+  <verdict category="GENERIC" reference="NESTED_UNITS" value="false">
     <explanation>No explanation</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="SAFE" value="true">
-    <explanation>safe by construction -- stated by the CAESAR compiler</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="SAFE" value="unknown">
+    <explanation>stated by CAESARBDD version 2.0 to be true on 1 instance(s) out of 7, and false on the remaining 6 instance(s)</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="DEADLOCK" value="unknown">
-    <explanation>stated by CAESARBDD version 2.6 to be true on 7 instance(s) out of 20, and unknown on the remaining 13 instance(s)</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="DEADLOCK" value="true">
+    <explanation>Checked by Marcie on 2013-12-13; confirmed at MCC2014 by Tapaal on 2 instances and by Lola on 5 instances</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="REVERSIBLE" value="unknown">
-    <explanation>stated by CAESARBDD version 2.6 to be false on 7 instance(s) out of 20, and unknown on the remaining 13 instance(s)</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="REVERSIBLE" value="false">
+    <explanation>has dead states</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="QUASI_LIVE" value="unknown">
-    <explanation>stated by CAESARBDD version 2.6 to be true on 9 instance(s) out of 20, and unknown on the remaining 11 instance(s)</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="QUASI_LIVE" value="false">
+    <explanation>No explanation</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
-  <verdict category="GENERIC" reference="LIVE" value="unknown">
-    <explanation>stated by CAESARBDD version 2.6 to be false on 7 instance(s) out of 20, and unknown on the remaining 13 instance(s)</explanation>
-    <statedby tool="MCC" version="2019" date="2019-04-16T10:52:41+02:00" reference="https://mcc.lip6.fr/pdf/AutoFlight-form.pdf"/>
+  <verdict category="GENERIC" reference="LIVE" value="false">
+    <explanation>has dead states</explanation>
+    <statedby tool="MCC" version="2019" date="2019-04-16T10:53:45+02:00" reference="https://mcc.lip6.fr/pdf/Angiogenesis-form.pdf"/>
   </verdict>
 </toolspecific>

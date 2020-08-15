@@ -809,20 +809,6 @@ RGNode::RGNode() {
     next = NULL;
 }
 
-/*int RGNode::tokensum(int marking_length)
- * function: 求当前marking每个库所的token和
- * in: marking_length, 状态数组长度
- * out: sum, token和
- * */
-//template <class t_mark>
-//NUM_t RGNode<t_mark>::tokensum() {
-//    NUM_t sum = 0;
-//    for(int i=0; i<marking_length; i++){
-//        sum += marking[i];
-//    }
-//    return sum;
-//}
-
 /*int RGNode::Hash(int length)
  * function: 求当前marking的哈希值；哈希函数类似于BKDR，种子的值取3；
  * in: length, 状态数组长度
@@ -882,19 +868,6 @@ BitRGNode::BitRGNode() {
     next = NULL;
 }
 
-/*int RGNode::tokensum(int marking_length)
- * function: 求当前marking每个库所的token和
- * in: marking_length, 状态数组长度
- * out: sum, token和
- * */
-//template <class t_mark>
-//NUM_t RGNode<t_mark>::tokensum() {
-//    NUM_t sum = 0;
-//    for(int i=0; i<marking_length; i++){
-//        sum += marking[i];
-//    }
-//    return sum;
-//}
 
 /*int RGNode::Hash(int length)
  * function: 求当前marking的哈希值；哈希函数类似于BKDR，种子的值取3；
@@ -1194,29 +1167,29 @@ void RG::Generate(RGNode *node) {
     MallocExtension::instance()->ReleaseFreeMemory();
 }
 
-void RG::printRGNode(RGNode *node) {
-    outRG << "(";
-
-    for (int i = 0; i < RGNodelength; i++) {
-        outRG << node->marking[i] << ",";
-        cout << node->marking[i] << " ";
-    }
-    cout << endl;
-    outRG << ")[>";
-/*
-    index_t *isFirable;
-    NUM_t firecount = 0;
-    getFireableTranx(node,&isFirable,firecount);
-    int fireT;
-    for(fireT=0; fireT<firecount; fireT++)
-    {
-        int tidx = isFirable[fireT];
-        outRG<<ptnet->transition[tidx].id<<" ";
-    }
-    outRG<<endl;
-    if(firecount > 0)
-        delete [] isFirable;*/
-}
+//void RG::printRGNode(RGNode *node) {
+//    outRG << "(";
+//
+//    for (int i = 0; i < RGNodelength; i++) {
+//        outRG << node->marking[i] << ",";
+//        cout << node->marking[i] << " ";
+//    }
+//    cout << endl;
+//    outRG << ")[>";
+///*
+//    index_t *isFirable;
+//    NUM_t firecount = 0;
+//    getFireableTranx(node,&isFirable,firecount);
+//    int fireT;
+//    for(fireT=0; fireT<firecount; fireT++)
+//    {
+//        int tidx = isFirable[fireT];
+//        outRG<<ptnet->transition[tidx].id<<" ";
+//    }
+//    outRG<<endl;
+//    if(firecount > 0)
+//        delete [] isFirable;*/
+//}
 
 /*析构函数，释放空间*/
 RG::~RG() {
@@ -1544,33 +1517,33 @@ void BitRG::Generate(BitRGNode *node) {
     MallocExtension::instance()->ReleaseFreeMemory();
 }
 
-void BitRG::printRGNode(BitRGNode *node) {
-    outRG << "(";
-    if (NUPN) {
-
-    } else if (SAFE) {
-        int unit;
-        int offset;
-        for (int i = 0; i < RGNodelength; i++) {
-            unit = i / (sizeof(myuint) * 8);
-            offset = i % (sizeof(myuint) * 8);
-            outRG << (node->marking[unit].test1(offset)) << ",";
-        }
-        outRG << ")[>";
-    }
-
-    index_t *isFirable;
-    NUM_t firecount = 0;
-    getFireableTranx(node, &isFirable, firecount);
-    int fireT;
-    for (fireT = 0; fireT < firecount; fireT++) {
-        int tidx = isFirable[fireT];
-        outRG << ptnet->transition[tidx].id << " ";
-    }
-    outRG << endl;
-    if (firecount > 0)
-        delete[] isFirable;
-}
+//void BitRG::printRGNode(BitRGNode *node) {
+//    outRG << "(";
+//    if (NUPN) {
+//
+//    } else if (SAFE) {
+//        int unit;
+//        int offset;
+//        for (int i = 0; i < RGNodelength; i++) {
+//            unit = i / (sizeof(myuint) * 8);
+//            offset = i % (sizeof(myuint) * 8);
+//            outRG << (node->marking[unit].test1(offset)) << ",";
+//        }
+//        outRG << ")[>";
+//    }
+//
+//    index_t *isFirable;
+//    NUM_t firecount = 0;
+//    getFireableTranx(node, &isFirable, firecount);
+//    int fireT;
+//    for (fireT = 0; fireT < firecount; fireT++) {
+//        int tidx = isFirable[fireT];
+//        outRG << ptnet->transition[tidx].id << " ";
+//    }
+//    outRG << endl;
+//    if (firecount > 0)
+//        delete[] isFirable;
+//}
 
 /*析构函数，释放空间*/
 BitRG::~BitRG() {

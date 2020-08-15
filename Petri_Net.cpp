@@ -797,7 +797,7 @@ void Petri::printTransition() {
 
     int i;
     for (i = 0; i < transitioncount; i++) {
-        Transition t = transition[i];
+        Transition &t = transition[i];
         outTransition << endl;
         outTransition << i << endl;
         outTransition << "id:" << t.id << endl;
@@ -856,5 +856,26 @@ void Petri::printUnit() {
         outUnit << "Mark_Length: " << unittable[i].mark_length << endl;
         outUnit << "startpos: " << unittable[i].startpos << endl;
         outUnit << endl;
+    }
+}
+
+void Petri::printTransition2CSV() {
+    ofstream outTransition("transition.csv", ios::out);
+
+    int i;
+    for (i = 0; i < transitioncount; i++) {
+        Transition &t = transition[i];
+        outTransition << t.id << ",";
+
+        vector<SArc>::iterator iterp;
+        for (iterp = t.producer.begin(); iterp != t.producer.end(); iterp++) {
+            outTransition <<place[iterp->idx].id << ",";
+        }
+        outTransition << "XXX,";
+        vector<SArc>::iterator iterc;
+        for (iterc = t.consumer.begin(); iterc != t.consumer.end(); iterc++) {
+            outTransition << place[iterc->idx].id << ",";
+        }
+        outTransition << endl;
     }
 }

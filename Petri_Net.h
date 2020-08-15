@@ -142,6 +142,7 @@ public:
     void printPlace();
 
     void printTransition();
+    void printTransition2CSV();
 
     void printGraph();
 
