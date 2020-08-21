@@ -572,6 +572,34 @@ void Syntax_Tree::Rewrite(STNode *n, STNode *nparent, bool right) {
         }
         simplest = false;
     }
+    else if(n->ntyp==DISJUNC) {
+        bool merge = false;
+        if(n->nleft->ntyp==PREDICATE && n->nright->ntyp==PREDICATE) {
+            if(n->nleft->formula[0]=='!') {
+                string str = n->nleft->formula.substr(1);
+                if(str == n->nright->formula) {
+                    merge = true;
+                }
+            }
+            else if(n->nright->formula[0]=='!') {
+                string str = n->nright->formula.substr(1);
+                if(str == n->nleft->formula) {
+                    merge = true;
+                }
+            }
+        }
+        if(merge) {
+            n->formula = "true";
+            n->ntyp = PREDICATE;
+            Destroy(n->nleft);
+            Destroy(n->nright);
+            n->nleft = n->nright = NULL;
+        }
+        else {
+            Rewrite(n->nleft,n,0);
+            Rewrite(n->nright,n,1);
+        }
+    }
     else {
         if(n->nleft)
             Rewrite(n->nleft,n,0);

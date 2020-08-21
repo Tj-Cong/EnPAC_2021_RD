@@ -14,11 +14,11 @@
 #include <cmath>
 #include <gperftools/tcmalloc.h>
 #include <set>
+#include <map>
 #include <csetjmp>
 
 using namespace std;
 
-#define MultiFactor 1.3
 #define INDEX_ERROR 0xffffffff
 
 typedef unsigned int index_t;    //索引数据类型
@@ -45,12 +45,6 @@ void intersection(const vector<Small_Arc> &t1pre, const vector<Small_Arc> &t2pre
 int my_atoi(string str);
 
 /**********************************************/
-
-struct HashElement {
-    string id = "";    //库所或者变迁的id
-    bool place = true; //当前元素是否为库所
-    index_t position;  //这个元素在相应表中的索引位置
-};
 
 struct Unit {        //每一个单元的信息
     string uid = "";
@@ -84,8 +78,8 @@ typedef struct Transition {
     string id = "";
     vector<SArc> producer;
     vector<SArc> consumer;
-    set<int> wrup;
-    set<int> nonaccordwith;
+    set<index_t> increasing;
+    set<index_t> decreasing;
 } *Transition_P;
 
 typedef struct Arc {
@@ -98,15 +92,10 @@ typedef struct Arc {
     index_t weight = 1;
 } *Arc_P;
 
-typedef struct Nodes_Count {
-    NUM_t placesum = 0;       //实际库所个数的MULTIFACTOR倍
-    NUM_t transitionsum = 0;  //实际变迁个数的MULTIFACTOR倍
-    NUM_t arcsum = 0;         //实际弧个数的MULTIFACTOR倍
-} PT_Size;
-
 class Petri {
 public:
-    HashElement *Directory;     //哈希表
+    map<string,index_t> mapPlace;
+    map<string,index_t> mapTransition;
     Place *place;               //库所表
     Transition *transition;     //变迁表
     Arc *arc;                   //弧表
@@ -115,9 +104,6 @@ public:
     NUM_t transitioncount;      //变迁个数
     NUM_t arccount;             //弧个数
     NUM_t unitcount;            //单元个数
-    NUM_t Dicsize;              //哈希表大小
-    PT_Size size;
-    NUM_t hash_conflict_times;
     bool NUPN;
     bool SAFE;
 public:
@@ -129,7 +115,6 @@ public:
     NUM_t getPlaceSize() const;
 
     void allocHashTable();                          //申请空间
-    index_t arrange(string id, bool isPlace);       //将一个元素（库所或者变迁）放入哈希表中，并返回在哈希表中的索引位置
     index_t getPPosition(string str);               //根据库所id得到他在库所表中的索引位置
     index_t getTPosition(string str);               //根据变迁id得到他在变迁表中的索引位置
     index_t getPosition(string str, bool &isplace); //根据id得到他相应所表中的索引位置，并指明是库所还是变迁

@@ -128,7 +128,7 @@ bool EQUIVALENT(const BA_state &s1, const BA_state &s2);
 
 class Buchi
 {
-private:
+public:
     int vex_num;
     int state_num;
     int ustacksize;

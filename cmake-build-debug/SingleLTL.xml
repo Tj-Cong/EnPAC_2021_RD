@@ -1,62 +1,44 @@
 <?xml version="1.0"?>
 <property-set xmlns="http://mcc.lip6.fr/">
     <property>
-        <id>ResAllocation-PT-R002C002-05</id>
+        <id>DoubleExponent-PT-001-01</id>
         <description>Automatically generated</description>
         <formula>
             <all-paths>
-                <until>
-                    <before>
-                        <until>
-                            <before>
-                                <integer-le>
-                                    <tokens-count>
-                                        <place>p_0_1</place>
-                                    </tokens-count>
-                                    <tokens-count>
-                                        <place>p_1_1</place>
-                                    </tokens-count>
-                                </integer-le>
-                            </before>
-                            <reach>
+                <finally>
+                    <disjunction>
+                        <globally>
+                            <negation>
+                                <is-fireable>
+                                    <transition>a</transition>
+                                </is-fireable>
+                            </negation>
+                        </globally>
+                        <conjunction>
+                            <negation>
                                 <globally>
-                                    <next>
-                                        <globally>
-                                            <integer-le>
-                                                <tokens-count>
-                                                    <place>p_0_1</place>
-                                                </tokens-count>
-                                                <tokens-count>
-                                                    <place>p_1_1</place>
-                                                </tokens-count>
-                                            </integer-le>
-                                        </globally>
-                                    </next>
+                                    <is-fireable>
+                                        <transition>b</transition>
+                                    </is-fireable>
                                 </globally>
-                            </reach>
-                        </until>
-                    </before>
-                    <reach>
-                        <next>
-                            <conjunction>
-                                <integer-le>
-                                    <tokens-count>
-                                        <place>p_0_1</place>
-                                    </tokens-count>
-                                    <tokens-count>
-                                        <place>p_1_1</place>
-                                    </tokens-count>
-                                </integer-le>
-                                <integer-le>
-                                    <integer-constant>3</integer-constant>
-                                    <tokens-count>
-                                        <place>r_0_1</place>
-                                    </tokens-count>
-                                </integer-le>
-                            </conjunction>
-                        </next>
-                    </reach>
-                </until>
+                            </negation>
+                            <next>
+                                <negation>
+                                    <disjunction>
+                                        <is-fireable>
+                                            <transition>c</transition>
+                                        </is-fireable>
+                                        <negation>
+                                            <is-fireable>
+                                                <transition>c</transition>
+                                            </is-fireable>
+                                        </negation>
+                                    </disjunction>
+                                </negation>
+                            </next>
+                        </conjunction>
+                    </disjunction>
+                </finally>
             </all-paths>
         </formula>
     </property>

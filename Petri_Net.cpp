@@ -78,7 +78,6 @@ unsigned int stringToNum(const string &str) {
 /*构造函数
  * */
 Petri::Petri() {
-    Directory = NULL;
     place = NULL;
     transition = NULL;
     arc = NULL;
@@ -86,7 +85,6 @@ Petri::Petri() {
     placecount = 0;
     transitioncount = 0;
     arccount = 0;
-    hash_conflict_times = 0;
     NUPN = false;
     SAFE = false;
 }
@@ -96,8 +94,7 @@ Petri::Petri() {
 Petri::~Petri() {
     delete[] place;
     delete[] transition;
-    delete[] arc;
-    delete[] Directory;
+    //delete[] arc;
     if (NUPN)
         delete[] unittable;
 }
@@ -131,7 +128,8 @@ void Petri::getSize(char *filename) {
                 transitioncount++;
             } else if (value == "arc") {
                 arccount++;
-            } else if (value == "toolspecific") {
+            }
+            else if (value == "toolspecific") {
                 NUPN = true;
                 SAFE = false;
                 TiXmlElement *PTsize = pageElement->FirstChildElement("size");
@@ -141,12 +139,6 @@ void Petri::getSize(char *filename) {
                 transitioncount = stringToNum(attr->Value());
                 attr = attr->Next();
                 arccount = stringToNum(attr->Value());
-
-                size.placesum = placecount * MultiFactor;
-                size.transitionsum = transitioncount * MultiFactor;
-                size.arcsum = arccount * MultiFactor;
-
-                Dicsize = size.placesum + size.transitionsum;
 
                 TiXmlElement *structure = pageElement->FirstChildElement("structure");
                 TiXmlAttribute *usize = structure->FirstAttribute();
@@ -162,11 +154,6 @@ void Petri::getSize(char *filename) {
         }
         page = page->NextSiblingElement();
     }
-
-    size.placesum = placecount * MultiFactor;
-    size.transitionsum = transitioncount * MultiFactor;
-    size.arcsum = arccount * MultiFactor;
-    Dicsize = size.placesum + size.transitionsum;
 
     allocHashTable();
     delete mydoc;
@@ -200,21 +187,7 @@ void Petri::preNUPN(TiXmlElement *structure) {
             continue;
         }
         string placestr = test;
-//        //put this string into an input stream
-//        stringstream ss(placestr);
-//        //get a single place every time of the while circle
-//        string singleplace;
-//        NUM_t localplaces_count = 0;
-//        while (getline(ss, singleplace, ' ')) {
-//            index_t D_pidx = arrange(singleplace, true);
-//            Directory[D_pidx].position = pptr;
-//
-//            place[pptr].myunit = ut_iter;
-//            place[pptr].myoffset = localplaces_count;
-//
-//            localplaces_count++;
-//            ++pptr;
-//        }
+
         placestr = placestr+" ";
         string singleplace;
         NUM_t localplaces_count = 0;
@@ -224,11 +197,11 @@ void Petri::preNUPN(TiXmlElement *structure) {
             if(placestr[endpos]==HT || placestr[endpos]==space || placestr[endpos]==CR)
             {
                 singleplace = placestr.substr(startpos,endpos-startpos);
-                index_t D_pidx = arrange(singleplace, true);
-                Directory[D_pidx].position = pptr;
 
                 place[pptr].myunit = ut_iter;
                 place[pptr].myoffset = localplaces_count;
+                place[pptr].id = singleplace;
+                mapPlace.insert(pair<string,index_t>(singleplace,pptr));
 
                 localplaces_count++;
                 ++pptr;
@@ -256,46 +229,15 @@ NUM_t Petri::getPlaceSize() const {
  * function: allocate space for place, transition and arc
  * */
 void Petri::allocHashTable() {
-    if (size.transitionsum <= 0 || size.placesum <= 0 || size.arcsum <= 0) {
-        cerr << "Error, wrong size!" << endl;
-        return;
-    }
 
     //allocate space for place, transition and arc
     place = new Place[placecount];
     transition = new Transition[transitioncount];
     arc = new Arc[arccount];
 
-    //allocate space for Directory
-    Directory = new HashElement[Dicsize];
-
     if (NUPN) {
         unittable = new Unit[unitcount];
     }
-}
-
-//function:将当前元素放入哈希表中，返回在哈希表中的位置
-index_t Petri::arrange(string id, bool isPlace) {
-
-    //compute hashvalue and initial index
-    index_t hashvalue = BKDRHash(id);
-    index_t idx = hashvalue % Dicsize;
-
-    //check hash conflict
-    index_t start = idx;
-    while (Directory[idx].id != "" && (idx + 1) % Dicsize != start) {
-        idx = (idx + 1) % Dicsize;
-        hash_conflict_times++;
-    }
-
-    //push element in
-    if (Directory[idx].id == "") {
-        Directory[idx].id = id;
-        Directory[idx].place = isPlace;
-        return idx;
-    } else
-        cerr << "Directory overflow!" << endl;
-    return INDEX_ERROR;
 }
 
 /*int Petri::getPPosition(string str)
@@ -305,22 +247,14 @@ index_t Petri::arrange(string id, bool isPlace) {
  * out:place's index
  * */
 index_t Petri::getPPosition(string str) {
-    index_t idx = BKDRHash(str);
-    idx = idx % Dicsize;
-
-    index_t start = idx;
-    while (Directory[idx].id != str && (idx + 1) % Dicsize != start) {
-        idx = (idx + 1) % Dicsize;
-    }
-    if (Directory[idx].id == str) {
-        if (Directory[idx].place)
-            return Directory[idx].position;
-        else {
-            cerr << "getPPosition error! Cannot find place " << str << endl;
-            return INDEX_ERROR;
-        }
-    } else
+    map<string,index_t>::iterator it;
+    it=mapPlace.find(str);
+    if(it==mapPlace.end()) {
         return INDEX_ERROR;
+    }
+    else {
+        return it->second;
+    }
 }
 
 /*int Petri::getTPosition(string str)
@@ -330,37 +264,30 @@ index_t Petri::getPPosition(string str) {
  * out:transition's index
  * */
 index_t Petri::getTPosition(string str) {
-    index_t idx = BKDRHash(str);
-    idx = idx % Dicsize;
-
-    index_t start = idx;
-    while (Directory[idx].id != str && (idx + 1) % Dicsize != start) {
-        idx = (idx + 1) % Dicsize;
-    }
-    if (Directory[idx].id == str) {
-        if (Directory[idx].place == false)
-            return Directory[idx].position;
-        else {
-            cerr << "getTPosition error! Cannot find transition" << str << endl;
-            return INDEX_ERROR;
-        }
-    } else
+    map<string,index_t>::iterator it;
+    it=mapTransition.find(str);
+    if(it==mapTransition.end()) {
         return INDEX_ERROR;
+    }
+    else {
+        return it->second;
+    }
 }
 
 index_t Petri::getPosition(string str, bool &isplace) {
-    index_t idx = BKDRHash(str);
-    idx = idx % Dicsize;
-
-    index_t start = idx;
-    while (Directory[idx].id != str && (idx + 1) % Dicsize != start) {
-        idx = (idx + 1) % Dicsize;
+    map<string,index_t>::iterator it;
+    it=mapPlace.find(str);
+    if(it!=mapPlace.end()) {
+        isplace = true;
+        return it->second;
     }
-    if (Directory[idx].id == str) {
-        isplace = Directory[idx].place;
-        return Directory[idx].position;
-    } else
-        return INDEX_ERROR;
+
+    it=mapTransition.find(str);
+    if(it!=mapTransition.end()) {
+        isplace = false;
+        return it->second;
+    }
+    return INDEX_ERROR;
 }
 
 void Petri::readNUPN(char *filename) {
@@ -405,23 +332,24 @@ void Petri::readNUPN(char *filename) {
                 //
                 index_t P_pidx = getPPosition(p.id);
                 if (P_pidx == INDEX_ERROR) {
-                    cerr << "getPPosition Error! Cannot find place " << p.id << endl;
+                    cerr << "getPPosition Error! Cannot find place!" << p.id << endl;
                     exit(0);
                 }
-                place[P_pidx].id = p.id;
+                if(place[P_pidx].id != p.id) {
+                    cerr << "mapPlace Error! place-id \""<<p.id<<"\" doesn't match!" << endl;
+                    exit(0);
+                }
                 place[P_pidx].initialMarking = p.initialMarking;
             }
                 //变迁
             else if (value == "transition") {
                 //get information of Transition t;
-                Transition t;
+                Transition &t = transition[tptr];
                 TiXmlAttribute *id = pageElement->FirstAttribute();
                 t.id = id->Value();
 
-                //pushit into transition table and Directory
-                index_t D_tidx = arrange(t.id, false);
-                Directory[D_tidx].position = tptr;
-                transition[tptr] = t;
+                mapTransition.insert(pair<string,index_t>(t.id,tptr));
+
                 tptr++;
 
             }
@@ -530,7 +458,7 @@ void Petri::readPNML(char *filename) {
             //库所
             if (value == "place") {
                 //获取库所信息
-                Place p;
+                Place &p = place[pptr];
                 TiXmlAttribute *id = pageElement->FirstAttribute();
                 p.id = id->Value();
                 TiXmlElement *initialmarking = pageElement->FirstChildElement("initialMarking");
@@ -550,22 +478,18 @@ void Petri::readPNML(char *filename) {
                 }
 
                 //将库所放入库所表中，并维护Directory
-                index_t D_pidx = arrange(p.id, true);
-                Directory[D_pidx].position = pptr;
-                place[pptr] = p;
+                mapPlace.insert(pair<string,index_t>(p.id,pptr));
                 ++pptr;
             }
                 //变迁
             else if (value == "transition") {
                 //获取变迁信息
-                Transition t;
+                Transition &t=transition[tptr];
                 TiXmlAttribute *id = pageElement->FirstAttribute();
                 t.id = id->Value();
 
                 //将变迁放入变迁表中，并维护Directory
-                index_t D_tidx = arrange(t.id, false);
-                Directory[D_tidx].position = tptr;
-                transition[tptr] = t;
+                mapTransition.insert(pair<string,index_t>(t.id,tptr));
                 ++tptr;
             }
                 //弧
@@ -729,6 +653,7 @@ void Petri::checkarc() {
         }
     }
     cout << "Arc Check Passed! ^_^" << endl;
+    delete arc;
 }
 
 /*void printPlace();
@@ -752,7 +677,6 @@ consumer:t13
 void Petri::printPlace() {
     ofstream outplace("places.txt", ios::out);
     outplace << "Total places：" << placecount << endl;
-    outplace << "conflict times:" << hash_conflict_times << endl;
 
     int i;
     for (i = 0; i < placecount; i++) {
@@ -879,3 +803,5 @@ void Petri::printTransition2CSV() {
         outTransition << endl;
     }
 }
+
+

@@ -51,6 +51,8 @@ class Pstacknode
 {
 public:
     int id;
+    bool deadmark;
+    bool virgin;
     rgnode *RGname_ptr;
     int BAname_id;
     index_t next;
@@ -60,11 +62,13 @@ public:
     int fireptr;
 
     Pstacknode();
-    int NEXTFIREABLE(bool &deadmark);
+    int NEXTFIREABLE();
     ~Pstacknode(){};
 };
 template <class rgnode>
 Pstacknode<rgnode>::Pstacknode() {
+    deadmark = true;
+    virgin = true;
     RGname_ptr = NULL;
     next = UNREACHABLE;
     pba = NULL;
@@ -72,8 +76,9 @@ Pstacknode<rgnode>::Pstacknode() {
 }
 
 template<class rgnode>
-int Pstacknode<rgnode>::NEXTFIREABLE(bool &deadmark) {
-    deadmark = (fireptr == 0);
+int Pstacknode<rgnode>::NEXTFIREABLE() {
+    virgin = false;
+
     if(fireptr==0) {
         if(RGname_ptr->isFirable(petri->transition[0])) {
             deadmark = false;
@@ -601,9 +606,8 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
 
 template <class rgnode, class rg_T>
 Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnode> *q) {
-    bool deadmark;
     int firenum;
-    while((firenum=q->NEXTFIREABLE(deadmark))!=-1) {
+    while((firenum=q->NEXTFIREABLE())!=-1) {
         bool exist;
         rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,firenum,exist);
         if(rgseed == NULL)
@@ -637,7 +641,7 @@ Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnod
         q->fireptr++;
         q->pba = ba->vertics[q->BAname_id].firstarc;
     }
-    if(deadmark) {
+    if(q->deadmark) {
         while(q->pba)
         {
             if(isLabel(q->RGname_ptr,q->pba->destination))
@@ -732,46 +736,46 @@ void Product_Automata<rgnode,rg_T>::TCHECK_BOUND(Pstacknode<rgnode> *p0) {
         }
         else
         {
-            if(h.search(qs)!=NULL) {
-                /*this node exists in hash table, it means the scc
-                 * which includes this node doesn't have a counterexample,
-                 * so there is no need to search qs again*/
-                delete qs;
-                qs=NULL;
-                continue;
-            }
-            Pstacknode<rgnode> *existpos = cstack.search(qs);
-            if(existpos!=NULL) {
-                UPDATE(existpos);
-                delete qs;
-                qs=NULL;
-                continue;
-            }
-            if(dstack.size()>=bound) {
-                reachbound = true;
-                continue;
-            }
-            PUSH(qs);
+//            if(h.search(qs)!=NULL) {
+//                /*this node exists in hash table, it means the scc
+//                 * which includes this node doesn't have a counterexample,
+//                 * so there is no need to search qs again*/
+//                delete qs;
+//                qs=NULL;
+//                continue;
+//            }
 //            Pstacknode<rgnode> *existpos = cstack.search(qs);
-//            if(existpos!=NULL)
-//            {
+//            if(existpos!=NULL) {
 //                UPDATE(existpos);
 //                delete qs;
 //                qs=NULL;
 //                continue;
 //            }
-//            if(h.search(qs)==NULL)
-//            {
-//                if(dstack.size()>=bound) {
-//                    reachbound = true;
-//                    continue;
-//                }
-//
-//                PUSH(qs);
+//            if(dstack.size()>=bound) {
+//                reachbound = true;
 //                continue;
 //            }
-//            delete qs;
-//            qs=NULL;
+//            PUSH(qs);
+            Pstacknode<rgnode> *existpos = cstack.search(qs);
+            if(existpos!=NULL)
+            {
+                UPDATE(existpos);
+                delete qs;
+                qs=NULL;
+                continue;
+            }
+            if(h.search(qs)==NULL)
+            {
+                if(dstack.size()>=bound) {
+                    reachbound = true;
+                    continue;
+                }
+
+                PUSH(qs);
+                continue;
+            }
+            delete qs;
+            qs=NULL;
         }
     }
 }
