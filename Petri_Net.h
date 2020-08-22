@@ -113,7 +113,6 @@ public:
     void preNUPN(TiXmlElement *structure);          //NUPN的预处理
     void readNUPN(char *filename);                  //NUPN网的解析
     NUM_t getPlaceSize() const;
-
     void allocHashTable();                          //申请空间
     index_t getPPosition(string str);               //根据库所id得到他在库所表中的索引位置
     index_t getTPosition(string str);               //根据变迁id得到他在变迁表中的索引位置
@@ -121,16 +120,12 @@ public:
     void readPNML(char *filename);                  //第二次解析PNML
     void computeUnitMarkLen();                      //计算每一个unit的marking长度
     void judgeSAFE();
-
     void checkarc();
-
+    void computeDI();
     void printPlace();
-
     void printTransition();
     void printTransition2CSV();
-
     void printGraph();
-
     void printUnit();
 
     ~Petri();

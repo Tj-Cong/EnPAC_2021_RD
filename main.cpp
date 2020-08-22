@@ -74,6 +74,7 @@ void CHECKMEM() {
 }
 
 void CONSTRUCTPETRI() {
+    double starttime,endtime;
     Petri *ptnet = new Petri;
     char filename[]="model.pnml";
     ptnet->getSize(filename);
@@ -85,6 +86,12 @@ void CONSTRUCTPETRI() {
     }
     ptnet->judgeSAFE();
     setGlobalValue(ptnet);
+
+    starttime = get_time();
+    ptnet->computeDI();
+    endtime = get_time();
+    cout<<"COMPUTEDI TIME:"<<endtime-starttime<<endl;
+
     petri = ptnet;
     ptnet->printUnit();
     ptnet->checkarc();

@@ -762,8 +762,7 @@ void Petri::printGraph() {
 
     //打印边关系
     for (i = 0; i < arccount; i++) {
-        outGraph << '\t' << arc[i].source_id << "->" << arc[i].target_id << " [label=\"" << arc[i].weight << "\"]"
-                 << endl;
+        outGraph << '\t' << arc[i].source_id << "->" << arc[i].target_id << " [label=\"" << arc[i].weight << "\"]"<< endl;
     }
     outGraph << "}" << endl;
 }
@@ -801,6 +800,59 @@ void Petri::printTransition2CSV() {
             outTransition << place[iterc->idx].id << ",";
         }
         outTransition << endl;
+    }
+}
+
+void Petri::computeDI() {
+    /*iterate over places*/
+    for(index_t i=0;i<placecount;++i) {
+        Place &p=place[i];
+        vector<SArc>::iterator coniter1,coniter2,proiter;
+        /*计算decreasing set*/
+        for(coniter1=p.consumer.begin();coniter1!=p.consumer.end();++coniter1) {
+            vector<SArc>::iterator backiter;
+            weight_t backweight;
+            for(backiter=transition[coniter1->idx].consumer.begin();backiter!=transition[coniter1->idx].consumer.end();++backiter) {
+                if(backiter->idx == i)
+                    break;
+            }
+            if(backiter == transition[coniter1->idx].consumer.end()) {
+                backweight = 0;
+            }
+            else {
+                backweight = backiter->weight;
+            }
+            /*如果送回这个库所的token数比取出来的多，就没有decrease关系*/
+            if(backweight >= coniter1->weight) {
+                continue;
+            }
+            for(coniter2=p.consumer.begin();coniter2!=p.consumer.end();++coniter2) {
+                if(backweight<coniter2->weight) {
+                    transition[coniter1->idx].decreasing.insert(coniter2->idx);
+                }
+            }
+        }
+        /*计算increasing set*/
+        for(proiter=p.producer.begin();proiter!=p.producer.end();++proiter) {
+            vector<SArc>::iterator backiter;
+            weight_t backweight;
+            for(backiter=p.consumer.begin();backiter!=p.consumer.end();++backiter) {
+                if(backiter->idx == proiter->idx)
+                    break;
+            }
+            if(backiter == p.consumer.end()) {
+                backweight = 0;
+            }
+            else {
+                backweight = backiter->weight;
+            }
+            if(backweight>=proiter->weight) {
+                continue;
+            }
+            for(coniter1=p.consumer.begin();coniter1!=p.consumer.end();++coniter1) {
+                transition[proiter->idx].increasing.insert(coniter1->idx);
+            }
+        }
     }
 }
 

@@ -51,49 +51,22 @@ class Pstacknode
 {
 public:
     int id;
-    bool deadmark;
-    bool virgin;
     rgnode *RGname_ptr;
     int BAname_id;
     index_t next;
 
     //non-recursion extra information
     ArcNode *pba;
-    int fireptr;
+    set<index_t>::iterator fireptr;
 
     Pstacknode();
-    int NEXTFIREABLE();
     ~Pstacknode(){};
 };
 template <class rgnode>
 Pstacknode<rgnode>::Pstacknode() {
-    deadmark = true;
-    virgin = true;
     RGname_ptr = NULL;
     next = UNREACHABLE;
     pba = NULL;
-    fireptr = 0;
-}
-
-template<class rgnode>
-int Pstacknode<rgnode>::NEXTFIREABLE() {
-    virgin = false;
-
-    if(fireptr==0) {
-        if(RGname_ptr->isFirable(petri->transition[0])) {
-            deadmark = false;
-            return fireptr;
-        }
-        fireptr++;
-    }
-
-    for(fireptr;fireptr<petri->transitioncount;++fireptr) {
-        if(RGname_ptr->isFirable(petri->transition[fireptr])) {
-            deadmark = false;
-            return fireptr;
-        }
-    }
-    return -1;
 }
 
 /*====================================================*/
@@ -594,6 +567,7 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
             init->RGname_ptr = initial_status[i].RGname_ptr;
             init->BAname_id = initial_status[i].BAname_id;
             init->pba = ba->vertics[init->BAname_id].firstarc;
+            init->fireptr = init->RGname_ptr->fireset.begin();
             TCHECK(init);
             if (ready2exit)  //如果已经出结果或超时，则退出
             {
@@ -606,42 +580,8 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
 
 template <class rgnode, class rg_T>
 Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnode> *q) {
-    int firenum;
-    while((firenum=q->NEXTFIREABLE())!=-1) {
-        bool exist;
-        rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,firenum,exist);
-        if(rgseed == NULL)
-        {
-            data_flag = false;
-            return NULL;
-        }
-        while(q->pba)
-        {
-            if(isLabel(rgseed,q->pba->destination))
-            {
-                Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
-                qs->RGname_ptr = rgseed;
-                qs->BAname_id = q->pba->destination;
-                qs->pba = ba->vertics[qs->BAname_id].firstarc;
-
-                /*print*/
-//                       qs->RGname_ptr->printMarking(placecount);
-//                       cout<<qs->BAname_id<<endl;
-
-                if(qs->pba == NULL) {
-                    cerr<<"detect non-sense sba state!"<<endl;
-                    exit(6);
-                }
-
-                q->pba = q->pba->next;
-                return qs;
-            }
-            q->pba = q->pba->next;
-        }
-        q->fireptr++;
-        q->pba = ba->vertics[q->BAname_id].firstarc;
-    }
-    if(q->deadmark) {
+    if(q->RGname_ptr->fireset.size() == 0) {
+        /*this is a deadmark*/
         while(q->pba)
         {
             if(isLabel(q->RGname_ptr,q->pba->destination))
@@ -651,10 +591,13 @@ Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnod
                 qs->RGname_ptr = q->RGname_ptr;
                 qs->BAname_id = q->pba->destination;
                 qs->pba = ba->vertics[qs->BAname_id].firstarc;
-
+                qs->fireptr = qs->RGname_ptr->fireset.begin();
                 /*print*/
-//                   qs->RGname_ptr->printMarking(placecount);
-//                   cout<<qs->BAname_id<<endl;
+#ifdef DEBUG
+                qs->RGname_ptr->printMarking(MARKLEN);
+                cout<<qs->BAname_id<<endl;
+                cout<<"----------------------------------------"<<endl;
+#endif
 
                 if(qs->pba == NULL) {
                     cerr<<"detect non-sense sba state!"<<endl;
@@ -669,6 +612,41 @@ Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnod
         return NULL;
     }
     else {
+        for(q->fireptr;q->fireptr!=q->RGname_ptr->fireset.end();++(q->fireptr)) {
+            bool exist = false;
+            rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,*(q->fireptr),exist);
+            if(!exist) {
+                rgseed->getFireSet(q->RGname_ptr,*(q->fireptr));
+            }
+            if(rgseed == NULL)
+            {
+                data_flag = false;
+                return NULL;
+            }
+            while(q->pba)
+            {
+                if(isLabel(rgseed,q->pba->destination))
+                {
+                    Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
+                    qs->RGname_ptr = rgseed;
+                    qs->BAname_id = q->pba->destination;
+                    qs->pba = ba->vertics[qs->BAname_id].firstarc;
+                    qs->fireptr = qs->RGname_ptr->fireset.begin();
+
+                    /*print*/
+#ifdef DEBUG
+                    cout<<"["<<*(q->fireptr)<<">"<<endl;
+                    qs->RGname_ptr->printMarking(MARKLEN);
+                    cout<<qs->BAname_id<<endl;
+                    cout<<"----------------------------------------"<<endl;
+#endif
+                    q->pba = q->pba->next;
+                    return qs;
+                }
+                q->pba = q->pba->next;
+            }
+            q->pba = ba->vertics[q->BAname_id].firstarc;
+        }
         return NULL;
     }
 }
@@ -736,46 +714,46 @@ void Product_Automata<rgnode,rg_T>::TCHECK_BOUND(Pstacknode<rgnode> *p0) {
         }
         else
         {
-//            if(h.search(qs)!=NULL) {
-//                /*this node exists in hash table, it means the scc
-//                 * which includes this node doesn't have a counterexample,
-//                 * so there is no need to search qs again*/
-//                delete qs;
-//                qs=NULL;
-//                continue;
-//            }
-//            Pstacknode<rgnode> *existpos = cstack.search(qs);
-//            if(existpos!=NULL) {
-//                UPDATE(existpos);
-//                delete qs;
-//                qs=NULL;
-//                continue;
-//            }
-//            if(dstack.size()>=bound) {
-//                reachbound = true;
-//                continue;
-//            }
-//            PUSH(qs);
+            if(h.search(qs)!=NULL) {
+                /*this node exists in hash table, it means the scc
+                 * which includes this node doesn't have a counterexample,
+                 * so there is no need to search qs again*/
+                delete qs;
+                qs=NULL;
+                continue;
+            }
             Pstacknode<rgnode> *existpos = cstack.search(qs);
-            if(existpos!=NULL)
-            {
+            if(existpos!=NULL) {
                 UPDATE(existpos);
                 delete qs;
                 qs=NULL;
                 continue;
             }
-            if(h.search(qs)==NULL)
-            {
-                if(dstack.size()>=bound) {
-                    reachbound = true;
-                    continue;
-                }
-
-                PUSH(qs);
+            if(dstack.size()>=bound) {
+                reachbound = true;
                 continue;
             }
-            delete qs;
-            qs=NULL;
+            PUSH(qs);
+//            Pstacknode<rgnode> *existpos = cstack.search(qs);
+//            if(existpos!=NULL)
+//            {
+//                UPDATE(existpos);
+//                delete qs;
+//                qs=NULL;
+//                continue;
+//            }
+//            if(h.search(qs)==NULL)
+//            {
+//                if(dstack.size()>=bound) {
+//                    reachbound = true;
+//                    continue;
+//                }
+//
+//                PUSH(qs);
+//                continue;
+//            }
+//            delete qs;
+//            qs=NULL;
         }
     }
 }
@@ -860,6 +838,7 @@ void Product_Automata<rgnode,rg_T>::getProduct_Bound() {
             init->RGname_ptr = initial_status[i].RGname_ptr;
             init->BAname_id = initial_status[i].BAname_id;
             init->pba = ba->vertics[init->BAname_id].firstarc;
+            init->fireptr = init->RGname_ptr->fireset.begin();
             TCHECK_BOUND(init);
             if(ready2exit || !data_flag)  //如果已经出结果或超时，则退出
                 break;
@@ -1017,7 +996,10 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
                 exit(0);
             }
 
-            if(state->isFirable(ptnet->transition[idex])) {
+            set<index_t>::iterator it;
+            it = state->fireset.find(idex);
+
+            if(it!=state->fireset.end()) {
                 return false;
             }
 
@@ -1045,7 +1027,10 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
                 exit(0);
             }
 
-            if(state->isFirable(ptnet->transition[idex])) {
+            set<index_t>::iterator it;
+            it = state->fireset.find(idex);
+
+            if(it!=state->fireset.end()) {
                 return true;
             }
 

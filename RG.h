@@ -84,15 +84,13 @@ class RGNode {
 public:
     Mark *marking;
     RGNode *next;
+    set<index_t> fireset;
 public:
     RGNode();
-
     index_t Hash();
-
     bool isFirable(const Transition &t) const;
-
+    void getFireSet(RGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
-
     ~RGNode();
 };
 
@@ -101,15 +99,13 @@ class BitRGNode {
 public:
     myuint *marking;
     BitRGNode *next;
+    set<index_t> fireset;
 public:
     BitRGNode();
-
     index_t Hash();
-
     bool isFirable(const Transition &t) const;
-
+    void getFireSet(BitRGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
-
     ~BitRGNode();
 };
 
@@ -137,7 +133,7 @@ public:
 
     RGNode *RGcreatenode(RGNode *curnode, int tranxnum, bool &exist);
 
-    void getFireableTranx(RGNode *curnode, index_t **isFirable, NUM_t &firecount);
+    void getFireableTranx(RGNode *curnode, set<index_t> &fireset);
 
     void Generate(RGNode *node);
 
@@ -170,7 +166,7 @@ public:
 
     BitRGNode *RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist);
 
-    void getFireableTranx(BitRGNode *curnode, index_t **isFirable, NUM_t &firecount);
+    void getFireableTranx(BitRGNode *curnode,set<index_t> &fireset);
 
     void Generate(BitRGNode *node);
 
