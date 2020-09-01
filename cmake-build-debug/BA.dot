@@ -1,9 +1,12 @@
 digraph BA {
 	S0 [shape=circle]
-	S1 [shape=doublecircle]
+	S1 [shape=circle]
+	S2 [shape=doublecircle]
 
-	S0->S1 [label="!{t53,}"]
-	S0->S1 [label="!{t36,}"]
-	S0->S0 [label="true"]
-	S1->S1 [label="true"]
+	S0->S2 [label="!{token-count(stp5,)<=token-count(P4,)}"]
+	S0->S1 [label="true"]
+	S1->S2 [label="!{token-count(stp5,)<=token-count(P4,)}&&{token-count(stp5,)<=token-count(P4,)}"]
+	S1->S1 [label="{token-count(stp5,)<=token-count(P4,)}"]
+	S2->S2 [label="!{token-count(stp5,)<=token-count(P4,)}"]
+	S2->S1 [label="true"]
 }

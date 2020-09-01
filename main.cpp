@@ -93,7 +93,8 @@ void CONSTRUCTPETRI() {
     cout<<"COMPUTEDI TIME:"<<endtime-starttime<<endl;
 
     petri = ptnet;
-    ptnet->printUnit();
+    if(NUPN)
+        ptnet->printUnit();
     ptnet->checkarc();
     ptnet->printGraph();
     ptnet->printPlace();
@@ -117,7 +118,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         unsigned short each_run_time;
         unsigned short each_used_time;
         if(ltlcount<6)
-            each_run_time=300;
+            each_run_time=400;
         else{
             each_run_time=total_left_time/(16-ltlcount);
         }
@@ -220,7 +221,7 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     BitRG *bitgraph;
     RG *graph;
 
-    unsigned short each_run_time=3000;
+    unsigned short each_run_time=300;
 
     string propertyid;
     char ff[]="LTLFireability.xml";
@@ -326,8 +327,8 @@ int main() {
 
     CONSTRUCTPETRI();
 
-    CHECKLTL(petri,1);
-    CHECKLTL(petri,0);
+    CHECKLTL(petri,1,3);
+//    CHECKLTL(petri,0);
     endtime = get_time();
     cout<<"RUNTIME:"<<endtime-starttime<<endl;
     delete petri;

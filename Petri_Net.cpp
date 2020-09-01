@@ -144,6 +144,13 @@ void Petri::getSize(char *filename) {
                 TiXmlAttribute *usize = structure->FirstAttribute();
                 unitcount = stringToNum(usize->Value());
 
+                TiXmlAttribute *safe_attr = usize->Next()->Next();
+                string safe = safe_attr->Value();
+                if(safe == "false") {
+                    NUPN = false;
+                    SAFE = true;
+                    break;
+                }
                 allocHashTable();    //申请空间
 
                 preNUPN(structure);
