@@ -11,16 +11,16 @@ using namespace std;
 
 size_t  heap_malloc_total, heap_free_total,mmap_total, mmap_count;
 void print_info() {
-    struct mallinfo mi = mallinfo();
-    printf("count by itself:\n");
-    printf("\033[31m\theap_malloc_total=%lu heap_free_total=%lu heap_in_use=%lu\n\tmmap_total=%lu mmap_count=%lu\n",
-           heap_malloc_total*1024, heap_free_total*1024, heap_malloc_total*1024-heap_free_total*1024,
-           mmap_total*1024, mmap_count);
-    printf("count by mallinfo:\n");
-    printf("\theap_malloc_total=%lu heap_free_total=%lu heap_in_use=%lu\n\tmmap_total=%lu mmap_count=%lu\n\033[0m",
-           mi.arena, mi.fordblks, mi.uordblks,
-           mi.hblkhd, mi.hblks);
-//    malloc_stats();
+//    struct mallinfo mi = mallinfo();
+//    printf("count by itself:\n");
+//    printf("\033[31m\theap_malloc_total=%lu heap_free_total=%lu heap_in_use=%lu\n\tmmap_total=%lu mmap_count=%lu\n",
+//           heap_malloc_total*1024, heap_free_total*1024, heap_malloc_total*1024-heap_free_total*1024,
+//           mmap_total*1024, mmap_count);
+//    printf("count by mallinfo:\n");
+//    printf("\theap_malloc_total=%lu heap_free_total=%lu heap_in_use=%lu\n\tmmap_total=%lu mmap_count=%lu\n\033[0m",
+//           mi.arena, mi.fordblks, mi.uordblks,
+//           mi.hblkhd, mi.hblks);
+    malloc_stats();
 }
 
 NUM_t FIELDCOUNT;
@@ -32,7 +32,6 @@ bool ready2exit = false;
 
 //以MB为单位
 short int total_mem;
-short int total_swap;
 pid_t mypid;
 
 Petri *petri = NULL;
@@ -45,32 +44,7 @@ double get_time() {
 
 void CHECKMEM() {
     mypid = getpid();
-    //检测本机环境下的内存和swap分区
-    FILE *pf;
-    char sh_mem[20];
-//    pf = popen("sh $HOME/BenchKit/bin/detect_total_mem.sh","r");
-    pf = popen("sh detect_total_mem.sh","r");
-    if(pf == NULL) {
-        total_mem = 16000;
-    }
-    else {
-        fread(sh_mem, sizeof(sh_mem),1,pf);
-        total_mem = atoi(sh_mem);
-        pclose(pf);
-    }
-
-    //检测swap分区大小
-//    pf = popen("sh $HOME/BenchKit/bin/detect_swap.sh","r");
-    pf = popen("sh detect_swap.sh","r");
-    if(pf == NULL) {
-        total_swap = 0;
-    }
-    else {
-        char sh_swap[20];
-        fread(sh_swap, sizeof(sh_swap),1,pf);
-        total_swap = atoi(sh_swap);
-        pclose(pf);
-    }
+    total_mem = 16000;
 }
 
 void CONSTRUCTPETRI() {
@@ -118,7 +92,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         unsigned short each_run_time;
         unsigned short each_used_time;
         if(ltlcount<6)
-            each_run_time=400;
+            each_run_time=300;
         else{
             each_run_time=total_left_time/(16-ltlcount);
         }
@@ -231,21 +205,21 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
         syntaxTree.ParseXML(cc,propertyid,num);
     else
         syntaxTree.ParseXML(ff,propertyid,num);
-        cout<<"original tree:"<<endl;
-        syntaxTree.PrintTree();
-        cout<<"-----------------------------------"<<endl;
+//    cout<<"original tree:"<<endl;
+//    syntaxTree.PrintTree();
+//    cout<<"-----------------------------------"<<endl;
     syntaxTree.Push_Negation(syntaxTree.root);
-        cout<<"after negation:"<<endl;
-        syntaxTree.PrintTree();
-        cout<<"-----------------------------------"<<endl;
+//    cout<<"after negation:"<<endl;
+//    syntaxTree.PrintTree();
+//    cout<<"-----------------------------------"<<endl;
     syntaxTree.SimplifyLTL();
-        cout<<"after simplification:"<<endl;
-        syntaxTree.PrintTree();
-        cout<<"-----------------------------------"<<endl;
+//    cout<<"after simplification:"<<endl;
+//    syntaxTree.PrintTree();
+//    cout<<"-----------------------------------"<<endl;
     syntaxTree.Universe(syntaxTree.root);
-        cout<<"after universe"<<endl;
-        syntaxTree.PrintTree();
-        cout<<"-----------------------------------"<<endl;
+//    cout<<"after universe"<<endl;
+//    syntaxTree.PrintTree();
+//    cout<<"-----------------------------------"<<endl;
 
     syntaxTree.Get_DNF(syntaxTree.root);
     syntaxTree.Build_VWAA();
@@ -326,9 +300,8 @@ int main() {
     starttime = get_time();
 
     CONSTRUCTPETRI();
-
-    CHECKLTL(petri,1,3);
-//    CHECKLTL(petri,0);
+    CHECKLTL(petri,1);
+    CHECKLTL(petri,0);
     endtime = get_time();
     cout<<"RUNTIME:"<<endtime-starttime<<endl;
     delete petri;
@@ -361,58 +334,4 @@ int main2(int argc,char *argv[])
 }
 
 //void CreateBA(Buchi &ba) {
-//    ba.state_num = ba.vex_num = 4;
-//    BA_state &s0 = ba.vertics[0];
-//    BA_state &s1 = ba.vertics[1];
-//    BA_state &s2 = ba.vertics[2];
-//    BA_state &s3 = ba.vertics[3];
-//    s0.id = 0;
-//    BA_delta *d1=new BA_delta;
-//    d1->destination=1;
-//    d1->info="true";
-//    s0.AddArc(d1);
-//    BA_delta *d2=new BA_delta;
-//    d2->destination=3;
-//    d2->info="!{T_3_9_2_6,}";
-//    d2->predicates.insert("!{T_3_9_2_6,}");
-//    s0.AddArc(d2);
-//    s1.id=1;
-//    s1.accepted=true;
-//    s1.sources.insert(0);
-//    s1.sources.insert(1);
-//    s1.sources.insert(2);
-//    BA_delta *d3=new BA_delta;
-//    d3->destination=1;
-//    d3->info="{T_14_8_7_0,}";
-//    d3->predicates.insert("{T_14_8_7_0,}");
-//    s1.AddArc(d3);
-//    BA_delta *d4=new BA_delta;
-//    d4->destination=1;
-//    d4->info="!{T_12_8_6_1,}";
-//    d4->predicates.insert("!{T_12_8_6_1,}");
-//    s1.AddArc(d4);
-//    BA_delta *d5=new BA_delta;
-//    d5->destination=2;
-//    d5->info="true";
-//    s1.AddArc(d5);
-//    s2.id=2;
-//    s2.sources.insert(1);
-//    s2.sources.insert(2);
-//    BA_delta *d6=new BA_delta;
-//    d6->destination=2;
-//    d6->info="true";
-//    s2.AddArc(d6);
-//    BA_delta *d7=new BA_delta;
-//    d7->destination=1;
-//    d7->info="!{T_12_8_6_1,}";
-//    d7->predicates.insert("!{T_12_8_6_1,}");
-//    s2.AddArc(d7);
-//    s3.id=3;
-//    s3.accepted=true;
-//    s3.sources.insert(0);
-//    s3.sources.insert(3);
-//    BA_delta *d8=new BA_delta;
-//    d8->destination=3;
-//    d8->info="true";
-//    s3.AddArc(d8);
 //}

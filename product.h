@@ -37,7 +37,6 @@ extern bool NUPN;
 extern bool SAFE;
 extern bool ready2exit;
 extern short int total_mem;
-extern short int total_swap;
 extern pid_t mypid;
 extern Petri *petri;
 void  sig_handler(int num);
@@ -181,7 +180,6 @@ PStack<rgnode>::~PStack() {
             delete mydata[i];
             mydata[i]=NULL;
         }
-
     }
     delete [] mydata;
     mydata=NULL;
@@ -228,7 +226,6 @@ public:
     NUM_t hash_conflict_times;
 public:
     hashtable();
-    void insert(Product<rgnode> *n);
     void insert(Pstacknode<rgnode> *n);
     index_t hashfunction(Product<rgnode> *q);
     index_t hashfunction(Pstacknode<rgnode> *q);
@@ -271,17 +268,17 @@ hashtable<rgnode>::~hashtable() {
     MallocExtension::instance()->ReleaseFreeMemory();
 }
 
-template <class rgnode>
-void hashtable<rgnode>::insert(Product<rgnode> *q)
-{
-    int idex = hashfunction(q);
-    if(table[idex]!=NULL)
-        hash_conflict_times++;
-    Product<rgnode> *qs = new Product<rgnode>(q);
-    qs->hashnext = table[idex];
-    table[idex] = qs;
-    nodecount++;
-}
+//template <class rgnode>
+//void hashtable<rgnode>::insert(Product<rgnode> *q)
+//{
+//    int idex = hashfunction(q);
+//    if(table[idex]!=NULL)
+//        hash_conflict_times++;
+//    Product<rgnode> *qs = new Product<rgnode>(q);
+//    qs->hashnext = table[idex];
+//    table[idex] = qs;
+//    nodecount++;
+//}
 
 template <class rgnode>
 void hashtable<rgnode>::insert(Pstacknode<rgnode> *q)
@@ -430,6 +427,7 @@ private:
     bool memory_flag;
     bool stack_flag;
     bool data_flag;
+    bool consistency_flag;
     thread detect_mem_thread;
 public:
     Product_Automata(Petri *pt, rg_T* r, StateBuchi *sba);
@@ -466,6 +464,7 @@ Product_Automata<rgnode,rg_T>::Product_Automata(Petri *pt, rg_T* r, StateBuchi *
     stack_flag = true;
     reachbound = false;
     data_flag = true;
+    consistency_flag = true;
     outcurdepth.open("curdepth.txt",ios::out);
 }
 
@@ -503,7 +502,7 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
 
     //打印结果
     string re;
-    if(timeflag && memory_flag && stack_flag && data_flag)
+    if(timeflag && memory_flag && stack_flag && data_flag && consistency_flag)
     {
         if(result)
         {
@@ -522,22 +521,27 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
     }
     else if(!memory_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" MEMORY_OVERFLOW";
         ret = -1;
     }
     else if(!stack_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" STACK_OVERFLOW";
         ret = -1;
     }
     else if(!data_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" DATA_OVERFLOW";
+        ret = -1;
+    }
+    else if(!consistency_flag)
+    {
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" CONSISTENCY_ERROR";
         ret = -1;
     }
     else if(!timeflag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" TIME_RUNOUT";
         ret = -1;
     }
     unsigned short timeleft=alarm(0);
@@ -731,6 +735,7 @@ void Product_Automata<rgnode,rg_T>::TCHECK_BOUND(Pstacknode<rgnode> *p0) {
             }
             if(dstack.size()>=bound) {
                 reachbound = true;
+                delete qs;
                 continue;
             }
             PUSH(qs);
@@ -992,8 +997,9 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
 
             int idex = ptnet->getTPosition(subs);      //得到变迁在petri网中的index
             if(idex == INDEX_ERROR){
-                cerr<<"Can not find transition:"<<subs<<endl;
-                exit(0);
+                consistency_flag = false;
+                ready2exit = true;
+                return false;
             }
 
             set<index_t>::iterator it;
@@ -1023,8 +1029,9 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
 
             int idex = ptnet->getTPosition(subs);  //变迁的序列号
             if(idex == INDEX_ERROR){
-                cerr<<"Can not find transition:"<<subs<<endl;
-                exit(0);
+                consistency_flag = false;
+                ready2exit = true;
+                return false;
             }
 
             set<index_t>::iterator it;
@@ -1123,12 +1130,8 @@ void Product_Automata<rgnode,rg_T>::handleLTLCstep(NUM_t &front_sum, NUM_t &latt
  * */
 template <class rgnode,class rg_T>
 NUM_t Product_Automata<rgnode, rg_T>::sumtoken(string s, rgnode *state) {
-
-    Mark *marking = new Mark[ptnet->placecount];
     NUM_t sum = 0;
-
-    if (ptnet->NUPN) {
-        rg->deCoder(marking, state);
+    if (ptnet->NUPN || ptnet->SAFE) {
         while (1) {
             int pos = s.find_first_of(",");
             if (pos == string::npos)
@@ -1137,42 +1140,18 @@ NUM_t Product_Automata<rgnode, rg_T>::sumtoken(string s, rgnode *state) {
             index_t idex = ptnet->getPPosition(subs);  //得到该库所的索引号
 
             if (idex == INDEX_ERROR) {
-                cerr << "Can not find place:" << subs << endl;
-                exit(0);
+                consistency_flag = false;
+                ready2exit = true;
+                return 0;
             }
 
-            sum += marking[idex];
+            sum += state->readPlace(idex)?1:0;
 
             //将前面的用过的P1去除 从p2开始作为新的s串
             s = s.substr(pos + 1, s.length() - pos);
         }
-    } else if (ptnet->SAFE) {
-        myuint *bitmark = new myuint[FIELDCOUNT];
-        memcpy(bitmark, state->marking, sizeof(myuint) * FIELDCOUNT);
-
-        while (1) {
-            int pos = s.find_first_of(",");
-            if (pos == string::npos)
-                break;
-            string subs = s.substr(0, pos);        //取得一个p1
-            index_t idex = ptnet->getPPosition(subs);  //得到该库所的索引号
-
-            if (idex == INDEX_ERROR) {
-                cerr << "Can not find place:" << subs << endl;
-                exit(0);
-            }
-
-            int unit = idex / (sizeof(myuint) * 8);
-            int offset = idex % (sizeof(myuint) * 8);
-            sum += (bitmark[unit].test1(offset)) ? 1 : 0;
-
-            //将前面的用过的P1去除 从p2开始作为新的s串
-            s = s.substr(pos + 1, s.length() - pos);
-        }
-        delete[] bitmark;
     }
     else {
-        memcpy(marking, state->marking, sizeof(Mark) * (ptnet->placecount));
         while (1) {
             int pos = s.find_first_of(",");
             if (pos == string::npos)
@@ -1181,18 +1160,20 @@ NUM_t Product_Automata<rgnode, rg_T>::sumtoken(string s, rgnode *state) {
             index_t idex = ptnet->getPPosition(subs);  //得到该库所的索引号
 
             if (idex == INDEX_ERROR) {
-                cerr << "Can not find place:" << subs << endl;
-                exit(0);
+                consistency_flag = false;
+                ready2exit = true;
+                return 0;
             }
 
-            sum += marking[idex];
+            Mark ptokennum;
+            memcpy(&ptokennum,&state->marking[idex],sizeof(Mark));
+            sum += ptokennum;
 
             //将前面的用过的P1去除 从p2开始作为新的s串
             s = s.substr(pos + 1, s.length() - pos);
         }
     }
 
-    delete[] marking;
     return sum;
 }
 
@@ -1261,7 +1242,7 @@ void Product_Automata<rgnode,rg_T>::detect_memory()
         {
             break;
         }
-        sleep(0.5);
+        usleep(500);
     }
 }
 

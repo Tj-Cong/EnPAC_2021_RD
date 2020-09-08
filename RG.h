@@ -92,6 +92,9 @@ public:
     void getFireSet(RGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
     ~RGNode();
+    bool readPlace(int placeid) const {};
+    void writePlace(int placeid){};
+    void clearPlace(int placeid){};
 };
 
 //用于SAFE和NUPN
@@ -107,6 +110,9 @@ public:
     void getFireSet(BitRGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
     ~BitRGNode();
+    bool readPlace(int placeid) const;
+    void writePlace(int placeid);
+    void clearPlace(int placeid);
 };
 
 class RG {
@@ -124,10 +130,6 @@ public:
     void addRGNode(RGNode *mark);
 
     index_t getHashIndex(RGNode *mark);
-
-    void enCoder(unsigned short *equmark, RGNode *curnode);
-
-    void deCoder(unsigned short *equmark, RGNode *curnode);
 
     RGNode *RGinitialnode();
 
@@ -157,10 +159,6 @@ public:
     void addRGNode(BitRGNode *mark);
 
     index_t getHashIndex(BitRGNode *mark);
-
-    void enCoder(unsigned short *equmark, BitRGNode *curnode);
-
-    void deCoder(unsigned short *equmark, BitRGNode *curnode);
 
     BitRGNode *RGinitialnode();
 

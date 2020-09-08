@@ -74,6 +74,18 @@ typedef struct Place {
     index_t myoffset;            //该库所在单元中的偏移量
 } *Place_P;
 
+typedef struct Place_extra {
+    bool cutoff = false;
+    int intnum;
+    int intoffset;
+    index_t low_read_mask=0;
+    index_t high_read_mask=0;
+    index_t low_zero_mask=0;
+    index_t high_zero_mask=0;
+    index_t low_write_mask=0;
+    index_t high_write_mask=0;
+} Place_extra;
+
 typedef struct Transition {
     string id = "";
     vector<SArc> producer;
@@ -100,6 +112,7 @@ public:
     Transition *transition;     //变迁表
     Arc *arc;                   //弧表
     Unit *unittable;            //单元表
+    Place_extra *placeExtra;
     NUM_t placecount;           //库所个数
     NUM_t transitioncount;      //变迁个数
     NUM_t arccount;             //弧个数

@@ -92,8 +92,8 @@ Petri::Petri() {
 /*析构函数
  * */
 Petri::~Petri() {
-    delete[] place;
-    delete[] transition;
+    delete [] place;
+    delete [] transition;
     //delete[] arc;
     if (NUPN)
         delete[] unittable;
@@ -244,6 +244,7 @@ void Petri::allocHashTable() {
 
     if (NUPN) {
         unittable = new Unit[unitcount];
+        placeExtra = new Place_extra[placecount];
     }
 }
 
@@ -579,6 +580,25 @@ void Petri::computeUnitMarkLen() {
         unittable[i].mark_length = ceil(log2(unittable[i].size + 1));
         temp_len = temp_len + unittable[i].mark_length;
     }
+
+    //compute every place's patterns
+    for(int i=0;i<placecount;++i) {
+        Place_extra &pe = placeExtra[i];
+        const Unit &uu = unittable[place[i].myunit];
+        pe.intnum = uu.mark_sp / 32;
+        pe.intoffset = uu.mark_sp % 32;
+        if(pe.intoffset+uu.mark_length > 32)
+            pe.cutoff = true;
+        pe.low_read_mask = (((unsigned int)1<<uu.mark_length)-1) << pe.intoffset;
+        pe.low_zero_mask = ~(pe.low_read_mask);
+        pe.low_write_mask = (place[i].myoffset+1) << pe.intoffset;
+
+        if(pe.cutoff) {
+            pe.high_read_mask = (((unsigned int)1<<uu.mark_length)-1) >> (32-pe.intoffset);
+            pe.high_zero_mask = ~(pe.high_read_mask);
+            pe.high_write_mask = (place[i].myoffset+1) >> (32-pe.intoffset);
+        }
+    }
 }
 
 
@@ -660,7 +680,7 @@ void Petri::checkarc() {
         }
     }
     cout << "Arc Check Passed! ^_^" << endl;
-    delete arc;
+    delete [] arc;
 }
 
 /*void printPlace();
@@ -687,28 +707,41 @@ void Petri::printPlace() {
 
     int i;
     for (i = 0; i < placecount; i++) {
-        Place p = place[i];
+        const Place &p = place[i];
+        const Place_extra &pe = placeExtra[i];
         outplace << endl;
         outplace << i << endl;
         outplace << "id:" << p.id << endl;
         outplace << "initialMarking:" << p.initialMarking << endl;
-        outplace << "myUnit:" << p.myunit << endl;
-        outplace << "myOffset:" << p.myoffset << endl;
+        if(NUPN) {
+            outplace << "myUnit:" << p.myunit << endl;
+            outplace << "myOffset:" << p.myoffset << endl;
+            outplace << "cutoff:" << (pe.cutoff?"TRUE":"FALSE") << endl;
+            outplace << "intnum:" << pe.intnum << endl;
+            outplace << "intoffset:" << pe.intoffset << endl;
+            outplace << "low_read_mask:" <<hex<< pe.low_read_mask << endl;
+            outplace << "low_zero_mask:" <<hex<< pe.low_zero_mask << endl;
+            outplace << "low_write_mask:" <<hex<< pe.low_write_mask << endl;
+            if(pe.cutoff) {
+                outplace << "high_read_mask:" <<hex<< pe.high_read_mask << endl;
+                outplace << "high_zero_mask:" <<hex<< pe.high_zero_mask << endl;
+                outplace << "high_write_mask:" <<hex<< pe.high_write_mask << endl;
+            }
+        }
         outplace << "producer:";
-        vector<SArc>::iterator iterp;
+        vector<SArc>::const_iterator iterp;
         for (iterp = p.producer.begin(); iterp != p.producer.end(); iterp++) {
             outplace << transition[iterp->idx].id << " ";
         }
         outplace << endl;
         outplace << "consumer:";
 
-        vector<SArc>::iterator iterc;
+        vector<SArc>::const_iterator iterc;
         for (iterc = p.consumer.begin(); iterc != p.consumer.end(); iterc++) {
             outplace << transition[iterc->idx].id << " ";
         }
         outplace << endl;
     }
-
 }
 
 /*void printTransition()
@@ -784,6 +817,7 @@ void Petri::printUnit() {
         outUnit << "id: " << unittable[i].uid << endl;
         outUnit << "size: " << unittable[i].size << endl;
         outUnit << "Mark_Length: " << unittable[i].mark_length << endl;
+        outUnit << "mark_sp: " << unittable[i].mark_sp << endl;
         outUnit << "startpos: " << unittable[i].startpos << endl;
         outUnit << endl;
     }

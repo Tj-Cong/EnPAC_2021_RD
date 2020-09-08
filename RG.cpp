@@ -842,9 +842,8 @@ bool RGNode::isFirable(const Transition &t) const {
  * function： 析构函数，释放空间
  * */
 RGNode::~RGNode() {
-    delete marking;
+    delete [] marking;
     MallocExtension::instance()->ReleaseFreeMemory();
-
 }
 
 void RGNode::printMarking(const int &len) {
@@ -922,8 +921,18 @@ index_t BitRGNode::Hash() {
 }
 
 bool BitRGNode::isFirable(const Transition &t) const {
-
-    if (SAFE) {
+    if(NUPN) {
+        bool isfirable = true;
+        vector<SArc>::const_iterator tpre = t.producer.begin();
+        for (tpre; tpre != t.producer.end(); ++tpre) {
+            if(!readPlace(tpre->idx)) {
+                isfirable = false;
+                break;
+            }
+        }
+        return isfirable;
+    }
+    else if (SAFE) {
         bool isfirable = true;
         vector<SArc>::const_iterator tpre = t.producer.begin();
         for (tpre; tpre != t.producer.end(); ++tpre) {
@@ -936,58 +945,13 @@ bool BitRGNode::isFirable(const Transition &t) const {
         }
         return isfirable;
     }
-
-    Mark *equmark = new Mark[petri->placecount];
-    memset(equmark, 0, sizeof(short) * petri->placecount);
-
-    //遍历每一个unit
-    for (int i = 0; i < petri->unitcount; i++) {
-        index_t msp = petri->unittable[i].mark_sp;
-        NUM_t marklen = petri->unittable[i].mark_length;
-        index_t mend = msp + marklen;
-        int mi = 0;
-        unsigned short *Binarystr = new unsigned short[marklen];
-        int unit, offset;
-        for (mi, msp; msp < mend; mi++, msp++) {
-            unit = msp / (sizeof(myuint) * 8);
-            offset = msp % (sizeof(myuint) * 8);
-            if (this->marking[unit].test1(offset))  //1
-            {
-                Binarystr[mi] = 1;
-            } else {   //0
-                Binarystr[mi] = 0;
-            }
-
-        }
-
-        index_t place_offset;
-        BinaryToDec(place_offset, Binarystr, marklen);
-
-        delete[] Binarystr;
-
-        if (place_offset > 0) {
-            index_t pos = petri->unittable[i].startpos + place_offset - 1;
-            equmark[pos] = 1;
-        }
-    }
-
-    bool isfirable = true;
-    vector<SArc>::const_iterator tpre = t.producer.begin();
-    for (tpre; tpre != t.producer.end(); ++tpre) {
-        if (equmark[tpre->idx] < tpre->weight) {
-            isfirable = false;
-            break;
-        }
-    }
-    delete[] equmark;
-    return isfirable;
 }
 
 /*RGNode::~RGNode()
  * function： 析构函数，释放空间
  * */
 BitRGNode::~BitRGNode() {
-    delete marking;
+    delete [] marking;
     MallocExtension::instance()->ReleaseFreeMemory();
 }
 
@@ -1041,6 +1005,84 @@ void BitRGNode::getFireSet(BitRGNode *lastnode, index_t lastfid) {
                 fireset.insert(*eniter);
             }
         }
+    }
+}
+
+bool BitRGNode::readPlace(int placeid) const{
+    if(NUPN) {
+        const Place_extra &pe = petri->placeExtra[placeid];
+        if(!pe.cutoff) {
+            index_t markint;
+            memcpy(&markint,&this->marking[pe.intnum],sizeof(index_t));
+            if((markint & pe.low_read_mask)>>pe.intoffset == (petri->place[placeid].myoffset+1))
+                return true;
+            else
+                return false;
+        }
+        else {
+            index_t markint1,markint2;
+            memcpy(&markint1,&this->marking[pe.intnum],sizeof(index_t));
+            memcpy(&markint2,&this->marking[pe.intnum+1],sizeof(index_t));
+            index_t read_content = ((markint1 & pe.low_read_mask)>>pe.intoffset) + ((markint2 & pe.high_read_mask)<<(32-pe.intoffset));
+            return (read_content == (petri->place[placeid].myoffset)+1);
+        }
+    }
+    else if(SAFE) {
+        int unit = placeid / (sizeof(myuint) * 8);
+        int offset = placeid % (sizeof(myuint) * 8);
+        return this->marking[unit].test1(offset);
+    }
+    cerr<<"ERROR, bit encoding for non-safe net."<<endl;
+    exit(4);
+}
+
+void BitRGNode::writePlace(int placeid) {
+    if(NUPN) {
+        const Place_extra &pe = petri->placeExtra[placeid];
+        if(!pe.cutoff) {
+            index_t markint;
+            memcpy(&markint,&this->marking[pe.intnum],sizeof(index_t));
+            markint = (markint & pe.low_zero_mask) | pe.low_write_mask;
+            memcpy(&this->marking[pe.intnum],&markint,sizeof(index_t));
+        }
+        else {
+            index_t markint1,markint2;
+            memcpy(&markint1,&this->marking[pe.intnum],sizeof(index_t));
+            memcpy(&markint2,&this->marking[pe.intnum+1],sizeof(index_t));
+            markint1 = (markint1 & pe.low_zero_mask) | pe.low_write_mask;
+            markint2 = (markint2 & pe.high_zero_mask) | pe.high_write_mask;
+            memcpy(&this->marking[pe.intnum],&markint1,sizeof(index_t));
+            memcpy(&this->marking[pe.intnum+1],&markint2,sizeof(index_t));
+        }
+    }
+    else if(SAFE) {
+        cerr<<"ERROR, function writePlace doesn't offer service for encoding of safe net."<<endl;
+        exit(4);
+    }
+}
+
+void BitRGNode::clearPlace(int placeid) {
+    if(NUPN) {
+        const Place_extra &pe = petri->placeExtra[placeid];
+        if(!pe.cutoff) {
+            index_t markint;
+            memcpy(&markint,&this->marking[pe.intnum],sizeof(index_t));
+            markint = (markint & pe.low_zero_mask);
+            memcpy(&this->marking[pe.intnum],&markint,sizeof(index_t));
+        }
+        else {
+            index_t markint1,markint2;
+            memcpy(&markint1,&this->marking[pe.intnum],sizeof(index_t));
+            memcpy(&markint2,&this->marking[pe.intnum+1],sizeof(index_t));
+            markint1 = (markint1 & pe.low_zero_mask);
+            markint2 = (markint2 & pe.high_zero_mask);
+            memcpy(&this->marking[pe.intnum],&markint1,sizeof(index_t));
+            memcpy(&this->marking[pe.intnum+1],&markint2,sizeof(index_t));
+        }
+    }
+    else if(SAFE) {
+        cerr<<"ERROR, function writePlace doesn't offer service for encoding of safe net."<<endl;
+        exit(4);
     }
 }
 
@@ -1170,8 +1212,10 @@ RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
         unsigned short max = SHORTMAX;
         if (max - newnode->marking[iterpost->idx] > iterpost->weight)
             newnode->marking[iterpost->idx] = newnode->marking[iterpost->idx] + iterpost->weight;
-        else
+        else {
+            delete newnode;
             return NULL;
+        }
     }
 
 
@@ -1255,17 +1299,9 @@ RG::~RG() {
             }
         }
     }
-    delete rgnode;
+    delete [] rgnode;
 
     MallocExtension::instance()->ReleaseFreeMemory();
-}
-
-void RG::enCoder(unsigned short *equmark, RGNode *curnode) {
-
-}
-
-void RG::deCoder(unsigned short *equmark, RGNode *curnode) {
-
 }
 
 /****************************BitRG*****************************/
@@ -1330,12 +1366,6 @@ void BitRG::addRGNode(BitRGNode *mark) {
 
 void BitRG::getFireableTranx(BitRGNode *curnode,set<index_t> &fireset) {
 
-    unsigned short *mark = NULL;
-    if (NUPN) {
-        mark = new unsigned short[placecount];
-        deCoder(mark, curnode);
-    }
-
     //计算当前状态的可发生变迁；
     bool firable;
     NUM_t tlength = ptnet->transitioncount;
@@ -1354,7 +1384,7 @@ void BitRG::getFireableTranx(BitRGNode *curnode,set<index_t> &fireset) {
         //遍历ptnet.transition[j]的所有前继库所，看其token值是否大于weight
         for (iterpre; iterpre != preend; iterpre++) {
             if (NUPN) {
-                if (mark[iterpre->idx] == 0) {
+                if (!curnode->readPlace(iterpre->idx)) {
                     firable = false;
                     break;
                 }
@@ -1386,19 +1416,17 @@ BitRGNode *BitRG::RGinitialnode() {
 
     //计算状态
     if (NUPN) {
-        unsigned short *mark = new unsigned short[placecount];
         for (index_t i = 0; i < placecount; i++) {
-            mark[i] = ptnet->place[i].initialMarking;
+            if(ptnet->place[i].initialMarking>0) {
+                rg->writePlace(i);
+            }
         }
-
-        enCoder(mark, rg);
-        delete mark;
-    } else if (SAFE) {
+    }
+    else if (SAFE) {
         for (int i = 0; i < placecount; i++) {
             int unit = i / (sizeof(myuint) * 8);
             int offset = i % (sizeof(myuint) * 8);
             if (ptnet->place[i].initialMarking == 1) {
-
                 rg->marking[unit].set(offset);
             } else {
                 rg->marking[unit].reset(offset);
@@ -1433,21 +1461,14 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
     vector<SArc>::iterator postend = firingTanx->consumer.end();
 
     if (NUPN) {
-        unsigned short *curmark = new unsigned short[ptnet->placecount];
-        unsigned short *newmark = new unsigned short[ptnet->placecount];
-
-        deCoder(curmark, curnode);
-        memcpy(newmark, curmark, sizeof(unsigned short) * ptnet->placecount);
-
+        memcpy(newnode->marking, curnode->marking, sizeof(myuint) * FIELDCOUNT);
         for (iterpre; iterpre != preend; iterpre++) {
-            newmark[iterpre->idx] = 0;
+            newnode->clearPlace(iterpre->idx);
         }
 
         for (iterpost; iterpost != postend; iterpost++) {
-            newmark[iterpost->idx] = 1;
+            newnode->writePlace(iterpost->idx);
         }
-
-        enCoder(newmark, newnode);
 
         //判断是否已经存在该节点
         index_t hashvalue = getHashIndex(newnode);
@@ -1470,10 +1491,7 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
 
             if (repeated) {
                 exist = true;
-                delete[] curmark;
-                delete[] newmark;
                 delete newnode;
-                //MallocExtension::instance()->ReleaseFreeMemory();
                 return p;
             }
             p = p->next;
@@ -1481,9 +1499,6 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
 
         //没有重复
         addRGNode(newnode);
-
-        delete[] curmark;
-        delete[] newmark;
     } else if (SAFE) {
         memcpy(newnode->marking, curnode->marking, sizeof(myuint) * FIELDCOUNT);
 
@@ -1590,101 +1605,5 @@ BitRG::~BitRG() {
         }
     }
     delete rgnode;
-    MallocExtension::instance()->ReleaseFreeMemory();
-}
-
-//
-void BitRG::enCoder(unsigned short *equmark, BitRGNode *curnode) {
-    if (NUPN) {
-        //遍历每一个unit
-        for (int i = 0; i < ptnet->unitcount; i++) {
-            //对于unit[i]来说
-            //遍历该unit中的每一个库所
-            index_t sp = ptnet->unittable[i].startpos;  //该unit的起始地址
-            index_t end = sp + ptnet->unittable[i].size;  //该unit的终止地址
-            NUM_t unitmarklen = ptnet->unittable[i].mark_length;
-            bool somebodyhastoken = false;
-
-            //遍历unit[i]中的每一个库所
-            for (sp; sp < end; sp++) {
-                if (equmark[sp]) {
-                    somebodyhastoken = true;
-                    unsigned short *Binarystr = new unsigned short[unitmarklen];
-                    memset(Binarystr, 0, sizeof(short) * unitmarklen);
-                    DecToBinary(ptnet->place[sp].myoffset + 1, Binarystr);
-                    //设置marking
-                    index_t msp = ptnet->unittable[i].mark_sp;
-                    //遍历每一位bit
-                    index_t mi = 0;
-                    int unit;
-                    int offset;
-                    for (mi, msp; mi < unitmarklen; mi++, msp++) {
-                        unit = msp / (sizeof(myuint) * 8);
-                        offset = msp % (sizeof(myuint) * 8);
-                        if (Binarystr[mi] == 1) {
-                            curnode->marking[unit].set(offset);
-                        } else {
-                            curnode->marking[unit].reset(offset);
-                        }
-                    }
-                    delete[] Binarystr;
-                    break;
-                }
-            }
-
-            if (!somebodyhastoken) {
-                index_t msp = ptnet->unittable[i].mark_sp;
-                index_t mend = msp + ptnet->unittable[i].mark_length;
-
-                int unit;
-                int offset;
-
-                for (msp; msp < mend; msp++) {
-                    unit = msp / (sizeof(myuint) * 8);
-                    offset = msp % (sizeof(myuint) * 8);
-                    curnode->marking[unit].reset(offset);
-                }
-            }
-        }
-    }
-    MallocExtension::instance()->ReleaseFreeMemory();
-}
-
-
-void BitRG::deCoder(unsigned short *equmark, BitRGNode *curnode) {
-    if (!NUPN)
-        return;
-    memset(equmark, 0, sizeof(short) * ptnet->placecount);
-
-    //遍历每一个unit
-    for (int i = 0; i < ptnet->unitcount; i++) {
-        index_t msp = ptnet->unittable[i].mark_sp;
-        NUM_t marklen = ptnet->unittable[i].mark_length;
-        index_t mend = msp + marklen;
-        int mi = 0;
-        unsigned short *Binarystr = new unsigned short[marklen];
-        int unit, offset;
-        for (mi, msp; msp < mend; mi++, msp++) {
-            unit = msp / (sizeof(myuint) * 8);
-            offset = msp % (sizeof(myuint) * 8);
-            if (curnode->marking[unit].test1(offset))  //1
-            {
-                Binarystr[mi] = 1;
-            } else {   //0
-                Binarystr[mi] = 0;
-            }
-
-        }
-
-        index_t place_offset;
-        BinaryToDec(place_offset, Binarystr, marklen);
-
-        delete[] Binarystr;
-
-        if (place_offset > 0) {
-            index_t pos = ptnet->unittable[i].startpos + place_offset - 1;
-            equmark[pos] = 1;
-        }
-    }
     MallocExtension::instance()->ReleaseFreeMemory();
 }
