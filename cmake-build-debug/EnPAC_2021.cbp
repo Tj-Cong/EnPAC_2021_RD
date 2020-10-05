@@ -98,6 +98,12 @@
 		<Unit filename="/home/hecong/文档/EnPAC_2021/BA/VWAA.h">
 			<Option target="EnPAC_2021"/>
 		</Unit>
+		<Unit filename="/home/hecong/文档/EnPAC_2021/BA/atomic.cpp">
+			<Option target="EnPAC_2021"/>
+		</Unit>
+		<Unit filename="/home/hecong/文档/EnPAC_2021/BA/atomic.h">
+			<Option target="EnPAC_2021"/>
+		</Unit>
 		<Unit filename="/home/hecong/文档/EnPAC_2021/BA/buchi.cpp">
 			<Option target="EnPAC_2021"/>
 		</Unit>
@@ -144,6 +150,12 @@
 			<Option target="EnPAC_2021"/>
 		</Unit>
 		<Unit filename="/home/hecong/文档/EnPAC_2021/product.h">
+			<Option target="EnPAC_2021"/>
+		</Unit>
+		<Unit filename="/home/hecong/文档/EnPAC_2021/rref.cpp">
+			<Option target="EnPAC_2021"/>
+		</Unit>
+		<Unit filename="/home/hecong/文档/EnPAC_2021/rref.h">
 			<Option target="EnPAC_2021"/>
 		</Unit>
 		<Unit filename="/home/hecong/文档/EnPAC_2021/CMakeLists.txt">

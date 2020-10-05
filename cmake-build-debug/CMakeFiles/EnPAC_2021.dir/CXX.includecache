@@ -19,12 +19,24 @@ tinyxml.h
 /home/hecong/文档/EnPAC_2021/BA/tinyxml.h
 VWAA.h
 /home/hecong/文档/EnPAC_2021/BA/VWAA.h
+atomic.h
+/home/hecong/文档/EnPAC_2021/BA/atomic.h
 
 /home/hecong/文档/EnPAC_2021/BA/VWAA.h
 set.h
 /home/hecong/文档/EnPAC_2021/BA/set.h
 vector
 -
+
+/home/hecong/文档/EnPAC_2021/BA/atomic.h
+iostream
+-
+string
+-
+set
+-
+Petri_Net.h
+/home/hecong/文档/EnPAC_2021/BA/Petri_Net.h
 
 /home/hecong/文档/EnPAC_2021/BA/buchi.h
 Syntax_Tree.h
@@ -77,9 +89,13 @@ sstream
 -
 BA/tinyxml.h
 /home/hecong/文档/EnPAC_2021/BA/tinyxml.h
+rref.h
+/home/hecong/文档/EnPAC_2021/rref.h
 cmath
 -
 gperftools/tcmalloc.h
+-
+gperftools/malloc_extension.h
 -
 set
 -
@@ -116,10 +132,6 @@ unistd.h
 exception
 -
 
-/home/hecong/文档/EnPAC_2021/product.cpp
-product.h
-/home/hecong/文档/EnPAC_2021/product.h
-
 /home/hecong/文档/EnPAC_2021/product.h
 cstdio
 -
@@ -151,4 +163,6 @@ thread
 -
 csetjmp
 -
+
+/home/hecong/文档/EnPAC_2021/rref.h
 

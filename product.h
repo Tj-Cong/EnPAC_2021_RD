@@ -193,7 +193,7 @@ template <class rgnode>
 class Product  //交自动机的一个状态
 {
 public:
-    index_t id;           //交状态的大小标号
+//    index_t id;           //交状态的大小标号
     rgnode *RGname_ptr;   //可达图状态所在位置，可以根据该指针索引到可达图状态
     int BAname_id;        //buchi自动机在自动机邻接表中的位置
     Product *hashnext;
@@ -210,7 +210,7 @@ Product<rgnode>::Product() {
 template <class rgnode>
 Product<rgnode>::Product(Pstacknode<rgnode> *pnode)
 {
-    id = pnode->id;
+//    id = pnode->id;
     RGname_ptr = pnode->RGname_ptr;
     BAname_id = pnode->BAname_id;
     hashnext = NULL;
@@ -415,6 +415,7 @@ private:
     Petri *ptnet;
     rg_T *rg;
     StateBuchi *ba;
+    int generatecount;
     bool result;
     int ret;
     vector<int> negpath;
@@ -433,6 +434,7 @@ public:
     Product_Automata(Petri *pt, rg_T* r, StateBuchi *sba);
     void getProduct();         //合成交自动机
     Pstacknode<rgnode>* getNextChild(Pstacknode<rgnode>* q);
+    Pstacknode<rgnode>* getNextChild2(Pstacknode<rgnode>* q);
     void TCHECK(Pstacknode<rgnode>* p0);
     void TCHECK_BOUND(Pstacknode<rgnode>* p0);
     void UPDATE(Pstacknode<rgnode>* p0);
@@ -449,13 +451,14 @@ public:
     void handleLTLCstep(NUM_t &front_sum, NUM_t &latter_sum, string s, rgnode *state);
     int getresult();
     NUM_t getConflictTimes();
-    int getNodecount();
+    int getgeneratecount();
     void printNegapth(ofstream &outpath);
     void detect_memory();
     ~Product_Automata();
 };
 template <class rgnode, class rg_T>
 Product_Automata<rgnode,rg_T>::Product_Automata(Petri *pt, rg_T* r, StateBuchi *sba) {
+    generatecount = 0;
     ptnet = pt;
     rg = r;
     ba = sba;
@@ -504,18 +507,19 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
     string re;
     if(timeflag && memory_flag && stack_flag && data_flag && consistency_flag)
     {
+        string nupn = NUPN?" USE_NUPN":"";
+        string safe = SAFE?" SAFE":"";
+        string pinvar = PINVAR?" PINVAR":"";
         if(result)
         {
             re="TRUE";
-            string nupn = NUPN?" USE_NUPN":"";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES SEQUENTIAL_PROCESSING ABSTRACTIONS EXPLICIT"+nupn;
+            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar;
             ret = 1;
         }
         else
         {
             re="FALSE";
-            string nupn = NUPN?" USE_NUPN":"";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES SEQUENTIAL_PROCESSING ABSTRACTIONS EXPLICIT"+nupn;
+            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar;
             ret = 0;
         }
     }
@@ -650,6 +654,77 @@ Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnod
                 q->pba = q->pba->next;
             }
             q->pba = ba->vertics[q->BAname_id].firstarc;
+        }
+        return NULL;
+    }
+}
+
+template <class rgnode, class rg_T>
+Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild2(Pstacknode<rgnode> *q) {
+    if(q->RGname_ptr->fireset.size() == 0) {
+        /*this is a deadmark*/
+        while(q->pba)
+        {
+            if(isLabel(q->RGname_ptr,q->pba->destination))
+            {
+                //可以生成交状态
+                Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
+                qs->RGname_ptr = q->RGname_ptr;
+                qs->BAname_id = q->pba->destination;
+                qs->pba = ba->vertics[qs->BAname_id].firstarc;
+                qs->fireptr = qs->RGname_ptr->fireset.begin();
+                /*print*/
+#ifdef DEBUG
+                qs->RGname_ptr->printMarking(MARKLEN);
+                cout<<qs->BAname_id<<endl;
+                cout<<"----------------------------------------"<<endl;
+#endif
+
+                if(qs->pba == NULL) {
+                    cerr<<"detect non-sense sba state!"<<endl;
+                    exit(6);
+                }
+
+                q->pba = q->pba->next;
+                return qs;
+            }
+            q->pba = q->pba->next;
+        }
+        return NULL;
+    }
+    else {
+        while (q->pba) {
+            for(q->fireptr;q->fireptr!=q->RGname_ptr->fireset.end();++(q->fireptr)) {
+                bool exist = false;
+                rgnode *rgseed = rg->RGcreatenode2(q->RGname_ptr,*(q->fireptr),exist);
+                generatecount++;
+                if(!exist) {
+                    rgseed->getFireSet(q->RGname_ptr,*(q->fireptr));
+                }
+                if(rgseed == NULL)
+                {
+                    data_flag = false;
+                    return NULL;
+                }
+                if(isLabel(rgseed,q->pba->destination))
+                {
+                    Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
+                    qs->RGname_ptr = rgseed;
+                    qs->BAname_id = q->pba->destination;
+                    qs->pba = ba->vertics[qs->BAname_id].firstarc;
+                    qs->fireptr = qs->RGname_ptr->fireset.begin();
+
+                    if(!exist) {
+                        rg->addRGNode(rgseed);
+                    }
+                    ++(q->fireptr);
+                    return qs;
+                }
+                if(!exist)
+                    delete rgseed;
+            }
+            q->pba = q->pba->next;
+            q->fireptr = q->RGname_ptr->fireset.begin();
         }
         return NULL;
     }
@@ -1151,6 +1226,26 @@ NUM_t Product_Automata<rgnode, rg_T>::sumtoken(string s, rgnode *state) {
             s = s.substr(pos + 1, s.length() - pos);
         }
     }
+    else if(ptnet->PINVAR) {
+        while (1) {
+            int pos = s.find_first_of(",");
+            if (pos == string::npos)
+                break;
+            string subs = s.substr(0, pos);        //取得一个p1
+            index_t idex = ptnet->getPPosition(subs);  //得到该库所的索引号
+
+            if (idex == INDEX_ERROR) {
+                consistency_flag = false;
+                ready2exit = true;
+                return 0;
+            }
+
+            sum += state->readPlace(idex);
+
+            //将前面的用过的P1去除 从p2开始作为新的s串
+            s = s.substr(pos + 1, s.length() - pos);
+        }
+    }
     else {
         while (1) {
             int pos = s.find_first_of(",");
@@ -1189,8 +1284,8 @@ NUM_t Product_Automata<rgnode,rg_T>::getConflictTimes() {
 
 
 template <class rgnode,class rg_T>
-int Product_Automata<rgnode,rg_T>::getNodecount() {
-    return (h.nodecount+initial_status.size());
+int Product_Automata<rgnode,rg_T>::getgeneratecount() {
+    return generatecount;
 }
 
 template <class rgnode,class rg_T>

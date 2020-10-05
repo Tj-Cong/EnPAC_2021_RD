@@ -1,56 +1,121 @@
-Total transitions:11
+Total transitions:24
 
 0
-id:r_starts
-producer:(1,r_stopped) (1,initialize) 
-consumer:(1,r_active) (1,initialized) 
+id:t16_to_17
+producer:(1,Section_16) (1,F17) 
+consumer:(1,Section_17) (1,F15) 
 
 1
-id:r_begin_move
-producer:(1,move) (1,r_active) 
-consumer:(1,r_moving) 
+id:t7_to_8
+producer:(1,Section_7) (1,F8) 
+consumer:(1,F6) (1,Section_8) 
 
 2
-id:r_end_move
-producer:(1,r_moving) 
-consumer:(1,moved) (1,r_active) 
+id:t10_to_11
+producer:(1,Section_10) (1,F11) 
+consumer:(1,F9) (1,Section_11) 
 
 3
-id:r_stops
-producer:(1,r_active) (1,off) 
-consumer:(1,r_stopped) 
+id:t13_to_14
+producer:(1,F14) (1,Section_13) 
+consumer:(1,Section_14) (1,F12) 
 
 4
-id:p_intoSC
-producer:(1,p_rdy) (1,access) 
-consumer:(1,p_sc) 
+id:t22_to_23
+producer:(1,F23) (1,Section_22) 
+consumer:(1,F21) (1,Section_23) 
 
 5
-id:p_move
-producer:(1,p_sc) 
-consumer:(1,p_m) (1,move) 
+id:t18_to_19
+producer:(1,F19) (1,Section_18) 
+consumer:(1,Section_19) (1,F17) 
 
 6
-id:p_moved
-producer:(1,p_m) (1,moved) 
-consumer:(1,p_rel) 
+id:t4_to_5
+producer:(1,Section_4) (1,F5) 
+consumer:(1,F3) (1,Section_5) 
 
 7
-id:p_sop
-producer:(1,p_rdy) 
-consumer:(1,off) (1,p_i1) 
+id:t11_to_12
+producer:(1,Section_11) (1,F12) 
+consumer:(1,F10) (1,Section_12) 
 
 8
-id:p_relSC
-producer:(1,p_rel) 
-consumer:(1,access) (1,p_rdy) 
+id:t6_to_7
+producer:(1,F7) (1,Section_6) 
+consumer:(1,Section_7) (1,F5) 
 
 9
-id:p_start
-producer:(1,p_i1) 
-consumer:(1,initialize) (1,p_i2) 
+id:t9_to_10
+producer:(1,Section_9) (1,F10) 
+consumer:(1,Section_10) (1,F8) 
 
 10
-id:p_started
-producer:(1,p_i2) (1,initialized) 
-consumer:(1,p_rdy) 
+id:t8_to_9
+producer:(1,Section_8) (1,F9) 
+consumer:(1,Section_9) (1,F7) 
+
+11
+id:t20_to_21
+producer:(1,Section_20) (1,F21) 
+consumer:(1,Section_21) (1,F19) 
+
+12
+id:t23_to_24
+producer:(1,F24) (1,Section_23) 
+consumer:(1,F22) (1,Section_24) 
+
+13
+id:t15_to_16
+producer:(1,Section_15) (1,F16) 
+consumer:(1,Section_16) (1,F14) 
+
+14
+id:t2_to_3
+producer:(1,Section_2) (1,F3) 
+consumer:(1,Section_3) (1,F1) 
+
+15
+id:t24_to_1
+producer:(1,Section_24) (1,F1) 
+consumer:(1,F23) (1,Section_1) 
+
+16
+id:t19_to_20
+producer:(1,F20) (1,Section_19) 
+consumer:(1,Section_20) (1,F18) 
+
+17
+id:t12_to_13
+producer:(1,F13) (1,Section_12) 
+consumer:(1,F11) (1,Section_13) 
+
+18
+id:t5_to_6
+producer:(1,F6) (1,Section_5) 
+consumer:(1,F4) (1,Section_6) 
+
+19
+id:t17_to_18
+producer:(1,F18) (1,Section_17) 
+consumer:(1,Section_18) (1,F16) 
+
+20
+id:t21_to_22
+producer:(1,Section_21) (1,F22) 
+consumer:(1,F20) (1,Section_22) 
+
+21
+id:t3_to_4
+producer:(1,Section_3) (1,F4) 
+consumer:(1,Section_4) (1,F2) 
+
+22
+id:t14_to_15
+producer:(1,F15) (1,Section_14) 
+consumer:(1,F13) (1,Section_15) 
+
+23
+id:t1_to_2
+producer:(1,F2) (1,Section_1) 
+consumer:(1,Section_2) (1,F24) 

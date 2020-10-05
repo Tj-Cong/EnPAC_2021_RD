@@ -23,13 +23,17 @@ add_executable(EnPAC_2021
         BA/tinyxmlparser.cpp
         BA/VWAA.cpp
         BA/VWAA.h
+        BA/atomic.h
+        BA/atomic.cpp
         main.cpp
+        rref.h
+        rref.cpp
         Petri_Net.cpp
         Petri_Net.h
         product.cpp
         product.h
         RG.cpp
         RG.h
-        BA/set.h)
+        BA/set.h BA/atomic.h BA/atomic.cpp)
 
 target_link_libraries(EnPAC_2021 tcmalloc)

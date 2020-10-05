@@ -1,537 +1,572 @@
 <?xml version="1.0"?>
 <property-set xmlns="http://mcc.lip6.fr/">
   <property>
-    <id>RobotManipulation-PT-00100-00</id>
+    <id>Angiogenesis-PT-05-00</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <conjunction>
+          <negation>
+            <until>
+              <before>
+                <is-fireable>
+                  <transition>k59</transition>
+                </is-fireable>
+              </before>
+              <reach>
+                <negation>
+                  <is-fireable>
+                    <transition>k31</transition>
+                  </is-fireable>
+                </negation>
+              </reach>
+            </until>
+          </negation>
+          <until>
+            <before>
+              <finally>
+                <next>
+                  <negation>
+                    <is-fireable>
+                      <transition>k8</transition>
+                    </is-fireable>
+                  </negation>
+                </next>
+              </finally>
+            </before>
+            <reach>
+              <is-fireable>
+                <transition>k31</transition>
+              </is-fireable>
+            </reach>
+          </until>
+        </conjunction>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-05-01</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <next>
+          <negation>
+            <disjunction>
+              <next>
+                <next>
+                  <conjunction>
+                    <is-fireable>
+                      <transition>k12</transition>
+                    </is-fireable>
+                    <is-fireable>
+                      <transition>k36</transition>
+                    </is-fireable>
+                  </conjunction>
+                </next>
+              </next>
+              <until>
+                <before>
+                  <negation>
+                    <until>
+                      <before>
+                        <next>
+                          <is-fireable>
+                            <transition>k12</transition>
+                          </is-fireable>
+                        </next>
+                      </before>
+                      <reach>
+                        <is-fireable>
+                          <transition>k5</transition>
+                        </is-fireable>
+                      </reach>
+                    </until>
+                  </negation>
+                </before>
+                <reach>
+                  <is-fireable>
+                    <transition>k17</transition>
+                  </is-fireable>
+                </reach>
+              </until>
+            </disjunction>
+          </negation>
+        </next>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-05-02</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <next>
+          <negation>
+            <disjunction>
+              <negation>
+                <finally>
+                  <globally>
+                    <next>
+                      <next>
+                        <until>
+                          <before>
+                            <next>
+                              <negation>
+                                <is-fireable>
+                                  <transition>k53</transition>
+                                </is-fireable>
+                              </negation>
+                            </next>
+                          </before>
+                          <reach>
+                            <is-fireable>
+                              <transition>k55</transition>
+                            </is-fireable>
+                          </reach>
+                        </until>
+                      </next>
+                    </next>
+                  </globally>
+                </finally>
+              </negation>
+              <finally>
+                <is-fireable>
+                  <transition>k58</transition>
+                </is-fireable>
+              </finally>
+            </disjunction>
+          </negation>
+        </next>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-05-03</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <globally>
-          <next>
-            <conjunction>
-              <is-fireable>
-                <transition>r_begin_move</transition>
-              </is-fireable>
-              <negation>
-                <is-fireable>
-                  <transition>r_stops</transition>
-                </is-fireable>
-              </negation>
-              <globally>
-                <negation>
-                  <is-fireable>
-                    <transition>r_stops</transition>
-                  </is-fireable>
-                </negation>
-              </globally>
-            </conjunction>
-          </next>
+          <finally>
+            <is-fireable>
+              <transition>k62</transition>
+            </is-fireable>
+          </finally>
         </globally>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-01</id>
+    <id>Angiogenesis-PT-05-04</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <conjunction>
-          <is-fireable>
-            <transition>r_stops</transition>
-          </is-fireable>
-          <globally>
-            <is-fireable>
-              <transition>p_start</transition>
-            </is-fireable>
-          </globally>
+        <globally>
           <finally>
             <globally>
-              <is-fireable>
-                <transition>r_stops</transition>
-              </is-fireable>
-            </globally>
-          </finally>
-        </conjunction>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>RobotManipulation-PT-00100-02</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <conjunction>
-          <disjunction>
-            <finally>
-              <is-fireable>
-                <transition>p_moved</transition>
-              </is-fireable>
-            </finally>
-            <until>
-              <before>
-                <conjunction>
-                  <is-fireable>
-                    <transition>r_begin_move</transition>
-                  </is-fireable>
-                  <globally>
-                    <is-fireable>
-                      <transition>p_intoSC</transition>
-                    </is-fireable>
-                  </globally>
-                </conjunction>
-              </before>
-              <reach>
-                <is-fireable>
-                  <transition>p_moved</transition>
-                </is-fireable>
-              </reach>
-            </until>
-          </disjunction>
-          <negation>
-            <next>
               <until>
                 <before>
-                  <is-fireable>
-                    <transition>p_moved</transition>
-                  </is-fireable>
+                  <globally>
+                    <is-fireable>
+                      <transition>k44</transition>
+                    </is-fireable>
+                  </globally>
                 </before>
                 <reach>
-                  <is-fireable>
-                    <transition>p_intoSC</transition>
-                  </is-fireable>
-                </reach>
-              </until>
-            </next>
-          </negation>
-        </conjunction>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>RobotManipulation-PT-00100-03</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <disjunction>
-          <globally>
-            <finally>
-              <globally>
-                <conjunction>
-                  <is-fireable>
-                    <transition>r_stops</transition>
-                  </is-fireable>
-                  <is-fireable>
-                    <transition>p_start</transition>
-                  </is-fireable>
-                </conjunction>
-              </globally>
-            </finally>
-          </globally>
-          <finally>
-            <next>
-              <globally>
-                <conjunction>
-                  <is-fireable>
-                    <transition>p_sop</transition>
-                  </is-fireable>
                   <negation>
                     <is-fireable>
-                      <transition>p_start</transition>
+                      <transition>k46</transition>
                     </is-fireable>
                   </negation>
-                </conjunction>
-              </globally>
-            </next>
+                </reach>
+              </until>
+            </globally>
           </finally>
-        </disjunction>
+        </globally>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-04</id>
+    <id>Angiogenesis-PT-05-05</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <conjunction>
-          <negation>
+        <finally>
+          <globally>
             <is-fireable>
-              <transition>r_end_move</transition>
+              <transition>k60</transition>
             </is-fireable>
-          </negation>
-          <globally>
-            <until>
-              <before>
-                <negation>
-                  <is-fireable>
-                    <transition>r_end_move</transition>
-                  </is-fireable>
-                </negation>
-              </before>
-              <reach>
-                <is-fireable>
-                  <transition>p_start</transition>
-                </is-fireable>
-              </reach>
-            </until>
           </globally>
-          <globally>
-            <finally>
-              <next>
-                <is-fireable>
-                  <transition>p_move</transition>
-                </is-fireable>
-              </next>
-            </finally>
-          </globally>
-        </conjunction>
+        </finally>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-05</id>
+    <id>Angiogenesis-PT-05-06</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <next>
+          <finally>
+            <globally>
+              <negation>
+                <is-fireable>
+                  <transition>k47</transition>
+                </is-fireable>
+              </negation>
+            </globally>
+          </finally>
+        </next>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-05-07</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <negation>
+          <next>
+            <next>
+              <next>
+                <finally>
+                  <next>
+                    <finally>
+                      <until>
+                        <before>
+                          <disjunction>
+                            <negation>
+                              <is-fireable>
+                                <transition>k9</transition>
+                              </is-fireable>
+                            </negation>
+                            <globally>
+                              <is-fireable>
+                                <transition>k9</transition>
+                              </is-fireable>
+                            </globally>
+                          </disjunction>
+                        </before>
+                        <reach>
+                          <next>
+                            <is-fireable>
+                              <transition>k42</transition>
+                            </is-fireable>
+                          </next>
+                        </reach>
+                      </until>
+                    </finally>
+                  </next>
+                </finally>
+              </next>
+            </next>
+          </next>
+        </negation>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-05-08</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <conjunction>
+            <is-fireable>
+              <transition>k14</transition>
+            </is-fireable>
+            <globally>
+              <finally>
+                <next>
+                  <until>
+                    <before>
+                      <is-fireable>
+                        <transition>k12</transition>
+                      </is-fireable>
+                    </before>
+                    <reach>
+                      <is-fireable>
+                        <transition>k14</transition>
+                      </is-fireable>
+                    </reach>
+                  </until>
+                </next>
+              </finally>
+            </globally>
+          </conjunction>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-05-09</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <until>
           <before>
-            <next>
-              <negation>
+            <until>
+              <before>
                 <is-fireable>
-                  <transition>p_started</transition>
+                  <transition>k29</transition>
                 </is-fireable>
-              </negation>
-            </next>
+              </before>
+              <reach>
+                <finally>
+                  <negation>
+                    <conjunction>
+                      <is-fireable>
+                        <transition>k45</transition>
+                      </is-fireable>
+                      <globally>
+                        <is-fireable>
+                          <transition>k16</transition>
+                        </is-fireable>
+                      </globally>
+                      <disjunction>
+                        <is-fireable>
+                          <transition>k29</transition>
+                        </is-fireable>
+                        <next>
+                          <is-fireable>
+                            <transition>k10</transition>
+                          </is-fireable>
+                        </next>
+                      </disjunction>
+                    </conjunction>
+                  </negation>
+                </finally>
+              </reach>
+            </until>
           </before>
           <reach>
-            <negation>
-              <disjunction>
-                <is-fireable>
-                  <transition>p_started</transition>
-                </is-fireable>
-                <globally>
-                  <is-fireable>
-                    <transition>p_relSC</transition>
-                  </is-fireable>
-                </globally>
-              </disjunction>
-            </negation>
+            <is-fireable>
+              <transition>k45</transition>
+            </is-fireable>
           </reach>
         </until>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-06</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <disjunction>
-          <next>
-            <is-fireable>
-              <transition>r_begin_move</transition>
-            </is-fireable>
-          </next>
-          <next>
-            <negation>
-              <globally>
-                <is-fireable>
-                  <transition>p_moved</transition>
-                </is-fireable>
-              </globally>
-            </negation>
-          </next>
-        </disjunction>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>RobotManipulation-PT-00100-07</id>
+    <id>Angiogenesis-PT-05-10</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <conjunction>
-          <finally>
+          <disjunction>
             <is-fireable>
-              <transition>p_started</transition>
+              <transition>k24</transition>
             </is-fireable>
-          </finally>
-          <next>
-            <negation>
-              <until>
-                <before>
-                  <is-fireable>
-                    <transition>p_relSC</transition>
-                  </is-fireable>
-                </before>
-                <reach>
-                  <next>
-                    <is-fireable>
-                      <transition>r_end_move</transition>
-                    </is-fireable>
-                  </next>
-                </reach>
-              </until>
-            </negation>
-          </next>
+            <is-fireable>
+              <transition>k47</transition>
+            </is-fireable>
+          </disjunction>
+          <disjunction>
+            <is-fireable>
+              <transition>k24</transition>
+            </is-fireable>
+            <until>
+              <before>
+                <is-fireable>
+                  <transition>k47</transition>
+                </is-fireable>
+              </before>
+              <reach>
+                <is-fireable>
+                  <transition>k20</transition>
+                </is-fireable>
+              </reach>
+            </until>
+          </disjunction>
         </conjunction>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-08</id>
+    <id>Angiogenesis-PT-05-11</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <globally>
-          <negation>
+          <disjunction>
+            <is-fireable>
+              <transition>k4</transition>
+            </is-fireable>
             <globally>
-              <until>
-                <before>
-                  <until>
-                    <before>
-                      <negation>
-                        <globally>
-                          <is-fireable>
-                            <transition>p_relSC</transition>
-                          </is-fireable>
-                        </globally>
-                      </negation>
-                    </before>
-                    <reach>
-                      <next>
-                        <negation>
-                          <is-fireable>
-                            <transition>p_relSC</transition>
-                          </is-fireable>
-                        </negation>
-                      </next>
-                    </reach>
-                  </until>
-                </before>
-                <reach>
-                  <until>
-                    <before>
-                      <is-fireable>
-                        <transition>p_intoSC</transition>
-                      </is-fireable>
-                    </before>
-                    <reach>
-                      <globally>
-                        <is-fireable>
-                          <transition>p_intoSC</transition>
-                        </is-fireable>
-                      </globally>
-                    </reach>
-                  </until>
-                </reach>
-              </until>
+              <is-fireable>
+                <transition>k63</transition>
+              </is-fireable>
             </globally>
-          </negation>
+          </disjunction>
         </globally>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-09</id>
+    <id>Angiogenesis-PT-05-12</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <finally>
-          <next>
-            <negation>
-              <globally>
-                <disjunction>
+        <conjunction>
+          <until>
+            <before>
+              <until>
+                <before>
                   <is-fireable>
-                    <transition>p_moved</transition>
+                    <transition>k16</transition>
                   </is-fireable>
-                  <conjunction>
-                    <is-fireable>
-                      <transition>p_start</transition>
-                    </is-fireable>
-                    <until>
-                      <before>
-                        <is-fireable>
-                          <transition>p_moved</transition>
-                        </is-fireable>
-                      </before>
-                      <reach>
-                        <is-fireable>
-                          <transition>p_start</transition>
-                        </is-fireable>
-                      </reach>
-                    </until>
-                  </conjunction>
-                </disjunction>
+                </before>
+                <reach>
+                  <is-fireable>
+                    <transition>k61</transition>
+                  </is-fireable>
+                </reach>
+              </until>
+            </before>
+            <reach>
+              <globally>
+                <is-fireable>
+                  <transition>k61</transition>
+                </is-fireable>
               </globally>
-            </negation>
-          </next>
-        </finally>
+            </reach>
+          </until>
+          <disjunction>
+            <is-fireable>
+              <transition>k9</transition>
+            </is-fireable>
+            <globally>
+              <until>
+                <before>
+                  <is-fireable>
+                    <transition>k9</transition>
+                  </is-fireable>
+                </before>
+                <reach>
+                  <next>
+                    <is-fireable>
+                      <transition>k9</transition>
+                    </is-fireable>
+                  </next>
+                </reach>
+              </until>
+            </globally>
+          </disjunction>
+        </conjunction>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-10</id>
+    <id>Angiogenesis-PT-05-13</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <finally>
+        <next>
+          <next>
+            <globally>
+              <until>
+                <before>
+                  <finally>
+                    <conjunction>
+                      <is-fireable>
+                        <transition>k22</transition>
+                      </is-fireable>
+                      <is-fireable>
+                        <transition>k54</transition>
+                      </is-fireable>
+                    </conjunction>
+                  </finally>
+                </before>
+                <reach>
+                  <is-fireable>
+                    <transition>k54</transition>
+                  </is-fireable>
+                </reach>
+              </until>
+            </globally>
+          </next>
+        </next>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Angiogenesis-PT-05-14</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <disjunction>
           <globally>
             <is-fireable>
-              <transition>p_moved</transition>
+              <transition>k38</transition>
             </is-fireable>
           </globally>
-        </finally>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>RobotManipulation-PT-00100-11</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <conjunction>
-          <until>
-            <before>
-              <finally>
-                <is-fireable>
-                  <transition>p_start</transition>
-                </is-fireable>
-              </finally>
-            </before>
-            <reach>
-              <negation>
-                <is-fireable>
-                  <transition>r_starts</transition>
-                </is-fireable>
-              </negation>
-            </reach>
-          </until>
           <next>
-            <globally>
-              <disjunction>
-                <is-fireable>
-                  <transition>r_starts</transition>
-                </is-fireable>
-                <globally>
-                  <is-fireable>
-                    <transition>r_starts</transition>
-                  </is-fireable>
-                </globally>
-              </disjunction>
-            </globally>
-          </next>
-        </conjunction>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>RobotManipulation-PT-00100-12</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <disjunction>
-          <finally>
             <next>
-              <is-fireable>
-                <transition>r_starts</transition>
-              </is-fireable>
+              <until>
+                <before>
+                  <negation>
+                    <is-fireable>
+                      <transition>k38</transition>
+                    </is-fireable>
+                  </negation>
+                </before>
+                <reach>
+                  <finally>
+                    <conjunction>
+                      <is-fireable>
+                        <transition>k18</transition>
+                      </is-fireable>
+                      <is-fireable>
+                        <transition>k56</transition>
+                      </is-fireable>
+                    </conjunction>
+                  </finally>
+                </reach>
+              </until>
             </next>
-          </finally>
-          <negation>
-            <finally>
-              <is-fireable>
-                <transition>r_end_move</transition>
-              </is-fireable>
-            </finally>
-          </negation>
+          </next>
         </disjunction>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>RobotManipulation-PT-00100-13</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <globally>
-          <is-fireable>
-            <transition>p_relSC</transition>
-          </is-fireable>
-        </globally>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>RobotManipulation-PT-00100-14</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <globally>
-          <finally>
-            <disjunction>
-              <is-fireable>
-                <transition>p_started</transition>
-              </is-fireable>
-              <globally>
-                <is-fireable>
-                  <transition>p_started</transition>
-                </is-fireable>
-              </globally>
-              <negation>
-                <until>
-                  <before>
-                    <is-fireable>
-                      <transition>p_intoSC</transition>
-                    </is-fireable>
-                  </before>
-                  <reach>
-                    <is-fireable>
-                      <transition>r_stops</transition>
-                    </is-fireable>
-                  </reach>
-                </until>
-              </negation>
-            </disjunction>
-          </finally>
-        </globally>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>RobotManipulation-PT-00100-15</id>
+    <id>Angiogenesis-PT-05-15</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <disjunction>
-          <until>
-            <before>
-              <is-fireable>
-                <transition>p_start</transition>
-              </is-fireable>
-            </before>
-            <reach>
-              <finally>
-                <globally>
-                  <next>
-                    <is-fireable>
-                      <transition>p_start</transition>
-                    </is-fireable>
-                  </next>
-                </globally>
-              </finally>
-            </reach>
-          </until>
-          <next>
+          <conjunction>
+            <is-fireable>
+              <transition>k3</transition>
+            </is-fireable>
             <negation>
-              <finally>
-                <globally>
-                  <next>
-                    <is-fireable>
-                      <transition>p_move</transition>
-                    </is-fireable>
-                  </next>
-                </globally>
-              </finally>
+              <globally>
+                <is-fireable>
+                  <transition>k11</transition>
+                </is-fireable>
+              </globally>
             </negation>
+          </conjunction>
+          <next>
+            <until>
+              <before>
+                <disjunction>
+                  <is-fireable>
+                    <transition>k11</transition>
+                  </is-fireable>
+                  <is-fireable>
+                    <transition>k60</transition>
+                  </is-fireable>
+                </disjunction>
+              </before>
+              <reach>
+                <finally>
+                  <is-fireable>
+                    <transition>k25</transition>
+                  </is-fireable>
+                </finally>
+              </reach>
+            </until>
           </next>
         </disjunction>
       </all-paths>

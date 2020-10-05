@@ -12,6 +12,11 @@ using namespace std;
 
 /***********Global Functions***********/
 
+void handler(int num) {
+    //printf("time out .\n");
+    //exit(0);
+    longjmp(petrienv,1);
+}
 
 /*unsigned int BKDRHash(string str);
  * function: get a string's hash value
@@ -87,6 +92,7 @@ Petri::Petri() {
     arccount = 0;
     NUPN = false;
     SAFE = false;
+    PINVAR = false;
 }
 
 /*析构函数
@@ -95,8 +101,15 @@ Petri::~Petri() {
     delete [] place;
     delete [] transition;
     //delete[] arc;
-    if (NUPN)
-        delete[] unittable;
+    if (NUPN) {
+        delete [] placeExtra;
+        delete [] unittable;
+    }
+    if(PINVAR) {
+        destroyPINVAR();
+        delete [] pinvarExtra;
+        delete [] weightsum0;
+     }
 }
 
 void Petri::getSize(char *filename) {
@@ -244,7 +257,7 @@ void Petri::allocHashTable() {
 
     if (NUPN) {
         unittable = new Unit[unitcount];
-        placeExtra = new Place_extra[placecount];
+        placeExtra = new NUPN_extra[placecount];
     }
 }
 
@@ -583,7 +596,7 @@ void Petri::computeUnitMarkLen() {
 
     //compute every place's patterns
     for(int i=0;i<placecount;++i) {
-        Place_extra &pe = placeExtra[i];
+        NUPN_extra &pe = placeExtra[i];
         const Unit &uu = unittable[place[i].myunit];
         pe.intnum = uu.mark_sp / 32;
         pe.intoffset = uu.mark_sp % 32;
@@ -708,7 +721,7 @@ void Petri::printPlace() {
     int i;
     for (i = 0; i < placecount; i++) {
         const Place &p = place[i];
-        const Place_extra &pe = placeExtra[i];
+        const NUPN_extra &pe = placeExtra[i];
         outplace << endl;
         outplace << i << endl;
         outplace << "id:" << p.id << endl;
@@ -897,4 +910,373 @@ void Petri::computeDI() {
     }
 }
 
+/* 计算得到P不变量 以及 重要库所
+ * 得到关联矩阵
+ * 将矩阵进行行阶梯转化
+ * 其中的主元就是重要库所
+ * 自由变量是非重要库所
+ * P不变量 通过对行最简的矩阵 依次赋值可得
+ * 对其中一个自由变量赋1 其余自由变量赋0
+ * 求得主元的值 即为一个P不变量
+ * （从矩阵的最后一行 依次往上求即可）
+ * */
+int Petri::computePinvariant() {
 
+    float **matrix=NULL;
+    short int **input=NULL;
+    short int **output=NULL;
+    ComputeRref *m=NULL;
+    pinvarExtra = new Place_PINVAR_info[placecount];
+    eq_var = new Equation_variables[placecount];
+
+    signal(SIGALRM, handler);
+    alarm(COMPUTE_P_INVAR_TIME);
+    int r=setjmp(petrienv);
+
+    if(r==0){
+        //关联矩阵
+        matrix = new float *[transitioncount];
+        if(matrix == NULL)
+            longjmp(petrienv,1);
+        memset(matrix, 0, transitioncount * sizeof(float *));
+
+        for (int i = 0; i < transitioncount; i++) {
+            matrix[i] = new float[placecount];
+            if(matrix[i] == NULL) {
+                longjmp(petrienv,1);
+            }
+            memset(matrix[i], 0, placecount * sizeof(float));
+        }
+
+        //输入矩阵
+        input = new short *[transitioncount];
+        if(input == NULL) {
+            longjmp(petrienv,1);
+        }
+        memset(input,0,transitioncount*sizeof(short *));
+        for (int i = 0; i < transitioncount; i++) {
+            input[i] = new short[placecount];
+            if(input[i] == NULL) {
+                longjmp(petrienv,1);
+            }
+            memset(input[i], 0, placecount * sizeof(short));
+        }
+
+        //输出矩阵
+        output = new short *[transitioncount];
+        if(output == NULL) {
+            longjmp(petrienv,1);
+        }
+        memset(output,0,transitioncount*sizeof(short *));
+        for (int i = 0; i < transitioncount; i++) {
+            output[i] = new short[placecount];
+            if(output[i] == NULL) {
+                longjmp(petrienv,1);
+            }
+            memset(output[i], 0, placecount * sizeof(short));
+        }
+
+        //维护输出矩阵
+        for (int i = 0; i < transitioncount; i++) {
+            short tmp = transition[i].consumer.size();
+            for (int j = 0; j < tmp; j++) {
+                short row = i;
+                short placeidx = transition[i].consumer[j].idx;
+                short col = placeidx;
+                short weight = transition[i].consumer[j].weight;
+                output[row][col] = weight;
+            }
+        }
+
+        //维护输入矩阵
+        for (int i = 0; i < placecount; i++) {
+            short tmp = place[i].consumer.size();
+            for (int j = 0; j < tmp; j++) {
+                short row = i;
+                short tranidx = place[i].consumer[j].idx;
+                short col = tranidx;
+                short weight = place[i].consumer[j].weight;
+                input[col][row] = weight;
+            }
+        }
+
+        //A+ — A- = matrix
+        for (int i = 0; i < transitioncount; i++) {
+            for (int j = 0; j < placecount; j++) {
+                matrix[i][j] = output[i][j] - input[i][j];
+            }
+        }
+
+//        printIncidenceMatrix(matrix);
+
+        //释放A+  A- 矩阵
+        for (int i = 0; i < transitioncount; i++) {
+            delete [] input[i];
+            delete [] output[i];
+        }
+        delete [] input;
+        delete [] output;
+        MallocExtension::instance()->ReleaseFreeMemory();
+
+        //计算行阶梯 得到的matrix是行阶梯形式的
+        m = new ComputeRref(transitioncount, placecount, matrix);
+        m->rref();
+        delete m;
+        m=NULL;
+
+//        printIncidenceMatrix(matrix);
+
+        //初始化
+        for (int i = 0; i < placecount; i++) {
+            eq_var[i].mainvar = false;
+        }
+
+        //判断秩 并且找出主元/自由变量
+        RankOfmatrix = 0;
+        for (int i = 0; i < transitioncount; i++) {
+            for (int j = 0; j < placecount; j++) {
+                if (fabs(matrix[i][j]) > 1e-6) {
+                    RankOfmatrix++;
+                    pinvarExtra[j].significant = true;
+                    eq_var[j].mainvar = true;
+                    break;
+                }
+            }
+        }
+
+        if ((double)RankOfmatrix / placecount > 0.9) {
+            //释放关联矩阵
+            for (int i = 0; i < transitioncount; i++) {
+                delete [] matrix[i];
+            }
+            delete [] matrix;
+            MallocExtension::instance()->ReleaseFreeMemory();
+            return -1;
+        }
+
+        //初始化 保存P不变量的数组
+        Pinvar = new float *[placecount - RankOfmatrix];
+        if(Pinvar == NULL) {
+            longjmp(petrienv,1);
+        }
+        memset(Pinvar,0,(placecount - RankOfmatrix)*sizeof(float *));
+
+        for (int i = 0; i < placecount - RankOfmatrix; i++) {
+            Pinvar[i] = new float[placecount];
+            if(Pinvar[i] == NULL) {
+                longjmp(petrienv,1);
+            }
+            memset(Pinvar[i], 0, placecount*sizeof(float));
+        }
+
+        /*对自由变量赋值 得到所有变量的值(求P不变量)
+         * 自由变量的个数是n-r   (placecount-RankOfmatrix)
+         * 依次对自由变量 一个赋1 其余自由变量赋0
+         * */
+        for (int i = 0; i < placecount - RankOfmatrix; i++) {
+            short free_count = 0;
+            //依次对自由变量 一个赋1 其余自由变量赋0
+            for (int j = 0; j < placecount; j++) {
+                if (free_count == i && !eq_var[j].mainvar) {
+                    eq_var[j].variable = 1;
+                    pinvarExtra[j].pinvarLink = i;
+                    free_count++;
+                } else if (!eq_var[j].mainvar) {
+                    eq_var[j].variable = 0;
+                    free_count++;
+                }
+            }
+
+            /*从矩阵的底部开始 往上求主元的值
+             *找到第一个非零的变量 对其求值
+             * */
+            for (int k = transitioncount - 1; k >= 0; k--) {
+                for (int p = 0; p < placecount; p++) {
+                    if (matrix[k][p] == 0)continue;
+                    else //对第一个非0的变量 求得其值(此为主元)
+                    {
+                        //求得p到最后一个变量的和
+                        float sum = 0.0;
+                        for (int o = p + 1; o < placecount; o++) {
+                            sum += matrix[k][o] * eq_var[o].variable;
+                        }
+                        eq_var[p].variable = (-sum) / matrix[k][p];
+                        break;
+                    }
+                }
+            }
+            //将该P不变量写到二维数组中
+            for (int j = 0; j < placecount; j++) {
+                if (eq_var[j].variable == -0)
+                    eq_var[j].variable = 0;
+                Pinvar[i][j] = eq_var[j].variable;
+            }
+        }
+
+//        printPinvar();
+
+        //释放关联矩阵
+        for (int i = 0; i < transitioncount; i++) {
+            delete [] matrix[i];
+        }
+        delete [] matrix;
+        MallocExtension::instance()->ReleaseFreeMemory();
+
+        alarm(0);
+        return 1;
+    }
+    else{
+        if(!matrix)
+        {
+            //释放关联矩阵
+            for (int i = 0; i < transitioncount; i++) {
+                if(!matrix[i])
+                    delete [] matrix[i];
+            }
+            delete [] matrix;
+        }
+        if(!input)
+        {
+            for (int i = 0; i < transitioncount; i++) {
+                if(!input[i])
+                    delete [] input[i];
+            }
+            delete [] input;
+        }
+        if(!output)
+        {
+            for (int i = 0; i < transitioncount; i++) {
+                if(!output[i])
+                    delete [] output[i];
+            }
+            delete [] output;
+        }
+        if(!m)
+            delete m;
+        MallocExtension::instance()->ReleaseFreeMemory();
+        return -1;
+    }
+}
+
+void Petri::printIncidenceMatrix(float **matrix) {
+    /*test print*/
+    cout << "placecount:" << placecount << endl;
+    cout << "transitioncount:" << transitioncount << endl;
+    cout << endl;
+    for (int i = 0; i < transitioncount; i++) {
+        for (int j = 0; j < placecount; j++) {
+            printf("%8.3f", matrix[i][j]);
+        }
+        cout << endl;
+    }
+
+}
+
+void Petri::printPinvar() {
+    /*test print*/
+    cout << "**********************************************" << endl;
+    cout << "P-invar:" << endl;
+    for (int i = 0; i < placecount - RankOfmatrix; i++) {
+        for (int j = 0; j < placecount; j++)
+            printf("%7.1f", Pinvar[i][j]);
+        cout << endl;
+    }
+    cout << "**********************************************" << endl;
+    cout << "RankOfmatrix:" << RankOfmatrix << endl;
+}
+
+void Petri::judgePINVAR() {
+    if(NUPN || SAFE) {
+        PINVAR = false;
+        return;
+    }
+    if(computePinvariant() == 1) {
+        PINVAR = true;
+        computeBound();
+        if(!PINVAR) {
+            destroyPINVAR();
+            delete [] pinvarExtra;
+        }
+    }
+    else {
+        PINVAR = false;
+        delete [] pinvarExtra;
+    }
+    delete [] eq_var;
+    MallocExtension::instance()->ReleaseFreeMemory();
+}
+
+void Petri::computeBound() {
+    NUM_t *bound = new NUM_t [placecount];
+    weightsum0 = new int[placecount - RankOfmatrix];
+    for(int i=0;i<placecount;++i)
+        bound[i] = 65535;
+    memset(weightsum0,0,sizeof(int)*(placecount-RankOfmatrix));
+
+    /*calculate i*m0*/
+    for(int i=0;i<placecount-RankOfmatrix;++i) {
+        float sum = 0;
+        for(int j=0;j<placecount;++j) {
+            sum += Pinvar[i][j] * place[j].initialMarking;
+        }
+        weightsum0[i] = sum>0?(int)(sum+0.5):(int)(sum-0.5);
+    }
+
+    /*筛选出semi-positive P不变量*/
+    vector<int> semi_positive_index;
+    for(int i = 0; i < placecount - RankOfmatrix; ++i) {
+        bool posflag = true;
+        for(int j=0;j<placecount;++j) {
+            if(Pinvar[i][j] < 0) {
+                posflag = false;
+                break;
+            }
+        }
+        if(posflag) {
+            semi_positive_index.push_back(i);
+        }
+    }
+
+    for(int i=0;i<semi_positive_index.size();++i) {
+        for(int k=0; k<placecount; ++k) {
+            if(Pinvar[semi_positive_index[i]][k]<1e-6 || pinvarExtra[k].significant==false)
+                continue;
+            else {
+                double bb = ceil((double)weightsum0[semi_positive_index[i]]/Pinvar[semi_positive_index[i]][k]);
+                if((NUM_t)bb<bound[k]) {
+                    bound[k] = (NUM_t)bb;
+                }
+            }
+        }
+    }
+
+    NUM_t bitcounter = 0;
+    for(int j=0;j<placecount;++j) {
+        Place_PINVAR_info &pinvarInfo = pinvarExtra[j];
+        if(pinvarInfo.significant) {
+            pinvarInfo.startpos = bitcounter;
+            pinvarInfo.length = ceil(log2(bound[j]+1));
+            pinvarInfo.intnum = pinvarInfo.startpos / 32;
+            pinvarInfo.intoffset = pinvarInfo.startpos % 32;
+            bitcounter += pinvarInfo.length;
+            if(pinvarInfo.intoffset+pinvarInfo.length>32)
+                pinvarInfo.cutoff = true;
+        }
+    }
+
+    if((double)bitcounter/(16*placecount) > 0.8) {
+        delete [] weightsum0;
+        PINVAR = false;
+    }
+    delete [] bound;
+    MallocExtension::instance()->ReleaseFreeMemory();
+}
+
+void Petri::destroyPINVAR() {
+    for(int i=0;i<placecount-RankOfmatrix;++i) {
+        if(!Pinvar[i])
+            delete [] Pinvar[i];
+    }
+    delete [] Pinvar;
+    MallocExtension::instance()->ReleaseFreeMemory();
+}

@@ -197,6 +197,33 @@ BA/VWAA.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/BA/VWAA.cpp.s
 .PHONY : BA/VWAA.cpp.s
 
+BA/atomic.o: BA/atomic.cpp.o
+
+.PHONY : BA/atomic.o
+
+# target to build an object file
+BA/atomic.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o
+.PHONY : BA/atomic.cpp.o
+
+BA/atomic.i: BA/atomic.cpp.i
+
+.PHONY : BA/atomic.i
+
+# target to preprocess a source file
+BA/atomic.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.i
+.PHONY : BA/atomic.cpp.i
+
+BA/atomic.s: BA/atomic.cpp.s
+
+.PHONY : BA/atomic.s
+
+# target to generate assembly for a file
+BA/atomic.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.s
+.PHONY : BA/atomic.cpp.s
+
 BA/buchi.o: BA/buchi.cpp.o
 
 .PHONY : BA/buchi.o
@@ -440,6 +467,33 @@ product.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/product.cpp.s
 .PHONY : product.cpp.s
 
+rref.o: rref.cpp.o
+
+.PHONY : rref.o
+
+# target to build an object file
+rref.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/rref.cpp.o
+.PHONY : rref.cpp.o
+
+rref.i: rref.cpp.i
+
+.PHONY : rref.i
+
+# target to preprocess a source file
+rref.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/rref.cpp.i
+.PHONY : rref.cpp.i
+
+rref.s: rref.cpp.s
+
+.PHONY : rref.s
+
+# target to generate assembly for a file
+rref.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/rref.cpp.s
+.PHONY : rref.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -455,6 +509,9 @@ help:
 	@echo "... BA/VWAA.o"
 	@echo "... BA/VWAA.i"
 	@echo "... BA/VWAA.s"
+	@echo "... BA/atomic.o"
+	@echo "... BA/atomic.i"
+	@echo "... BA/atomic.s"
 	@echo "... BA/buchi.o"
 	@echo "... BA/buchi.i"
 	@echo "... BA/buchi.s"
@@ -482,6 +539,9 @@ help:
 	@echo "... product.o"
 	@echo "... product.i"
 	@echo "... product.s"
+	@echo "... rref.o"
+	@echo "... rref.i"
+	@echo "... rref.s"
 .PHONY : help
 
 

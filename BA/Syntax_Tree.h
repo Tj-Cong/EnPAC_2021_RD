@@ -7,6 +7,7 @@
 #include <string>
 #include "tinyxml.h"
 #include "VWAA.h"
+#include "atomic.h"
 using namespace std;
 
 /*ROOT: root node of Syntax_Tree, non-sense
@@ -21,7 +22,6 @@ using namespace std;
  * V_OPER: "V/R";
  * */
 enum NodeType{ROOT,PREDICATE,NEG,CONJUNC,DISJUNC,NEXT,ALWAYS,EVENTUALLY,U_OPER,V_OPER};
-string DrawType(NodeType ntyp);
 
 
 /*The tree node structure of Syntax_Tree;

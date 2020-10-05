@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#define RGTABLE_SIZE 1048576
+#define RGTABLE_SIZE 13131313
 #define SHORTMAX 0xffff
 
 extern NUM_t FIELDCOUNT;   //占用bitfield个数，仅仅用于NUPN和SAFE网
@@ -21,6 +21,7 @@ extern NUM_t MARKLEN;      //Petri网
 extern NUM_t placecount;   //Petri网库所个数
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
+extern bool PINVAR;        //当前Petri网是否使用P不变量编码
 extern Petri *petri;
 
 void setGlobalValue(Petri *ptnet);
@@ -92,12 +93,13 @@ public:
     void getFireSet(RGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
     ~RGNode();
-    bool readPlace(int placeid) const {};
+    index_t readPlace(int placeid) const {};
     void writePlace(int placeid){};
+    void writePlace(int placeid,index_t tokencount){};
     void clearPlace(int placeid){};
 };
 
-//用于SAFE和NUPN
+//用于SAFE、NUPN和P不变量
 class BitRGNode {
 public:
     myuint *marking;
@@ -110,8 +112,9 @@ public:
     void getFireSet(BitRGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
     ~BitRGNode();
-    bool readPlace(int placeid) const;
+    index_t readPlace(int placeid) const;
     void writePlace(int placeid);
+    void writePlace(int placeid,index_t tokencount);
     void clearPlace(int placeid);
 };
 
@@ -134,6 +137,7 @@ public:
     RGNode *RGinitialnode();
 
     RGNode *RGcreatenode(RGNode *curnode, int tranxnum, bool &exist);
+    RGNode *RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist);
 
     void getFireableTranx(RGNode *curnode, set<index_t> &fireset);
 
@@ -163,6 +167,7 @@ public:
     BitRGNode *RGinitialnode();
 
     BitRGNode *RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist);
+    BitRGNode *RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist);
 
     void getFireableTranx(BitRGNode *curnode,set<index_t> &fireset);
 
