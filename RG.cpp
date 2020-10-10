@@ -57,8 +57,10 @@ void setGlobalValue(Petri *ptnet) {
             if(ptnet->pinvarExtra[i].significant)
                 MARKLEN += ptnet->pinvarExtra[i].length;
         }
+    } else if (LONGBITPLACE) {
+        MARKLEN = 32*placecount;
     } else {
-        MARKLEN = ptnet->placecount;
+        MARKLEN = 16*ptnet->placecount;
     }
     FIELDCOUNT = ceil(double(MARKLEN) / (sizeof(myuint) * 8));
 }
@@ -951,7 +953,7 @@ bool BitRGNode::isFirable(const Transition &t) const {
         }
         return isfirable;
     }
-    else if (PINVAR) {
+    else if (PINVAR || LONGBITPLACE) {
         bool isfirable = true;
         vector<SArc>::const_iterator tpre = t.producer.begin();
         for (tpre; tpre != t.producer.end(); ++tpre) {
@@ -1082,6 +1084,10 @@ index_t BitRGNode::readPlace(int placeid) const{
             int ssum = sum<0?(int)(sum-0.5):(int)(sum+0.5);
             return (petri->weightsum0[pinvarInfo.pinvarLink]-ssum);
         }
+    } else if(LONGBITPLACE) {
+        index_t markint;
+        memcpy(&markint,&this->marking[placeid],sizeof(index_t));
+        return markint;
     }
     cerr<<"ERROR, bit encoding for non-safe net."<<endl;
     exit(4);
@@ -1132,7 +1138,7 @@ void BitRGNode::clearPlace(int placeid) {
         }
     }
     else if(SAFE) {
-        cerr<<"ERROR, function writePlace doesn't offer service for encoding of safe net."<<endl;
+        cerr<<"ERROR, function clearPlace doesn't offer service for encoding of safe net."<<endl;
         exit(4);
     }
 }
@@ -1184,6 +1190,9 @@ void BitRGNode::writePlace(int placeid, index_t tokencount) {
                 memcpy(&this->marking[pinvarInfo.intnum],&markint,sizeof(index_t));
             }
         }
+    }
+    else if(LONGBITPLACE) {
+        memcpy(&this->marking[placeid],&tokencount,sizeof(index_t));
     }
 }
 
@@ -1490,6 +1499,8 @@ BitRG::BitRG(Petri *pt) {
             if(pt->pinvarExtra[i].significant)
                 RGNodelength += pt->pinvarExtra[i].length;
         }
+    } else if (LONGBITPLACE) {
+        RGNodelength = 32*placecount;
     }
 
     int transcount = ptnet->transitioncount;
@@ -1563,7 +1574,7 @@ void BitRG::getFireableTranx(BitRGNode *curnode,set<index_t> &fireset) {
                     firable = false;
                     break;
                 }
-            } else if(PINVAR) {
+            } else if(PINVAR || LONGBITPLACE) {
                 if(curnode->readPlace(iterpre->idx)<iterpre->weight) {
                     firable = false;
                     break;
@@ -1611,6 +1622,11 @@ BitRGNode *BitRG::RGinitialnode() {
             if(ptnet->pinvarExtra[i].significant) {
                 rg->writePlace(i,ptnet->place[i].initialMarking);
             }
+        }
+    }
+    else if (LONGBITPLACE) {
+        for (index_t i = 0; i < placecount; i++) {
+            rg->writePlace(i,ptnet->place[i].initialMarking);
         }
     }
 
@@ -1738,6 +1754,43 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
                 index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
                 newnode->writePlace(iterpost->idx,newtoken);
             }
+        }
+
+        index_t hashvalue = getHashIndex(newnode);
+
+        bool repeated;
+        BitRGNode *p = rgnode[hashvalue];
+        while(p!=NULL) {
+            repeated = true;
+            index_t i=0;
+            for(i=0;i<FIELDCOUNT;++i) {
+                unsigned int equp;
+                unsigned int equnewnode;
+                memcpy(&equp, &p->marking[i], sizeof(unsigned int));
+                memcpy(&equnewnode, &newnode->marking[i], sizeof(unsigned int));
+                if(equp != equnewnode) {
+                    repeated = false;
+                    break;
+                }
+            }
+            if(repeated) {
+                exist = true;
+                delete newnode;
+                return p;
+            }
+            p=p->next;
+        }
+        addRGNode(newnode);
+    }
+    else if(LONGBITPLACE) {
+        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
+        for(iterpre;iterpre!=preend;++iterpre) {
+            index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
+            newnode->writePlace(iterpre->idx,remain);
+        }
+        for(iterpost;iterpost!=postend;++iterpost) {
+            index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
+            newnode->writePlace(iterpost->idx,newtoken);
         }
 
         index_t hashvalue = getHashIndex(newnode);
@@ -1906,7 +1959,43 @@ BitRGNode *BitRG::RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist) {
         }
         //addRGNode(newnode);
     }
+    else if(LONGBITPLACE) {
+        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
+        for(iterpre;iterpre!=preend;++iterpre) {
+            index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
+            newnode->writePlace(iterpre->idx,remain);
+        }
+        for(iterpost;iterpost!=postend;++iterpost) {
+            index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
+            newnode->writePlace(iterpost->idx,newtoken);
+        }
 
+        index_t hashvalue = getHashIndex(newnode);
+
+        bool repeated;
+        BitRGNode *p = rgnode[hashvalue];
+        while(p!=NULL) {
+            repeated = true;
+            index_t i=0;
+            for(i=0;i<FIELDCOUNT;++i) {
+                unsigned int equp;
+                unsigned int equnewnode;
+                memcpy(&equp, &p->marking[i], sizeof(unsigned int));
+                memcpy(&equnewnode, &newnode->marking[i], sizeof(unsigned int));
+                if(equp != equnewnode) {
+                    repeated = false;
+                    break;
+                }
+            }
+            if(repeated) {
+                exist = true;
+                delete newnode;
+                return p;
+            }
+            p=p->next;
+        }
+        //addRGNode(newnode);
+    }
     return newnode;
 }
 

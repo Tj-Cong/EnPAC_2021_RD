@@ -4,7 +4,7 @@
 #include "Syntax_Tree.h"
 using namespace std;
 
-#define MAXSTATENUM 200
+#define MAXSTATENUM 1000
 #define MAXINT 0x7fffffff
 
 class Buchi;

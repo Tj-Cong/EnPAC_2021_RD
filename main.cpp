@@ -7,7 +7,7 @@
 #include <exception>
 using namespace std;
 
-#define  TOTALTOOLTIME 3580
+#define TOTALTOOLTIME 3580
 
 size_t  heap_malloc_total, heap_free_total,mmap_total, mmap_count;
 void print_info() {
@@ -26,19 +26,19 @@ void print_info() {
 NUM_t FIELDCOUNT;
 NUM_t placecount;
 NUM_t MARKLEN;
-bool NUPN = false;
-bool SAFE = false;
-bool PINVAR = false;
+bool NUPN = false;            //whether the checking process uses NUPN encoding
+bool SAFE = false;            //whether the checking process uses SAFE encoding
+bool PINVAR = false;          //whether the checking process uses P-invariant encoding
+bool LONGBITPLACE = false;    //whether the checking process externs marking storage from short to int
 bool ready2exit = false;
 jmp_buf petrienv;
 jmp_buf productenv;
 
 //以MB为单位
-short int total_mem;
+short int total_mem;          //memory limit
 pid_t mypid;
-
 Petri *petri = NULL;
-void CreateBA(Buchi &ba);
+
 double get_time() {
     struct timeval t;
     gettimeofday(&t, NULL);
@@ -148,7 +148,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         SBA.self_check();
         SBA.PrintStateBuchi();
 
-        if (NUPN || SAFE || PINVAR) {
+        if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
             bitgraph = new BitRG(ptnet);
 //            BitRGNode *initnode = bitgraph->RGinitialnode();
 //            bitgraph->Generate(initnode);
@@ -162,7 +162,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
 
         //cout << "begin:ON-THE-FLY" << endl;
         ready2exit = false;
-        if (NUPN || SAFE || PINVAR) {
+        if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
             Product_Automata<BitRGNode, BitRG> *product;
             product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, &SBA);
 
@@ -190,7 +190,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
             delete product;
         }
-        if (NUPN || SAFE || PINVAR) {
+        if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
             delete bitgraph;
         } else {
             delete graph;
@@ -206,95 +206,95 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     BitRG *bitgraph;
     RG *graph;
 
-//    unsigned short each_run_time=300;
-//
-//    string propertyid;
-//    char ff[]="LTLFireability.xml";
-//    char cc[]="LTLCardinality.xml";
-//    Syntax_Tree syntaxTree;
-//    if(cardinality)
-//        syntaxTree.ParseXML(cc,propertyid,num);
-//    else
-//        syntaxTree.ParseXML(ff,propertyid,num);
-////    cout<<"original tree:"<<endl;
-////    syntaxTree.PrintTree();
-////    cout<<"-----------------------------------"<<endl;
-//    syntaxTree.Push_Negation(syntaxTree.root);
-////    cout<<"after negation:"<<endl;
-////    syntaxTree.PrintTree();
-////    cout<<"-----------------------------------"<<endl;
-//    syntaxTree.SimplifyLTL();
-////    cout<<"after simplification:"<<endl;
-////    syntaxTree.PrintTree();
-////    cout<<"-----------------------------------"<<endl;
-//    syntaxTree.Universe(syntaxTree.root);
-////    cout<<"after universe"<<endl;
-////    syntaxTree.PrintTree();
-////    cout<<"-----------------------------------"<<endl;
-//
-//    syntaxTree.Get_DNF(syntaxTree.root);
-//    syntaxTree.Build_VWAA();
-//    syntaxTree.VWAA_Simplify();
-//
-//    General GBA;
-//    GBA.Build_GBA(syntaxTree);
-//    GBA.Simplify();
-//    GBA.self_check();
-//
-//    Buchi BA;
-//    BA.Build_BA(GBA);
-//    BA.Simplify();
-//    BA.self_check();
-//    BA.Backward_chaining();
-//    BA.PrintBuchi("BA.dot");
-//
-//    StateBuchi SBA;
-//    SBA.Build_SBA(BA);
-//    SBA.PrintStateBuchi();
-//    SBA.Simplify();
-//    SBA.Tarjan();
-//    SBA.Complete1();
-//    SBA.Add_heuristic();
-//    SBA.Complete2();
-//    SBA.self_check();
-//    SBA.PrintStateBuchi();
+    unsigned short each_run_time=300;
 
-    if (NUPN || SAFE || PINVAR) {
+    string propertyid;
+    char ff[]="LTLFireability.xml";
+    char cc[]="LTLCardinality.xml";
+    Syntax_Tree syntaxTree;
+    if(cardinality)
+        syntaxTree.ParseXML(cc,propertyid,num);
+    else
+        syntaxTree.ParseXML(ff,propertyid,num);
+    cout<<"original tree:"<<endl;
+    syntaxTree.PrintTree();
+    cout<<"-----------------------------------"<<endl;
+    syntaxTree.Push_Negation(syntaxTree.root);
+    cout<<"after negation:"<<endl;
+    syntaxTree.PrintTree();
+    cout<<"-----------------------------------"<<endl;
+    syntaxTree.SimplifyLTL();
+    cout<<"after simplification:"<<endl;
+    syntaxTree.PrintTree();
+    cout<<"-----------------------------------"<<endl;
+    syntaxTree.Universe(syntaxTree.root);
+    cout<<"after universe"<<endl;
+    syntaxTree.PrintTree();
+    cout<<"-----------------------------------"<<endl;
+
+    syntaxTree.Get_DNF(syntaxTree.root);
+    syntaxTree.Build_VWAA();
+    syntaxTree.VWAA_Simplify();
+
+    General GBA;
+    GBA.Build_GBA(syntaxTree);
+    GBA.Simplify();
+    GBA.self_check();
+
+    Buchi BA;
+    BA.Build_BA(GBA);
+    BA.Simplify();
+    BA.self_check();
+    BA.Backward_chaining();
+    BA.PrintBuchi("BA.dot");
+
+    StateBuchi SBA;
+    SBA.Build_SBA(BA);
+    SBA.PrintStateBuchi();
+    SBA.Simplify();
+    SBA.Tarjan();
+    SBA.Complete1();
+    SBA.Add_heuristic();
+    SBA.Complete2();
+    SBA.self_check();
+    SBA.PrintStateBuchi();
+
+    if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
         bitgraph = new BitRG(ptnet);
-        BitRGNode *initnode = bitgraph->RGinitialnode();
-        bitgraph->Generate(initnode);
-        cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
+//        BitRGNode *initnode = bitgraph->RGinitialnode();
+//        bitgraph->Generate(initnode);
+//        cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
     } else {
         graph = new RG(ptnet);
-        RGNode *initnode = graph->RGinitialnode();
-        graph->Generate(initnode);
-        cout<<"STATE SPACE:"<<graph->nodecount<<endl;
+//        RGNode *initnode = graph->RGinitialnode();
+//        graph->Generate(initnode);
+//        cout<<"STATE SPACE:"<<graph->nodecount<<endl;
     }
 
 
-//    ready2exit = false;
-//    if (NUPN || SAFE || PINVAR) {
-//        Product_Automata<BitRGNode, BitRG> *product;
-//        product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, &SBA);
-//        product->ModelChecker(propertyid,each_run_time);
-//        cout<<endl;
-//        cout<<" "<<bitgraph->nodecount<<endl;
-//        int ret = product->getresult();
-//        //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
-//        delete product;
-//    } else {
-//        Product_Automata<RGNode, RG> *product;
-//        product = new Product_Automata<RGNode, RG>(ptnet, graph, &SBA);
-//        product->ModelChecker(propertyid,each_run_time);
-//        cout<<endl;
-//        cout<<" "<<graph->nodecount<<endl;
-//        int ret = product->getresult();
-//
-//        //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
-//        delete product;
-//    }
+    ready2exit = false;
+    if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
+        Product_Automata<BitRGNode, BitRG> *product;
+        product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, &SBA);
+        product->ModelChecker(propertyid,each_run_time);
+        cout<<endl;
+        cout<<" "<<bitgraph->nodecount<<endl;
+        int ret = product->getresult();
+        //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
+        delete product;
+    } else {
+        Product_Automata<RGNode, RG> *product;
+        product = new Product_Automata<RGNode, RG>(ptnet, graph, &SBA);
+        product->ModelChecker(propertyid,each_run_time);
+        cout<<endl;
+        cout<<" "<<graph->nodecount<<endl;
+        int ret = product->getresult();
 
-    if (NUPN || SAFE || PINVAR) {
+        //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
+        delete product;
+    }
+
+    if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
         delete bitgraph;
     } else {
         delete graph;

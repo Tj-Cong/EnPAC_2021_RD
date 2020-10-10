@@ -501,7 +501,7 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
     stack_flag = true;
     //核心部分
     result = true;
-    getProduct_Bound();     //合成交自动机并进行搜索
+    getProduct();     //合成交自动机并进行搜索
 
     //打印结果
     string re;
@@ -510,16 +510,17 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
         string nupn = NUPN?" USE_NUPN":"";
         string safe = SAFE?" SAFE":"";
         string pinvar = PINVAR?" PINVAR":"";
+        string longbitplace = LONGBITPLACE?" LONGBITPLACE":"";
         if(result)
         {
             re="TRUE";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar;
+            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar+longbitplace;
             ret = 1;
         }
         else
         {
             re="FALSE";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar;
+            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar+longbitplace;
             ret = 0;
         }
     }
@@ -1226,7 +1227,7 @@ NUM_t Product_Automata<rgnode, rg_T>::sumtoken(string s, rgnode *state) {
             s = s.substr(pos + 1, s.length() - pos);
         }
     }
-    else if(ptnet->PINVAR) {
+    else if(ptnet->PINVAR || LONGBITPLACE) {
         while (1) {
             int pos = s.find_first_of(",");
             if (pos == string::npos)

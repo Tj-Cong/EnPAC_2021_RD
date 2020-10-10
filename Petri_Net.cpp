@@ -491,8 +491,9 @@ void Petri::readPNML(char *filename) {
                         string marking = token->GetText();
                         unsigned int initm = stringToNum(marking);
                         if (initm > 65535) {
-                            cout << "CANNOT_COMPUTE" << endl;
-                            exit(0);
+//                            cout << "CANNOT_COMPUTE" << endl;
+//                            exit(0);
+                            LONGBITPLACE = true;
                         }
                         p.initialMarking = stringToNum(marking);
                     }
@@ -617,7 +618,7 @@ void Petri::computeUnitMarkLen() {
 
 //判断当前网是否为SAFE网
 void Petri::judgeSAFE() {
-    if (NUPN) {
+    if (NUPN || LONGBITPLACE) {
         SAFE = false;
         return;
     }
@@ -980,9 +981,9 @@ int Petri::computePinvariant() {
         for (int i = 0; i < transitioncount; i++) {
             short tmp = transition[i].consumer.size();
             for (int j = 0; j < tmp; j++) {
-                short row = i;
-                short placeidx = transition[i].consumer[j].idx;
-                short col = placeidx;
+                int row = i;
+                int placeidx = transition[i].consumer[j].idx;
+                int col = placeidx;
                 short weight = transition[i].consumer[j].weight;
                 output[row][col] = weight;
             }
@@ -992,9 +993,9 @@ int Petri::computePinvariant() {
         for (int i = 0; i < placecount; i++) {
             short tmp = place[i].consumer.size();
             for (int j = 0; j < tmp; j++) {
-                short row = i;
-                short tranidx = place[i].consumer[j].idx;
-                short col = tranidx;
+                int row = i;
+                int tranidx = place[i].consumer[j].idx;
+                int col = tranidx;
                 short weight = place[i].consumer[j].weight;
                 input[col][row] = weight;
             }
@@ -1209,8 +1210,12 @@ void Petri::judgePINVAR() {
 void Petri::computeBound() {
     NUM_t *bound = new NUM_t [placecount];
     weightsum0 = new int[placecount - RankOfmatrix];
-    for(int i=0;i<placecount;++i)
-        bound[i] = 65535;
+    for(int i=0;i<placecount;++i) {
+        if(LONGBITPLACE)
+            bound[i] = MAXUNINT32;
+        else
+            bound[i] = MAXUNSHORT16;
+    }
     memset(weightsum0,0,sizeof(int)*(placecount-RankOfmatrix));
 
     /*calculate i*m0*/

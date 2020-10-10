@@ -23,7 +23,8 @@ using namespace std;
 
 #define INDEX_ERROR 0xffffffff
 #define COMPUTE_P_INVAR_TIME 400
-#define MAXINTNUM 4294967295
+#define MAXUNINT32 4294967295
+#define MAXUNSHORT16 65535
 
 typedef unsigned int index_t;    //索引数据类型
 typedef unsigned short weight_t; //弧权重的数据类型
@@ -36,6 +37,7 @@ extern NUM_t placecount;   //Petri网库所个数
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码
+extern bool LONGBITPLACE;
 extern jmp_buf petrienv;
 extern jmp_buf productenv;
 
