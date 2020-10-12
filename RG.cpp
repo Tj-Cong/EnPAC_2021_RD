@@ -862,40 +862,40 @@ void RGNode::printMarking(const int &len) {
     }
     cout << marking[i] << ")" << endl;
     /*print fireable transitions*/
-    set<index_t>::iterator it;
-    cout << "[";
-    for(it=fireset.begin();it!=fireset.end();++it) {
-        cout<<*it<<" ";
-    }
-    cout << "]"<<endl;
+//    set<index_t>::iterator it;
+//    cout << "[";
+//    for(it=fireset.begin();it!=fireset.end();++it) {
+//        cout<<*it<<" ";
+//    }
+//    cout << "]"<<endl;
 }
 
-void RGNode::getFireSet(RGNode *lastnode, index_t lastfid) {
-    this->fireset = lastnode->fireset;
-    const Transition &t = petri->transition[lastfid];
-    set<index_t>::iterator deiter,eniter;
-    /*remove disabled transition*/
-    for(deiter=t.decreasing.begin();deiter!=t.decreasing.end();++deiter) {
-        set<index_t>::iterator it;
-        it = fireset.find(*deiter);
-        if(it!=fireset.end()) {
-            /*check if it is disabled*/
-            if(!isFirable(petri->transition[*deiter])) {
-                fireset.erase(it);
-            }
-        }
-    }
-    /*add enabled transition*/
-    for(eniter=t.increasing.begin();eniter!=t.increasing.end();++eniter) {
-        set<index_t>::iterator it;
-        it = fireset.find(*eniter);
-        if(it == fireset.end()) {
-            if(isFirable(petri->transition[*eniter])) {
-                fireset.insert(*eniter);
-            }
-        }
-    }
-}
+//void RGNode::getFireSet(RGNode *lastnode, index_t lastfid) {
+//    this->fireset = lastnode->fireset;
+//    const Transition &t = petri->transition[lastfid];
+//    set<index_t>::iterator deiter,eniter;
+//    /*remove disabled transition*/
+//    for(deiter=t.decreasing.begin();deiter!=t.decreasing.end();++deiter) {
+//        set<index_t>::iterator it;
+//        it = fireset.find(*deiter);
+//        if(it!=fireset.end()) {
+//            /*check if it is disabled*/
+//            if(!isFirable(petri->transition[*deiter])) {
+//                fireset.erase(it);
+//            }
+//        }
+//    }
+//    /*add enabled transition*/
+//    for(eniter=t.increasing.begin();eniter!=t.increasing.end();++eniter) {
+//        set<index_t>::iterator it;
+//        it = fireset.find(*eniter);
+//        if(it == fireset.end()) {
+//            if(isFirable(petri->transition[*eniter])) {
+//                fireset.insert(*eniter);
+//            }
+//        }
+//    }
+//}
 
 /*****************************************************************/
 /*RGNode::RGNode(int marking_length)
@@ -992,40 +992,40 @@ void BitRGNode::printMarking(const int &len) {
     else
         cout << "1)" << endl;
     /*print fireable transitions*/
-    set<index_t>::iterator it;
-    cout << "[";
-    for(it=fireset.begin();it!=fireset.end();++it) {
-        cout<<*it<<" ";
-    }
-    cout << "]"<<endl;
+//    set<index_t>::iterator it;
+//    cout << "[";
+//    for(it=fireset.begin();it!=fireset.end();++it) {
+//        cout<<*it<<" ";
+//    }
+//    cout << "]"<<endl;
 }
 
-void BitRGNode::getFireSet(BitRGNode *lastnode, index_t lastfid) {
-    this->fireset = lastnode->fireset;
-    const Transition &t = petri->transition[lastfid];
-    set<index_t>::iterator deiter,eniter;
-    /*remove disabled transition*/
-    for(deiter=t.decreasing.begin();deiter!=t.decreasing.end();++deiter) {
-        set<index_t>::iterator it;
-        it = fireset.find(*deiter);
-        if(it!=fireset.end()) {
-            /*check if it is disabled*/
-            if(!isFirable(petri->transition[*deiter])) {
-                fireset.erase(it);
-            }
-        }
-    }
-    /*add enabled transition*/
-    for(eniter=t.increasing.begin();eniter!=t.increasing.end();++eniter) {
-        set<index_t>::iterator it;
-        it = fireset.find(*eniter);
-        if(it == fireset.end()) {
-            if(isFirable(petri->transition[*eniter])) {
-                fireset.insert(*eniter);
-            }
-        }
-    }
-}
+//void BitRGNode::getFireSet(BitRGNode *lastnode, index_t lastfid) {
+//    this->fireset = lastnode->fireset;
+//    const Transition &t = petri->transition[lastfid];
+//    set<index_t>::iterator deiter,eniter;
+//    /*remove disabled transition*/
+//    for(deiter=t.decreasing.begin();deiter!=t.decreasing.end();++deiter) {
+//        set<index_t>::iterator it;
+//        it = fireset.find(*deiter);
+//        if(it!=fireset.end()) {
+//            /*check if it is disabled*/
+//            if(!isFirable(petri->transition[*deiter])) {
+//                fireset.erase(it);
+//            }
+//        }
+//    }
+//    /*add enabled transition*/
+//    for(eniter=t.increasing.begin();eniter!=t.increasing.end();++eniter) {
+//        set<index_t>::iterator it;
+//        it = fireset.find(*eniter);
+//        if(it == fireset.end()) {
+//            if(isFirable(petri->transition[*eniter])) {
+//                fireset.insert(*eniter);
+//            }
+//        }
+//    }
+//}
 
 index_t BitRGNode::readPlace(int placeid) const{
     if(NUPN) {
@@ -1251,35 +1251,35 @@ void RG::addRGNode(RGNode *mark) {
 
 }
 
-void RG::getFireableTranx(RGNode *curnode, set<index_t> &fireset) {
-    //计算当前状态的可发生变迁；
-    bool firable;
-    NUM_t tlength = ptnet->transitioncount;
-    Transition *tranx;
-
-    //遍历每一个变迁
-    for (index_t j = 0; j < tlength; j++) {
-        //对于第j个变迁
-        tranx = &ptnet->transition[j];
-        firable = true;
-
-        //遍历第j个变迁的所有前继库所
-        vector<SArc>::iterator iterpre = tranx->producer.begin();
-        vector<SArc>::iterator preend = tranx->producer.end();
-
-        //遍历ptnet.transition[j]的所有前继库所，看其token值是否大于weight
-        for (iterpre; iterpre != preend; iterpre++) {
-            if (curnode->marking[iterpre->idx] < iterpre->weight) {
-                firable = false;
-                break;
-            }
-        }
-
-        //判断是否能发生，若能发生，加入当前状态的可发生数组中
-        if (firable)
-            fireset.insert(j);
-    }
-}
+//void RG::getFireableTranx(RGNode *curnode, set<index_t> &fireset) {
+//    //计算当前状态的可发生变迁；
+//    bool firable;
+//    NUM_t tlength = ptnet->transitioncount;
+//    Transition *tranx;
+//
+//    //遍历每一个变迁
+//    for (index_t j = 0; j < tlength; j++) {
+//        //对于第j个变迁
+//        tranx = &ptnet->transition[j];
+//        firable = true;
+//
+//        //遍历第j个变迁的所有前继库所
+//        vector<SArc>::iterator iterpre = tranx->producer.begin();
+//        vector<SArc>::iterator preend = tranx->producer.end();
+//
+//        //遍历ptnet.transition[j]的所有前继库所，看其token值是否大于weight
+//        for (iterpre; iterpre != preend; iterpre++) {
+//            if (curnode->marking[iterpre->idx] < iterpre->weight) {
+//                firable = false;
+//                break;
+//            }
+//        }
+//
+//        //判断是否能发生，若能发生，加入当前状态的可发生数组中
+//        if (firable)
+//            fireset.insert(j);
+//    }
+//}
 
 //计算初始状态节点
 RGNode *RG::RGinitialnode() {
@@ -1292,7 +1292,7 @@ RGNode *RG::RGinitialnode() {
 
     //将当前状态加入到rgnode哈希表中
     initnode = rg;
-    getFireableTranx(initnode,initnode->fireset);
+//    getFireableTranx(initnode,initnode->fireset);
     addRGNode(rg);
     return rg;
 }
@@ -1421,13 +1421,13 @@ RGNode *RG::RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist) {
 
 //一次性生成全部状态空间
 void RG::Generate(RGNode *node) {
-    set<index_t>::iterator fireptr;
-    for (fireptr=node->fireset.begin();fireptr!=node->fireset.end();++fireptr) {
-        bool exist = false;
-        RGNode *nextnode = RGcreatenode(node, *fireptr, exist);
-        if (!exist) {
-            nextnode->getFireSet(node,*fireptr);
-            Generate(nextnode);
+    for(int i=0;i<ptnet->transitioncount;++i) {
+        if(node->isFirable(ptnet->transition[i])) {
+            bool exist = false;
+            RGNode *nextnode = RGcreatenode(node, i, exist);
+            if (!exist) {
+                Generate(nextnode);
+            }
         }
     }
 }
@@ -1543,50 +1543,50 @@ void BitRG::addRGNode(BitRGNode *mark) {
 #endif
 }
 
-void BitRG::getFireableTranx(BitRGNode *curnode,set<index_t> &fireset) {
-
-    //计算当前状态的可发生变迁；
-    bool firable;
-    NUM_t tlength = ptnet->transitioncount;
-    Transition *tranx;
-
-    //遍历每一个变迁
-    for (index_t j = 0; j < tlength; j++) {
-        //对于第j个变迁
-        tranx = &ptnet->transition[j];
-        firable = true;
-
-        //遍历第j个变迁的所有前继库所
-        vector<SArc>::iterator iterpre = tranx->producer.begin();
-        vector<SArc>::iterator preend = tranx->producer.end();
-
-        //遍历ptnet.transition[j]的所有前继库所，看其token值是否大于weight
-        for (iterpre; iterpre != preend; iterpre++) {
-            if (NUPN) {
-                if (!curnode->readPlace(iterpre->idx)) {
-                    firable = false;
-                    break;
-                }
-            } else if (SAFE) {
-                int unit = iterpre->idx / (sizeof(myuint) * 8);
-                int offset = iterpre->idx % (sizeof(myuint) * 8);
-                if (curnode->marking[unit].test0(offset)) {
-                    firable = false;
-                    break;
-                }
-            } else if(PINVAR || LONGBITPLACE) {
-                if(curnode->readPlace(iterpre->idx)<iterpre->weight) {
-                    firable = false;
-                    break;
-                }
-            }
-        }
-
-        //判断是否能发生，若能发生，加入当前状态的可发生数组中
-        if (firable)
-            fireset.insert(j);
-    }
-}
+//void BitRG::getFireableTranx(BitRGNode *curnode,set<index_t> &fireset) {
+//
+//    //计算当前状态的可发生变迁；
+//    bool firable;
+//    NUM_t tlength = ptnet->transitioncount;
+//    Transition *tranx;
+//
+//    //遍历每一个变迁
+//    for (index_t j = 0; j < tlength; j++) {
+//        //对于第j个变迁
+//        tranx = &ptnet->transition[j];
+//        firable = true;
+//
+//        //遍历第j个变迁的所有前继库所
+//        vector<SArc>::iterator iterpre = tranx->producer.begin();
+//        vector<SArc>::iterator preend = tranx->producer.end();
+//
+//        //遍历ptnet.transition[j]的所有前继库所，看其token值是否大于weight
+//        for (iterpre; iterpre != preend; iterpre++) {
+//            if (NUPN) {
+//                if (!curnode->readPlace(iterpre->idx)) {
+//                    firable = false;
+//                    break;
+//                }
+//            } else if (SAFE) {
+//                int unit = iterpre->idx / (sizeof(myuint) * 8);
+//                int offset = iterpre->idx % (sizeof(myuint) * 8);
+//                if (curnode->marking[unit].test0(offset)) {
+//                    firable = false;
+//                    break;
+//                }
+//            } else if(PINVAR || LONGBITPLACE) {
+//                if(curnode->readPlace(iterpre->idx)<iterpre->weight) {
+//                    firable = false;
+//                    break;
+//                }
+//            }
+//        }
+//
+//        //判断是否能发生，若能发生，加入当前状态的可发生数组中
+//        if (firable)
+//            fireset.insert(j);
+//    }
+//}
 
 /*void RG::RGinitialnode()
  * function:计算初始状态；分为三步：1.计算（marking），2.计算初始状态的可发生变迁，
@@ -1632,7 +1632,7 @@ BitRGNode *BitRG::RGinitialnode() {
 
     //将当前状态加入到rgnode哈希表中
     initnode = rg;
-    getFireableTranx(initnode,initnode->fireset);
+//    getFireableTranx(initnode,initnode->fireset);
     addRGNode(rg);
     MallocExtension::instance()->ReleaseFreeMemory();
     return rg;
@@ -2000,13 +2000,13 @@ BitRGNode *BitRG::RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist) {
 }
 
 void BitRG::Generate(BitRGNode *node) {
-    set<index_t>::iterator fireptr;
-    for(fireptr=node->fireset.begin();fireptr!=node->fireset.end();++fireptr) {
-        bool exist = false;
-        BitRGNode *nextnode = RGcreatenode(node,*fireptr,exist);
-        if(!exist) {
-            nextnode->getFireSet(node,*fireptr);
-            Generate(nextnode);
+    for(int i=0;i<ptnet->transitioncount;++i) {
+        if(node->isFirable(ptnet->transition[i])) {
+            bool exist = false;
+            BitRGNode *nextnode = RGcreatenode(node,i,exist);
+            if(!exist) {
+                Generate(nextnode);
+            }
         }
     }
 }

@@ -50,22 +50,45 @@ class Pstacknode
 {
 public:
     int id;
+    bool deadmark;
     rgnode *RGname_ptr;
     int BAname_id;
     index_t next;
 
     //non-recursion extra information
     ArcNode *pba;
-    set<index_t>::iterator fireptr;
+    int fireptr;
 
     Pstacknode();
     ~Pstacknode(){};
+    int NEXTFIREABLE();
 };
 template <class rgnode>
 Pstacknode<rgnode>::Pstacknode() {
     RGname_ptr = NULL;
     next = UNREACHABLE;
     pba = NULL;
+    fireptr = 0;
+    deadmark = true;
+}
+
+template<class rgnode>
+int Pstacknode<rgnode>::NEXTFIREABLE() {
+    if(fireptr==0) {
+        if(RGname_ptr->isFirable(petri->transition[0])) {
+            deadmark = false;
+            return fireptr;
+        }
+        fireptr++;
+    }
+
+    for(fireptr;fireptr<petri->transitioncount;++fireptr) {
+        if(RGname_ptr->isFirable(petri->transition[fireptr])) {
+            deadmark = false;
+            return fireptr;
+        }
+    }
+    return -1;
 }
 
 /*====================================================*/
@@ -434,7 +457,6 @@ public:
     Product_Automata(Petri *pt, rg_T* r, StateBuchi *sba);
     void getProduct();         //合成交自动机
     Pstacknode<rgnode>* getNextChild(Pstacknode<rgnode>* q);
-    Pstacknode<rgnode>* getNextChild2(Pstacknode<rgnode>* q);
     void TCHECK(Pstacknode<rgnode>* p0);
     void TCHECK_BOUND(Pstacknode<rgnode>* p0);
     void UPDATE(Pstacknode<rgnode>* p0);
@@ -576,7 +598,6 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
             init->RGname_ptr = initial_status[i].RGname_ptr;
             init->BAname_id = initial_status[i].BAname_id;
             init->pba = ba->vertics[init->BAname_id].firstarc;
-            init->fireptr = init->RGname_ptr->fireset.begin();
             TCHECK(init);
             if (ready2exit)  //如果已经出结果或超时，则退出
             {
@@ -589,8 +610,42 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
 
 template <class rgnode, class rg_T>
 Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnode> *q) {
-    if(q->RGname_ptr->fireset.size() == 0) {
-        /*this is a deadmark*/
+    int firenum;
+    while((firenum=q->NEXTFIREABLE())!=-1) {
+        bool exist;
+        rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,firenum,exist);
+        if(rgseed == NULL)
+        {
+            data_flag = false;
+            return NULL;
+        }
+        while(q->pba)
+        {
+            if(isLabel(rgseed,q->pba->destination))
+            {
+                Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
+                qs->RGname_ptr = rgseed;
+                qs->BAname_id = q->pba->destination;
+                qs->pba = ba->vertics[qs->BAname_id].firstarc;
+
+                /*print*/
+//                       qs->RGname_ptr->printMarking(placecount);
+//                       cout<<qs->BAname_id<<endl;
+
+                if(qs->pba == NULL) {
+                    cerr<<"detect non-sense sba state!"<<endl;
+                    exit(6);
+                }
+
+                q->pba = q->pba->next;
+                return qs;
+            }
+            q->pba = q->pba->next;
+        }
+        q->fireptr++;
+        q->pba = ba->vertics[q->BAname_id].firstarc;
+    }
+    if(q->deadmark) {
         while(q->pba)
         {
             if(isLabel(q->RGname_ptr,q->pba->destination))
@@ -600,13 +655,10 @@ Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnod
                 qs->RGname_ptr = q->RGname_ptr;
                 qs->BAname_id = q->pba->destination;
                 qs->pba = ba->vertics[qs->BAname_id].firstarc;
-                qs->fireptr = qs->RGname_ptr->fireset.begin();
+
                 /*print*/
-#ifdef DEBUG
-                qs->RGname_ptr->printMarking(MARKLEN);
-                cout<<qs->BAname_id<<endl;
-                cout<<"----------------------------------------"<<endl;
-#endif
+//                   qs->RGname_ptr->printMarking(placecount);
+//                   cout<<qs->BAname_id<<endl;
 
                 if(qs->pba == NULL) {
                     cerr<<"detect non-sense sba state!"<<endl;
@@ -621,112 +673,6 @@ Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnod
         return NULL;
     }
     else {
-        for(q->fireptr;q->fireptr!=q->RGname_ptr->fireset.end();++(q->fireptr)) {
-            bool exist = false;
-            rgnode *rgseed = rg->RGcreatenode(q->RGname_ptr,*(q->fireptr),exist);
-            if(!exist) {
-                rgseed->getFireSet(q->RGname_ptr,*(q->fireptr));
-            }
-            if(rgseed == NULL)
-            {
-                data_flag = false;
-                return NULL;
-            }
-            while(q->pba)
-            {
-                if(isLabel(rgseed,q->pba->destination))
-                {
-                    Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
-                    qs->RGname_ptr = rgseed;
-                    qs->BAname_id = q->pba->destination;
-                    qs->pba = ba->vertics[qs->BAname_id].firstarc;
-                    qs->fireptr = qs->RGname_ptr->fireset.begin();
-
-                    /*print*/
-#ifdef DEBUG
-                    cout<<"["<<*(q->fireptr)<<">"<<endl;
-                    qs->RGname_ptr->printMarking(MARKLEN);
-                    cout<<qs->BAname_id<<endl;
-                    cout<<"----------------------------------------"<<endl;
-#endif
-                    q->pba = q->pba->next;
-                    return qs;
-                }
-                q->pba = q->pba->next;
-            }
-            q->pba = ba->vertics[q->BAname_id].firstarc;
-        }
-        return NULL;
-    }
-}
-
-template <class rgnode, class rg_T>
-Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild2(Pstacknode<rgnode> *q) {
-    if(q->RGname_ptr->fireset.size() == 0) {
-        /*this is a deadmark*/
-        while(q->pba)
-        {
-            if(isLabel(q->RGname_ptr,q->pba->destination))
-            {
-                //可以生成交状态
-                Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
-                qs->RGname_ptr = q->RGname_ptr;
-                qs->BAname_id = q->pba->destination;
-                qs->pba = ba->vertics[qs->BAname_id].firstarc;
-                qs->fireptr = qs->RGname_ptr->fireset.begin();
-                /*print*/
-#ifdef DEBUG
-                qs->RGname_ptr->printMarking(MARKLEN);
-                cout<<qs->BAname_id<<endl;
-                cout<<"----------------------------------------"<<endl;
-#endif
-
-                if(qs->pba == NULL) {
-                    cerr<<"detect non-sense sba state!"<<endl;
-                    exit(6);
-                }
-
-                q->pba = q->pba->next;
-                return qs;
-            }
-            q->pba = q->pba->next;
-        }
-        return NULL;
-    }
-    else {
-        while (q->pba) {
-            for(q->fireptr;q->fireptr!=q->RGname_ptr->fireset.end();++(q->fireptr)) {
-                bool exist = false;
-                rgnode *rgseed = rg->RGcreatenode2(q->RGname_ptr,*(q->fireptr),exist);
-                generatecount++;
-                if(!exist) {
-                    rgseed->getFireSet(q->RGname_ptr,*(q->fireptr));
-                }
-                if(rgseed == NULL)
-                {
-                    data_flag = false;
-                    return NULL;
-                }
-                if(isLabel(rgseed,q->pba->destination))
-                {
-                    Pstacknode<rgnode> *qs = new Pstacknode<rgnode>;
-                    qs->RGname_ptr = rgseed;
-                    qs->BAname_id = q->pba->destination;
-                    qs->pba = ba->vertics[qs->BAname_id].firstarc;
-                    qs->fireptr = qs->RGname_ptr->fireset.begin();
-
-                    if(!exist) {
-                        rg->addRGNode(rgseed);
-                    }
-                    ++(q->fireptr);
-                    return qs;
-                }
-                if(!exist)
-                    delete rgseed;
-            }
-            q->pba = q->pba->next;
-            q->fireptr = q->RGname_ptr->fireset.begin();
-        }
         return NULL;
     }
 }
@@ -1078,10 +1024,7 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
                 return false;
             }
 
-            set<index_t>::iterator it;
-            it = state->fireset.find(idex);
-
-            if(it!=state->fireset.end()) {
+            if(state->isFirable(ptnet->transition[idex])) {
                 return false;
             }
 
@@ -1110,10 +1053,7 @@ bool Product_Automata<rgnode,rg_T>::handleLTLF(string s, rgnode *state) {
                 return false;
             }
 
-            set<index_t>::iterator it;
-            it = state->fireset.find(idex);
-
-            if(it!=state->fireset.end()) {
+            if(state->isFirable(ptnet->transition[idex])) {
                 return true;
             }
 
