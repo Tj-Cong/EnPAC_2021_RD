@@ -60,7 +60,7 @@ void setGlobalValue(Petri *ptnet) {
     } else if (LONGBITPLACE) {
         MARKLEN = 32*placecount;
     } else {
-        MARKLEN = 16*ptnet->placecount;
+        MARKLEN = placecount;
     }
     FIELDCOUNT = ceil(double(MARKLEN) / (sizeof(myuint) * 8));
 }

@@ -17,7 +17,7 @@ using namespace std;
 
 extern Petri *petri;
 
-enum AtomicType{PT_CARDINALITY,PT_FIREABILITY};
+enum AtomicType{TRUE,PT_CARDINALITY,PT_FIREABILITY};
 
 typedef struct cardmeta {
     short coefficient = 1;
@@ -57,7 +57,7 @@ typedef struct atomic
 {
     bool negation;
     unsigned short atomicmeta_link;
-};
+} atomic;
 
 class atomictable
 {

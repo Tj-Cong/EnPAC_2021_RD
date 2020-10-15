@@ -23,7 +23,7 @@ using namespace std;
 
 #define INDEX_ERROR 0xffffffff
 #define COMPUTE_P_INVAR_TIME 400
-#define MAXUNINT32 4294967295
+#define MAXUINT32 4294967295
 #define MAXUNSHORT16 65535
 
 typedef unsigned int index_t;    //索引数据类型
@@ -109,8 +109,8 @@ typedef struct Transition {
     string id = "";
     vector<SArc> producer;
     vector<SArc> consumer;
-    set<index_t> increasing;
-    set<index_t> decreasing;
+//    set<index_t> increasing;
+//    set<index_t> decreasing;
 } *Transition_P;
 
 typedef struct Arc {
@@ -166,7 +166,7 @@ public:
     void judgeSAFE();
     void judgePINVAR();
     void checkarc();
-    void computeDI();
+//    void computeDI();
     void printPlace();
     void printTransition();
     void printTransition2CSV();

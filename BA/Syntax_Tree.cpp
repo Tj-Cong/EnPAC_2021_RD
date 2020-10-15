@@ -92,6 +92,7 @@ void Syntax_Tree::ParseXML(char *filename, string &property, int number) {
     property = this->propertyid = id->GetText();
     TiXmlElement *formula = p->FirstChildElement("formula");
     BuildTree(formula->FirstChildElement(),this->root);
+    delete doc;
 }
 
 void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {

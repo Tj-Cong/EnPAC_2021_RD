@@ -858,58 +858,58 @@ void Petri::printTransition2CSV() {
     }
 }
 
-void Petri::computeDI() {
-    /*iterate over places*/
-    for(index_t i=0;i<placecount;++i) {
-        Place &p=place[i];
-        vector<SArc>::iterator coniter1,coniter2,proiter;
-        /*计算decreasing set*/
-        for(coniter1=p.consumer.begin();coniter1!=p.consumer.end();++coniter1) {
-            vector<SArc>::iterator backiter;
-            weight_t backweight;
-            for(backiter=transition[coniter1->idx].consumer.begin();backiter!=transition[coniter1->idx].consumer.end();++backiter) {
-                if(backiter->idx == i)
-                    break;
-            }
-            if(backiter == transition[coniter1->idx].consumer.end()) {
-                backweight = 0;
-            }
-            else {
-                backweight = backiter->weight;
-            }
-            /*如果送回这个库所的token数比取出来的多，就没有decrease关系*/
-            if(backweight >= coniter1->weight) {
-                continue;
-            }
-            for(coniter2=p.consumer.begin();coniter2!=p.consumer.end();++coniter2) {
-                if(backweight<coniter2->weight) {
-                    transition[coniter1->idx].decreasing.insert(coniter2->idx);
-                }
-            }
-        }
-        /*计算increasing set*/
-        for(proiter=p.producer.begin();proiter!=p.producer.end();++proiter) {
-            vector<SArc>::iterator backiter;
-            weight_t backweight;
-            for(backiter=p.consumer.begin();backiter!=p.consumer.end();++backiter) {
-                if(backiter->idx == proiter->idx)
-                    break;
-            }
-            if(backiter == p.consumer.end()) {
-                backweight = 0;
-            }
-            else {
-                backweight = backiter->weight;
-            }
-            if(backweight>=proiter->weight) {
-                continue;
-            }
-            for(coniter1=p.consumer.begin();coniter1!=p.consumer.end();++coniter1) {
-                transition[proiter->idx].increasing.insert(coniter1->idx);
-            }
-        }
-    }
-}
+//void Petri::computeDI() {
+//    /*iterate over places*/
+//    for(index_t i=0;i<placecount;++i) {
+//        Place &p=place[i];
+//        vector<SArc>::iterator coniter1,coniter2,proiter;
+//        /*计算decreasing set*/
+//        for(coniter1=p.consumer.begin();coniter1!=p.consumer.end();++coniter1) {
+//            vector<SArc>::iterator backiter;
+//            weight_t backweight;
+//            for(backiter=transition[coniter1->idx].consumer.begin();backiter!=transition[coniter1->idx].consumer.end();++backiter) {
+//                if(backiter->idx == i)
+//                    break;
+//            }
+//            if(backiter == transition[coniter1->idx].consumer.end()) {
+//                backweight = 0;
+//            }
+//            else {
+//                backweight = backiter->weight;
+//            }
+//            /*如果送回这个库所的token数比取出来的多，就没有decrease关系*/
+//            if(backweight >= coniter1->weight) {
+//                continue;
+//            }
+//            for(coniter2=p.consumer.begin();coniter2!=p.consumer.end();++coniter2) {
+//                if(backweight<coniter2->weight) {
+//                    transition[coniter1->idx].decreasing.insert(coniter2->idx);
+//                }
+//            }
+//        }
+//        /*计算increasing set*/
+//        for(proiter=p.producer.begin();proiter!=p.producer.end();++proiter) {
+//            vector<SArc>::iterator backiter;
+//            weight_t backweight;
+//            for(backiter=p.consumer.begin();backiter!=p.consumer.end();++backiter) {
+//                if(backiter->idx == proiter->idx)
+//                    break;
+//            }
+//            if(backiter == p.consumer.end()) {
+//                backweight = 0;
+//            }
+//            else {
+//                backweight = backiter->weight;
+//            }
+//            if(backweight>=proiter->weight) {
+//                continue;
+//            }
+//            for(coniter1=p.consumer.begin();coniter1!=p.consumer.end();++coniter1) {
+//                transition[proiter->idx].increasing.insert(coniter1->idx);
+//            }
+//        }
+//    }
+//}
 
 /* 计算得到P不变量 以及 重要库所
  * 得到关联矩阵
@@ -1212,7 +1212,7 @@ void Petri::computeBound() {
     weightsum0 = new int[placecount - RankOfmatrix];
     for(int i=0;i<placecount;++i) {
         if(LONGBITPLACE)
-            bound[i] = MAXUNINT32;
+            bound[i] = MAXUINT32;
         else
             bound[i] = MAXUNSHORT16;
     }
