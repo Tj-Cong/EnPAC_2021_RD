@@ -1059,4 +1059,114 @@ void StateBuchi::PrintStateBuchi() {
     outsba<<"}"<<endl;
 }
 
+/*
+void StateBuchi::linkAtomics(const atomictable &AT) {
+    enum a_type{UNEXISTED,EXISTED_TRUE,EXISTED_FALSE};
+    int i, j;
+    string::size_type pos;
+    atomic temp;
+    a_type table[51];
+    for (i = 0; i <= vex_num; i++) {
+        if (vertics[i].id == -1 || vertics[i].label == "true")
+            continue;//keep linklist empty
+        //link
 
+        for (j = 1; j <= AT.atomiccount; j++) {
+            pos = 0;
+            while ((pos = vertics[i].label.find(AT.atomics[j].mystr, pos)) != string::npos) {
+                temp.atomicmeta_link = j;
+                temp.negation = pos != 0 && vertics[i].label[pos - 1] == '!';
+                vertics[i].links.push_back(temp);
+                pos++;
+            }
+        }
+
+        // invalid arg
+        memset(&table,UNEXISTED,51*sizeof(a_type));//init table
+        for (vector<atomic>::iterator it = vertics[i].links.begin(); it != vertics[i].links.end(); ++it) {
+            if (table[(*it).atomicmeta_link] == EXISTED_FALSE && (vertics[i].invalid = (*it).negation))
+                break;
+            if (table[(*it).atomicmeta_link] == EXISTED_TRUE && (vertics[i].invalid = !(*it).negation))
+                break;
+            table[(*it).atomicmeta_link] = (*it).negation ? EXISTED_TRUE : EXISTED_FALSE;
+        }
+
+
+    }
+}
+*/
+
+
+void StateBuchi::linkAtomics(atomictable &AT) {
+    pAT = &AT;
+    int i;
+    for (i=0;i<=vex_num;i++){
+        if (vertics[i].id == -1 || vertics[i].label == "true")
+            continue;//keep linklist empty
+        parseLabel(vertics[i].links, vertics[i].label, AT);
+
+        // invalid arg
+        judgeInvalid(vertics[i].invalid, vertics[i].links);
+    }
+
+    AT.linkPlace2atomictable();
+}
+
+void StateBuchi::parseLabel(vector<atomic> &links, const string &lable, const atomictable &AT) {
+    string::size_type pos = 0, end;
+    atomic temp;
+    string substr;
+    int i;
+    while (true) {
+        end = lable.find_first_of("&&", pos);
+        if (lable[pos] == '!') {
+            temp.negation = true;
+            pos++;
+        } else {
+            temp.negation = false;
+        }
+
+        if (end == string::npos) {
+            //last one
+            substr = lable.substr(pos);
+            for (i = 1; i <= AT.atomiccount; i++)
+                if (AT.atomics[i].mystr == substr) {
+                    temp.atomicmeta_link = i;
+                    links.push_back(temp);
+                    break;
+                }
+        } else {
+            substr = lable.substr(pos, end - pos);
+            for (i = 1; i <= AT.atomiccount; i++)
+                if (AT.atomics[i].mystr == substr) {
+                    temp.atomicmeta_link = i;
+                    links.push_back(temp);
+                    break;
+                }
+        }
+
+        if (i > AT.atomiccount) {
+            cerr << "Error in linking atomic string '" << substr << "'" << endl;
+            exit(-1);
+        }
+
+        pos = end+2;
+        if (end==string::npos)
+            break;
+    }
+}
+
+void StateBuchi::judgeInvalid(bool &invalid, const vector<atomic> &links) {
+    enum a_type{UNEXISTED=0,EXISTED_TRUE,EXISTED_FALSE};
+    a_type table[51];
+    int i;
+    memset(table,UNEXISTED,51*sizeof(a_type));
+    for (auto link : links) {
+        if (table[link.atomicmeta_link] == EXISTED_FALSE && (invalid = link.negation))
+            return;
+        if (table[link.atomicmeta_link] == EXISTED_TRUE && (invalid = !link.negation))
+            return;
+        table[link.atomicmeta_link] = link.negation ? EXISTED_TRUE : EXISTED_FALSE;
+    }
+    invalid= false;
+}

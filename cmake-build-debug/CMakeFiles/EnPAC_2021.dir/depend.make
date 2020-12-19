@@ -56,6 +56,7 @@ CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o: ../Petri_Net.cpp
 CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o: ../Petri_Net.h
 CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o: ../rref.h
 
+CMakeFiles/EnPAC_2021.dir/RG.cpp.o: ../BA/atomic.h
 CMakeFiles/EnPAC_2021.dir/RG.cpp.o: ../BA/set.h
 CMakeFiles/EnPAC_2021.dir/RG.cpp.o: ../BA/tinystr.h
 CMakeFiles/EnPAC_2021.dir/RG.cpp.o: ../BA/tinyxml.h

@@ -870,6 +870,10 @@ void RGNode::printMarking(const int &len) {
 //    cout << "]"<<endl;
 }
 
+index_t RGNode::readPlace(int placeid) const {
+    return marking[placeid];
+}
+
 //void RGNode::getFireSet(RGNode *lastnode, index_t lastfid) {
 //    this->fireset = lastnode->fireset;
 //    const Transition &t = petri->transition[lastfid];
@@ -1198,7 +1202,7 @@ void BitRGNode::writePlace(int placeid, index_t tokencount) {
 
 /****************************RG*****************************/
 /*构造函数*/
-RG::RG(Petri *pt) {
+RG::RG(Petri *pt, atomictable &argAT) : AT(argAT) {
     ptnet = pt;
     rgnode = new RGNode *[RGTABLE_SIZE];
     for (int i = 0; i < RGTABLE_SIZE; i++) {
@@ -1356,6 +1360,35 @@ RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
 
     //5.加入rgnode哈希表
     addRGNode(newnode);
+
+
+//    extern ofstream debugout;
+//    debugout << ptnet->transition[tranxnum].id << endl;
+
+    //6.更新值atomic check avaliable  不管是哪种类型的LTL公式都需要更新前继和后继
+    if (false) {
+        //static ofstream debugout("checkpoint.txt",ios::app);
+        iterpre = firingTanx->producer.begin();
+        iterpost = firingTanx->consumer.begin();
+        vector<unsigned char>::iterator temp_it, temp_end;
+        // producer
+        for (; iterpre != preend; iterpre++) {
+            temp_it = ptnet->place[iterpre->idx].atomicLinks.begin();
+            temp_end = ptnet->place[iterpre->idx].atomicLinks.end();
+            for (; temp_it != temp_end; temp_it++) {
+                AT.atomics[*temp_it].last_check_avaliable = false;
+            }
+        }
+        // consumer
+        for (; iterpost != postend; iterpost++) {
+            temp_it = ptnet->place[iterpost->idx].atomicLinks.begin();
+            temp_end = ptnet->place[iterpost->idx].atomicLinks.end();
+            for (; temp_it != temp_end; temp_it++) {
+                AT.atomics[*temp_it].last_check_avaliable = false;
+            }
+        }
+    }
+
     return newnode;
 }
 
@@ -1477,7 +1510,7 @@ RG::~RG() {
 
 /****************************BitRG*****************************/
 /*构造函数*/
-BitRG::BitRG(Petri *pt) {
+BitRG::BitRG(Petri *pt, atomictable &argAT) : AT(argAT) {
     ptnet = pt;
     rgnode = new BitRGNode *[RGTABLE_SIZE];
     for (int i = 0; i < RGTABLE_SIZE; i++) {
@@ -1695,7 +1728,8 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
 
         //没有重复
         addRGNode(newnode);
-    } else if (SAFE) {
+    }
+    else if (SAFE) {
         memcpy(newnode->marking, curnode->marking, sizeof(myuint) * FIELDCOUNT);
 
         int unit;
@@ -1819,6 +1853,30 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
         }
         addRGNode(newnode);
     }
+    //  执行至此表明该node添加成功
+    //  更新值atomic check avaliable  不管是哪种类型的LTL公式都需要更新前继和后继
+    if (false) {
+        iterpre = firingTanx->producer.begin();
+        iterpost = firingTanx->consumer.begin();
+        vector<unsigned char>::iterator temp_it, temp_end;
+        // producer
+        for (; iterpre != preend; iterpre++) {
+            temp_it = ptnet->place[iterpre->idx].atomicLinks.begin();
+            temp_end = ptnet->place[iterpre->idx].atomicLinks.end();
+            for (; temp_it != temp_end; temp_it++) {
+                AT.atomics[*temp_it].last_check_avaliable = false;
+            }
+        }
+        // consumer
+        for (; iterpost != postend; iterpost++) {
+            temp_it = ptnet->place[iterpost->idx].atomicLinks.begin();
+            temp_end = ptnet->place[iterpost->idx].atomicLinks.end();
+            for (; temp_it != temp_end; temp_it++) {
+                AT.atomics[*temp_it].last_check_avaliable = false;
+            }
+        }
+    }
+
     MallocExtension::instance()->ReleaseFreeMemory();
     return newnode;
 }

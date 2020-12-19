@@ -59,6 +59,9 @@ public:
     string propertyid;
     bool simplest;
     int UID;
+
+    //
+    atomictable AT;
 public:
     Syntax_Tree();
     ~Syntax_Tree();
@@ -104,4 +107,7 @@ public:
     void Transition_Simplify(STNode *n);
     void VWAA_Simplify();
     void VWAA_Simplify(STNode *n);
+
+    /*atomicstable operation*/
+    void PrintAT();
 };

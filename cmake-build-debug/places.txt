@@ -1,289 +1,79 @@
-Total places：48
+Total places：13
 
 0
-id:Section_4
-initialMarking:0
-producer:t3_to_4 
-consumer:t4_to_5 
+id:A1
+initialMarking:2
+producer:t2_1 t3_1 t4_1 t5_1 t9_1 
+consumer:t1_2 t1_3 t1_4 t1_5 t1_9 t2_1 t3_1 t4_1 t5_1 t9_1 
 
 1
-id:F7
+id:A2
 initialMarking:1
-producer:t8_to_9 
-consumer:t6_to_7 
+producer:t1_2 t3_2 t4_2 t5_2 t6_2 t9_2 t10_2 
+consumer:t1_2 t2_1 t2_3 t2_4 t2_5 t2_6 t2_9 t2_10 t3_2 t4_2 t5_2 t6_2 t9_2 t10_2 
 
 2
-id:Section_2
-initialMarking:0
-producer:t1_to_2 
-consumer:t2_to_3 
+id:A3
+initialMarking:1
+producer:t1_3 t2_3 t4_3 t5_3 t6_3 t7_3 t9_3 t10_3 t11_3 
+consumer:t1_3 t2_3 t3_1 t3_2 t3_4 t3_5 t3_6 t3_7 t3_9 t3_10 t3_11 t4_3 t5_3 t6_3 t7_3 t9_3 t10_3 t11_3 
 
 3
-id:Section_9
+id:A4
 initialMarking:1
-producer:t8_to_9 
-consumer:t9_to_10 
+producer:t1_4 t2_4 t3_4 t5_4 t6_4 t7_4 t9_4 t10_4 t11_4 
+consumer:t1_4 t2_4 t3_4 t4_1 t4_2 t4_3 t4_5 t4_6 t4_7 t4_9 t4_10 t4_11 t5_4 t6_4 t7_4 t9_4 t10_4 t11_4 
 
 4
-id:F23
-initialMarking:1
-producer:t24_to_1 
-consumer:t22_to_23 
+id:A5
+initialMarking:0
+producer:tb5 t1_5 t2_5 t3_5 t4_5 t6_5 t7_5 t9_5 t10_5 t11_5 
+consumer:t1_5 t2_5 t3_5 t4_5 t5_1 t5_2 t5_3 t5_4 t5_6 t5_7 t5_8 t5_9 t5_10 t5_11 t6_5 t7_5 t9_5 t10_5 t11_5 
 
 5
-id:Section_16
-initialMarking:0
-producer:t15_to_16 
-consumer:t16_to_17 
+id:B5
+initialMarking:1
+producer:
+consumer:tb5 tAb5 
 
 6
-id:F14
+id:A6
 initialMarking:1
-producer:t15_to_16 
-consumer:t13_to_14 
+producer:t2_6 t3_6 t4_6 t5_6 t7_6 t9_6 t10_6 
+consumer:t2_6 t3_6 t4_6 t5_6 t6_2 t6_3 t6_4 t6_5 t6_7 t6_8 t6_9 t6_10 t7_6 t9_6 t10_6 
 
 7
-id:F21
-initialMarking:0
-producer:t22_to_23 
-consumer:t20_to_21 
+id:A7
+initialMarking:1
+producer:t3_7 t4_7 t5_7 t6_7 t9_7 
+consumer:t3_7 t4_7 t5_7 t6_7 t7_3 t7_4 t7_5 t7_6 t7_8 t7_9 t9_7 
 
 8
-id:Section_23
-initialMarking:0
-producer:t22_to_23 
-consumer:t23_to_24 
+id:A8
+initialMarking:1
+producer:t5_8 t6_8 t7_8 tloop8 
+consumer:t5_8 t6_8 t7_8 tloop8 
 
 9
-id:Section_11
-initialMarking:0
-producer:t10_to_11 
-consumer:t11_to_12 
+id:A9
+initialMarking:1
+producer:t1_9 t2_9 t3_9 t4_9 t5_9 t6_9 t7_9 t10_9 t11_9 
+consumer:t1_9 t2_9 t3_9 t4_9 t5_9 t6_9 t7_9 t9_1 t9_2 t9_3 t9_4 t9_5 t9_6 t9_7 t9_10 t9_11 t9_12 t10_9 t11_9 
 
 10
-id:F2
+id:A10
 initialMarking:1
-producer:t3_to_4 
-consumer:t1_to_2 
+producer:t2_10 t3_10 t4_10 t5_10 t6_10 t9_10 t11_10 
+consumer:t2_10 t3_10 t4_10 t5_10 t6_10 t9_10 t10_2 t10_3 t10_4 t10_5 t10_6 t10_9 t10_11 t10_12 t11_10 
 
 11
-id:Section_6
+id:A11
 initialMarking:1
-producer:t5_to_6 
-consumer:t6_to_7 
+producer:t3_11 t4_11 t5_11 t9_11 t10_11 
+consumer:t3_11 t4_11 t5_11 t9_11 t10_11 t11_3 t11_4 t11_5 t11_9 t11_10 t11_12 
 
 12
-id:Section_14
-initialMarking:0
-producer:t13_to_14 
-consumer:t14_to_15 
-
-13
-id:F19
+id:A12
 initialMarking:1
-producer:t20_to_21 
-consumer:t18_to_19 
-
-14
-id:F16
-initialMarking:1
-producer:t17_to_18 
-consumer:t15_to_16 
-
-15
-id:F18
-initialMarking:0
-producer:t19_to_20 
-consumer:t17_to_18 
-
-16
-id:F9
-initialMarking:0
-producer:t10_to_11 
-consumer:t8_to_9 
-
-17
-id:F3
-initialMarking:0
-producer:t4_to_5 
-consumer:t2_to_3 
-
-18
-id:Section_12
-initialMarking:1
-producer:t11_to_12 
-consumer:t12_to_13 
-
-19
-id:Section_15
-initialMarking:1
-producer:t14_to_15 
-consumer:t15_to_16 
-
-20
-id:Section_21
-initialMarking:1
-producer:t20_to_21 
-consumer:t21_to_22 
-
-21
-id:Section_18
-initialMarking:1
-producer:t17_to_18 
-consumer:t18_to_19 
-
-22
-id:Section_24
-initialMarking:1
-producer:t23_to_24 
-consumer:t24_to_1 
-
-23
-id:F12
-initialMarking:0
-producer:t13_to_14 
-consumer:t11_to_12 
-
-24
-id:F6
-initialMarking:0
-producer:t7_to_8 
-consumer:t5_to_6 
-
-25
-id:Section_17
-initialMarking:0
-producer:t16_to_17 
-consumer:t17_to_18 
-
-26
-id:F1
-initialMarking:1
-producer:t2_to_3 
-consumer:t24_to_1 
-
-27
-id:F15
-initialMarking:0
-producer:t16_to_17 
-consumer:t14_to_15 
-
-28
-id:Section_3
-initialMarking:1
-producer:t2_to_3 
-consumer:t3_to_4 
-
-29
-id:Section_10
-initialMarking:0
-producer:t9_to_10 
-consumer:t10_to_11 
-
-30
-id:F8
-initialMarking:1
-producer:t9_to_10 
-consumer:t7_to_8 
-
-31
-id:F24
-initialMarking:0
-producer:t1_to_2 
-consumer:t23_to_24 
-
-32
-id:F10
-initialMarking:1
-producer:t11_to_12 
-consumer:t9_to_10 
-
-33
-id:Section_5
-initialMarking:0
-producer:t4_to_5 
-consumer:t5_to_6 
-
-34
-id:F13
-initialMarking:1
-producer:t14_to_15 
-consumer:t12_to_13 
-
-35
-id:Section_19
-initialMarking:0
-producer:t18_to_19 
-consumer:t19_to_20 
-
-36
-id:Section_8
-initialMarking:0
-producer:t7_to_8 
-consumer:t8_to_9 
-
-37
-id:F22
-initialMarking:1
-producer:t23_to_24 
-consumer:t21_to_22 
-
-38
-id:Section_7
-initialMarking:0
-producer:t6_to_7 
-consumer:t7_to_8 
-
-39
-id:F5
-initialMarking:1
-producer:t6_to_7 
-consumer:t4_to_5 
-
-40
-id:Section_20
-initialMarking:0
-producer:t19_to_20 
-consumer:t20_to_21 
-
-41
-id:F11
-initialMarking:1
-producer:t12_to_13 
-consumer:t10_to_11 
-
-42
-id:Section_13
-initialMarking:0
-producer:t12_to_13 
-consumer:t13_to_14 
-
-43
-id:Section_22
-initialMarking:0
-producer:t21_to_22 
-consumer:t22_to_23 
-
-44
-id:F4
-initialMarking:1
-producer:t5_to_6 
-consumer:t3_to_4 
-
-45
-id:Section_1
-initialMarking:0
-producer:t24_to_1 
-consumer:t1_to_2 
-
-46
-id:F20
-initialMarking:1
-producer:t21_to_22 
-consumer:t19_to_20 
-
-47
-id:F17
-initialMarking:1
-producer:t18_to_19 
-consumer:t16_to_17 
+producer:t9_12 t10_12 t11_12 tloop12 
+consumer:t9_12 t10_12 t11_12 tloop12 

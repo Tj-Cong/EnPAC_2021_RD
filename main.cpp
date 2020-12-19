@@ -7,6 +7,8 @@
 #include <exception>
 using namespace std;
 
+//ofstream debugout("checkpoint.txt");
+
 #define TOTALTOOLTIME 3580
 
 size_t  heap_malloc_total, heap_free_total,mmap_total, mmap_count;
@@ -106,9 +108,18 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             syntaxTree.ParseXML(cc,propertyid,i);
         else
             syntaxTree.ParseXML(ff,propertyid,i);
+
+
 //        cout<<"original tree:"<<endl;
 //        syntaxTree.PrintTree();
-//        cout<<"-----------------------------------"<<endl;
+//        cout << "-----------------------------------" << endl;
+//        if (0) {
+//            //debug output (Atomicstable)
+//            cout << "***********************************" << endl;
+//            syntaxTree.PrintAT();
+//            cout << "***********************************" << endl;
+//            continue;
+//        }
         syntaxTree.Push_Negation(syntaxTree.root);
 //        cout<<"after negation:"<<endl;
 //        syntaxTree.PrintTree();
@@ -147,14 +158,15 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         SBA.Complete2();
         SBA.self_check();
 //        SBA.PrintStateBuchi();
+        SBA.linkAtomics(syntaxTree.AT);
 
         if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
-            bitgraph = new BitRG(ptnet);
+            bitgraph = new BitRG(ptnet, syntaxTree.AT);
 //            BitRGNode *initnode = bitgraph->RGinitialnode();
 //            bitgraph->Generate(initnode);
 //            cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
         } else {
-            graph = new RG(ptnet);
+            graph = new RG(ptnet, syntaxTree.AT);
 //            RGNode *initnode = graph->RGinitialnode();
 //            graph->Generate(initnode);
 //            cout<<"STATE SPACE:"<<graph->nodecount<<endl;
@@ -173,6 +185,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             cout<<" NODECOUNT:"<<bitgraph->nodecount<<" TIME:"<<(endtime-starttime)/CLOCKS_PER_SEC<<endl;
             int ret = product->getresult();
             outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
+            //cout << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T')) << endl;
             //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
             delete product;
         } else {
@@ -216,9 +229,19 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
         syntaxTree.ParseXML(cc,propertyid,num);
     else
         syntaxTree.ParseXML(ff,propertyid,num);
+
+
+
     cout<<"original tree:"<<endl;
     syntaxTree.PrintTree();
     cout<<"-----------------------------------"<<endl;
+    if (0){
+        //debug output (Atomicstable)
+        cout<<"***********************************"<<endl;
+        syntaxTree.PrintAT();
+        cout<<"***********************************"<<endl;
+        return ;
+    }
     syntaxTree.Push_Negation(syntaxTree.root);
     cout<<"after negation:"<<endl;
     syntaxTree.PrintTree();
@@ -231,6 +254,8 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     cout<<"after universe"<<endl;
     syntaxTree.PrintTree();
     cout<<"-----------------------------------"<<endl;
+
+
 
     syntaxTree.Get_DNF(syntaxTree.root);
     syntaxTree.Build_VWAA();
@@ -258,14 +283,17 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     SBA.Complete2();
     SBA.self_check();
     SBA.PrintStateBuchi();
+    if (1){
+        SBA.linkAtomics(syntaxTree.AT);
+    }
 
     if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
-        bitgraph = new BitRG(ptnet);
+        bitgraph = new BitRG(ptnet, syntaxTree.AT);
         BitRGNode *initnode = bitgraph->RGinitialnode();
         bitgraph->Generate(initnode);
         cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
     } else {
-        graph = new RG(ptnet);
+        graph = new RG(ptnet, syntaxTree.AT);
         RGNode *initnode = graph->RGinitialnode();
         graph->Generate(initnode);
         cout<<"STATE SPACE:"<<graph->nodecount<<endl;

@@ -1,11 +1,9 @@
 digraph BA {
-	S0 [shape=doublecircle]
+	S0 [shape=circle]
 	S1 [shape=doublecircle]
-	S2 [shape=doublecircle]
 
-	S0->S2 [label="!{SampleLW_off,}&&{SpeedRW_6,}"]
-	S0->S1 [label="{SpeedRW_6,}"]
-	S1->S2 [label="!{SampleLW_off,}&&!{SpeedRW_6,}&&{SpeedRW_6,}"]
-	S1->S1 [label="!{SpeedRW_6,}&&{SpeedRW_6,}"]
-	S2->S2 [label="!{SampleLW_off,}&&{SpeedRW_6,}"]
+	S0->S1 [label="!{token-count(p273,)<=token-count(p301,)}"]
+	S0->S0 [label="true"]
+	S1->S1 [label="!{token-count(p273,)<=token-count(p301,)}"]
+	S1->S0 [label="true"]
 }

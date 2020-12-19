@@ -115,7 +115,7 @@ template <class rgnode>
 PStack<rgnode>::PStack() {
     toppoint = 0;
     mydata = new Pstacknode<rgnode>* [PSTACKSIZE];
-    memset(mydata,NULL,sizeof(Pstacknode<rgnode>*)*PSTACKSIZE);
+    memset(mydata,0,sizeof(Pstacknode<rgnode>*)*PSTACKSIZE);
 //    for(int i=0;i<PSTACKSIZE;++i)
 //    {
 //        mydata[i] = NULL;
@@ -466,10 +466,14 @@ public:
     void addinitial_status(rgnode *initnode);  //生成交自动机的初始状态
     unsigned short ModelChecker(string propertyid,unsigned short each_run_time);  //最外层的函数
     bool isLabel(rgnode *state, int sj);  //判断能否合成交状态
+    bool isLabel2(rgnode *state, int sj); //测试
+    bool isLabel1(rgnode *state, int sj); //测试
     bool judgeF(string s);         //判断该公式是否为F类型的公式
     NUM_t sumtoken(string s, rgnode *state);   //计算s中所有库所的token和
     bool handleLTLF(string s, rgnode *state);
     bool handleLTLC(string s, rgnode *state);
+    bool checkLTLF(rgnode *state, atomicmeta &am);
+    bool checkLTLC(rgnode *state, atomicmeta &am);
     void handleLTLCstep(NUM_t &front_sum, NUM_t &latter_sum, string s, rgnode *state);
     int getresult();
     NUM_t getConflictTimes();
@@ -477,6 +481,7 @@ public:
     void printNegapth(ofstream &outpath);
     void detect_memory();
     ~Product_Automata();
+
 };
 template <class rgnode, class rg_T>
 Product_Automata<rgnode,rg_T>::Product_Automata(Petri *pt, rg_T* r, StateBuchi *sba) {
@@ -923,11 +928,11 @@ void Product_Automata<rgnode,rg_T>::addinitial_status(rgnode *initnode) {
 /*bool Product_Automata::isLabel(RGNode *state, int sj)
  * function: 判断可达图的一个状态和buchi自动机的一个状态能否合成交状态
  * in: state,可达图状态指针，指向要合成的可达图状态
- * sj,buchi自动机状态在邻接表中的序号
+ *     sj,buchi自动机状态在邻接表中的序号
  * out: true(可以合成交状态) or false(不能合成状态)
  * */
 template <class rgnode, class rg_T>
-bool Product_Automata<rgnode,rg_T>::isLabel(rgnode *state, int sj) {
+bool Product_Automata<rgnode,rg_T>::isLabel2(rgnode *state, int sj) {
 
     //取出自动机状态中的label
     string str = ba->vertics[sj].label;
@@ -1286,4 +1291,176 @@ template <class rgnode,class rg_T>
 Product_Automata<rgnode,rg_T>::~Product_Automata() {
 
 }
+
+
+
+/*bool Product_Automata::isLabel2(RGNode *state, int sj)
+ * function: 判断可达图的一个状态和buchi自动机的一个状态能否合成交状态
+ * in: state,可达图状态指针，指向要合成的可达图状态
+ *     sj,buchi自动机状态在邻接表中的序号
+ * out: true(可以合成交状态) or false(不能合成状态)
+ * */
+template <class rgnode, class rg_T>
+bool Product_Automata<rgnode, rg_T>::isLabel1(rgnode *state, int sj) {
+    if (ba->vertics[sj].invalid)
+        return false;
+    if (ba->vertics[sj].label=="true")
+        return true;
+
+    atomictable &AT = *(ba->pAT);
+    const vector<Atomic> &links = ba->vertics[sj].links;
+    Atomic temp;
+    int atomic_num = links.size();
+    bool atomicTrue= false;
+    unsigned int left, right;
+    Mark ptokennum;
+    int i, j;
+    for (i = 0; i < atomic_num; i++) {
+        temp = links[i];
+        if (AT.atomics[temp.atomicmeta_link].mytype == PT_FIREABILITY) {
+            //LTL---F
+            atomicTrue = AT.atomics[temp.atomicmeta_link].last_check = false;
+
+            int t_num = AT.atomics[temp.atomicmeta_link].fires.size();
+            const vector<unsigned int> &fires = AT.atomics[temp.atomicmeta_link].fires;
+            for (j = 0; j < t_num; j++)
+                if (state->isFirable(ptnet->transition[fires[j]])) {
+                    atomicTrue = true;
+                    break;
+                }
+        }
+        else if (AT.atomics[temp.atomicmeta_link].mytype == PT_CARDINALITY) {
+            //LTL---C
+            const cardexp &l_exp = AT.atomics[temp.atomicmeta_link].leftexp;
+            const cardexp &r_exp = AT.atomics[temp.atomicmeta_link].rightexp;
+            left = right = 0;
+
+            //left
+            if (l_exp.constnum != -1) {
+                left = l_exp.constnum;
+            } else {
+                const cardmeta *p = l_exp.expression;
+                while (p) {
+                    //memcpy(&ptokennum, &state->marking[p->placeid], sizeof(Mark));
+                    left += state->readPlace(p->placeid);
+                    p = p->next;
+                }
+            }
+
+            //right
+            if (r_exp.constnum != -1) {
+                right = r_exp.constnum;
+            } else {
+                const cardmeta *p = r_exp.expression;
+                while (p) {
+                    right += state->readPlace(p->placeid);
+                    p = p->next;
+                }
+            }
+
+            atomicTrue = left <= right;
+        }
+
+        if ((atomicTrue&&temp.negation)||(!atomicTrue&&!temp.negation))
+            return false;
+    }
+
+    return true;
+}
+
+/*bool Product_Automata::isLabel(RGNode *state, int sj)
+ * function: 判断可达图的一个状态和buchi自动机的一个状态能否合成交状态
+ * in: state,可达图状态指针，指向要合成的可达图状态
+ *     sj,buchi自动机状态在邻接表中的序号
+ * out: true(可以合成交状态) or false(不能合成状态)
+ * */
+template<class rgnode, class rg_T>
+bool Product_Automata<rgnode, rg_T>::isLabel(rgnode *state, int sj) {
+    if (ba->vertics[sj].invalid)
+        return false;
+    if (ba->vertics[sj].label == "true")
+        return true;
+
+    // debug
+    //static ofstream debugoutput("checkpoint.txt");
+    extern ofstream debugout;
+
+    // def
+    atomictable &AT = *(ba->pAT);
+    const vector<Atomic> &links = ba->vertics[sj].links;
+    Atomic temp;
+    int atomic_num = links.size();
+    bool atomicTrue = false;
+    int i, j;
+    for (i = 0; i < atomic_num; i++){
+        temp = links[i];
+
+        if (AT.atomics[temp.atomicmeta_link].last_check_avaliable)
+            atomicTrue = AT.atomics[temp.atomicmeta_link].last_check;
+        else if (AT.atomics[temp.atomicmeta_link].mytype == PT_FIREABILITY)
+            //call F handle
+            atomicTrue = checkLTLF(state, AT.atomics[temp.atomicmeta_link]);
+        else if (AT.atomics[temp.atomicmeta_link].mytype == PT_CARDINALITY)
+            //call C handle
+            atomicTrue = checkLTLC(state, AT.atomics[temp.atomicmeta_link]);
+
+        if ((atomicTrue&&temp.negation)||(!atomicTrue&&!temp.negation)) {
+//            debugout << "F " << ba->vertics[sj].label << endl;
+            return false;
+        }
+    }
+//    debugout << "T " << ba->vertics[sj].label << endl;
+    return true;
+}
+// used above only (new HandleLTLF) for atomics table
+template<class rgnode, class rg_T>
+bool Product_Automata<rgnode, rg_T>::checkLTLF(rgnode *state, atomicmeta &am) {
+    bool ans = false;
+    int t_num = am.fires.size();
+    int i;
+    for (i = 0; i < t_num; i++) {
+        if (state->isFirable(ptnet->transition[am.fires[i]])) {
+            ans = true;
+            break;
+        }
+    }
+
+    am.last_check_avaliable = false;
+    am.last_check = ans;
+    return ans;
+}
+// used above only (new HandleLTLC) for atomics table
+template<class rgnode, class rg_T>
+bool Product_Automata<rgnode, rg_T>::checkLTLC(rgnode *state, atomicmeta &am) {
+    unsigned int left = 0;
+    unsigned int right = 0;
+    const cardmeta *p;
+
+    //left
+    if (am.leftexp.constnum != -1)
+        left = am.leftexp.constnum;
+    else {
+        p = am.leftexp.expression;
+        while (p) {
+            left += state->readPlace(p->placeid);
+            p = p->next;
+        }
+    }
+
+    //right
+    if (am.rightexp.constnum != -1)
+        right = am.rightexp.constnum;
+    else {
+        p = am.rightexp.expression;
+        while (p) {
+            right += state->readPlace(p->placeid);
+            p = p->next;
+        }
+    }
+
+    am.last_check_avaliable = false;
+    am.last_check = left <= right;
+    return left <= right;
+}
+
 #endif //ENPAC_2020_2_0_PRODUCT_H

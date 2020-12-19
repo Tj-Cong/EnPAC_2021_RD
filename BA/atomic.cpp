@@ -2,6 +2,7 @@
 // Created by hecong on 2020/9/28.
 //
 #include "atomic.h"
+#include <algorithm>
 
 cardexp::~cardexp(){
     cardmeta *p,*q;
@@ -61,6 +62,9 @@ void cardexp::DestroyExp() {
         p=q;
     }
 };
+
+
+
 
 int atomicmeta::parse() {
     int pos = mystr.find("<=");
@@ -140,7 +144,7 @@ int atomicmeta::parse_fire() {
         if(idex == INDEX_ERROR){
             return CONSISTENCY_ERROR;
         }
-        fires.insert(idex);
+        fires.push_back(idex);
         s = s.substr(pos + 1, s.length() - pos);
     }
     return OK;
@@ -151,5 +155,143 @@ void atomicmeta::transform() {
         rightexp.MINUS(leftexp);
         leftexp.constnum = 0;
         leftexp.DestroyExp();
+    }
+}
+
+
+void atomicmeta::addPlace2Exp(bool left, const string &placeName) {
+    cardexp *exp = left ? &leftexp : &rightexp;
+    if (exp->constnum != -1) {
+        cerr << "Error, try to add place to integer-constant type" << endl;
+        exit(-1);
+    }
+    index_t idx_P = petri->getPPosition(placeName);
+    if (idx_P == INDEX_ERROR) {
+        cerr << "Error in locate place '" << placeName << "'!" << endl;
+        exit(-1);
+    }
+    else {
+        cardmeta *meta = exp->expression;
+        if (!meta) {     //first cardmeta
+            exp->expression = new cardmeta;
+            meta = exp->expression;
+        } else {
+            while (meta->next)
+                meta = meta->next;
+            meta->next = new cardmeta;
+            meta = meta->next;
+        }
+        meta->placeid = idx_P;
+        meta->coefficient = 1;
+    }
+}
+
+void atomictable::checkRepeat() {
+    int i;
+    for (i = 1; i < atomiccount; i++)//locate repeated atomicmeta
+        if (atomics[atomiccount].mystr == atomics[i].mystr)
+            break;
+
+    if (i != atomiccount) {//exist
+        atomics[atomiccount].mystr.clear();
+        //Type doesn't need to be changed
+        if (atomics[atomiccount].mytype == PT_CARDINALITY) {//card, handle left and right
+            if (atomics[atomiccount].leftexp.constnum != -1)
+                atomics[atomiccount].leftexp.constnum = -1;
+            else {
+                cardmeta *exp = atomics[atomiccount].leftexp.expression, *temp;
+                while (exp) {
+                    temp = exp->next;
+                    delete exp;
+                    exp = temp;
+                }
+                atomics[atomiccount].leftexp.expression = NULL;
+            }
+
+            if (atomics[atomiccount].rightexp.constnum != -1)
+                atomics[atomiccount].rightexp.constnum = -1;
+            else {
+                cardmeta *exp = atomics[atomiccount].rightexp.expression, *temp;
+                while (exp) {
+                    temp = exp->next;
+                    delete exp;
+                    exp = temp;
+                }
+                atomics[atomiccount].rightexp.expression = NULL;
+            }
+
+        }
+        else if (atomics[atomiccount].mytype == PT_FIREABILITY) {//fire
+            atomics[atomiccount].fires.clear();
+        }
+        else{
+            cerr << "Error, atomicmeta type error while checking repeat!" << endl;
+            exit(-1);
+        }
+
+        atomiccount--;
+    }
+
+}
+
+/* 构建库所影响的原子命题序列
+ * 不可以构建成const形式
+ * */
+void atomictable::linkPlace2atomictable() {
+    if (atomiccount == 0)
+        return;             // No atomic existing
+    AtomicType LTL_TYPE = atomics[atomiccount].mytype;
+    int i, j, k;
+
+    for (i = 0; i < petri->placecount; i++) {
+        petri->place[i].atomicLinks.clear();  // clear last formula
+
+        if (LTL_TYPE == PT_FIREABILITY) { //Firability
+            int t_num = petri->place[i].consumer.size();  // num of transition
+
+            for (j = 0; j < t_num; j++) {
+                index_t t_idx = petri->place[i].consumer[j].idx;  // transition index
+
+                for (k = 1; k <= atomiccount; k++) {
+                    vector<index_t>::iterator it = find(atomics[k].fires.begin(), atomics[k].fires.end(),
+                                                        t_idx); //try to find consumer in atomics[k]
+                    //
+                    if (it != atomics[k].fires.end()) {  // existing
+                        petri->place[i].atomicLinks.push_back(k);  // add to link table
+
+                    }
+                }
+            }
+        }
+        else { //Cardinality  if(LTL_TYPE == PT_CARDINALITY)
+            for (k = 0; k <= atomiccount; k++) { // check every atomicmeta
+
+                if (atomics[k].leftexp.constnum == -1) { // if const num is not -1 then pass
+                    cardmeta *p = atomics[k].leftexp.expression;
+                    while (p) {
+                        if (p->placeid == i) {
+                            petri->place[i].atomicLinks.push_back(k);
+                            break;  // appear once
+                        }
+                        p = p->next;
+                    }
+                    if (!petri->place[i].atomicLinks.empty())
+                        continue;// continue to prevent 2 same values in atomicLinks
+                }
+                if (atomics[k].rightexp.constnum == -1) {  // right
+                    cardmeta *p = atomics[k].rightexp.expression;
+                    while (p) {
+                        if (p->placeid == i) {
+                            petri->place[i].atomicLinks.push_back(k);
+                            break;  // appear once
+                        }
+                        p = p->next;
+                    }
+                }
+
+            }
+        }
+
+        petri->place[i].atomicLinks.shrink_to_fit();  // release memory
     }
 }

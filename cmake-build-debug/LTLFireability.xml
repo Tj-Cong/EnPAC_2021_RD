@@ -1,272 +1,302 @@
 <?xml version="1.0"?>
 <property-set xmlns="http://mcc.lip6.fr/">
   <property>
-    <id>AirplaneLD-PT-0010-00</id>
+    <id>Diffusion2D-PT-D10N010-00</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <negation>
+          <disjunction>
+            <finally>
+              <disjunction>
+                <next>
+                  <is-fireable>
+                    <transition>t1_7_2_6_3</transition>
+                  </is-fireable>
+                </next>
+                <until>
+                  <before>
+                    <is-fireable>
+                      <transition>t1_7_2_6_3</transition>
+                    </is-fireable>
+                  </before>
+                  <reach>
+                    <conjunction>
+                      <negation>
+                        <is-fireable>
+                          <transition>t1_7_2_6_3</transition>
+                        </is-fireable>
+                      </negation>
+                      <next>
+                        <is-fireable>
+                          <transition>t1_3_2_4_1</transition>
+                        </is-fireable>
+                      </next>
+                    </conjunction>
+                  </reach>
+                </until>
+              </disjunction>
+            </finally>
+            <next>
+              <is-fireable>
+                <transition>t1_3_5_3_6</transition>
+              </is-fireable>
+            </next>
+          </disjunction>
+        </negation>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Diffusion2D-PT-D10N010-01</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <disjunction>
+          <until>
+            <before>
+              <is-fireable>
+                <transition>t1_9_5_10_4</transition>
+              </is-fireable>
+            </before>
+            <reach>
+              <negation>
+                <is-fireable>
+                  <transition>t1_6_9_5_9</transition>
+                </is-fireable>
+              </negation>
+            </reach>
+          </until>
+          <next>
+            <globally>
+              <conjunction>
+                <is-fireable>
+                  <transition>t1_6_6_7_6</transition>
+                </is-fireable>
+                <next>
+                  <negation>
+                    <is-fireable>
+                      <transition>t1_6_6_5_5</transition>
+                    </is-fireable>
+                  </negation>
+                </next>
+              </conjunction>
+            </globally>
+          </next>
+        </disjunction>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Diffusion2D-PT-D10N010-02</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <negation>
+          <finally>
+            <globally>
+              <disjunction>
+                <globally>
+                  <disjunction>
+                    <is-fireable>
+                      <transition>t1_8_7_8_8</transition>
+                    </is-fireable>
+                    <negation>
+                      <is-fireable>
+                        <transition>t1_9_8_8_8</transition>
+                      </is-fireable>
+                    </negation>
+                  </disjunction>
+                </globally>
+                <finally>
+                  <conjunction>
+                    <is-fireable>
+                      <transition>t1_9_7_9_8</transition>
+                    </is-fireable>
+                    <is-fireable>
+                      <transition>t1_4_1_5_2</transition>
+                    </is-fireable>
+                  </conjunction>
+                </finally>
+              </disjunction>
+            </globally>
+          </finally>
+        </negation>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Diffusion2D-PT-D10N010-03</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <globally>
-          <finally>
-            <conjunction>
+          <disjunction>
+            <is-fireable>
+              <transition>t1_4_6_3_7</transition>
+            </is-fireable>
+            <next>
               <is-fireable>
-                <transition>t1_1_on</transition>
+                <transition>t1_2_2_2_3</transition>
               </is-fireable>
-              <globally>
-                <finally>
-                  <is-fireable>
-                    <transition>t4_1_6</transition>
-                    <transition>t4_1_7</transition>
-                    <transition>t4_1_8</transition>
-                    <transition>t4_1_9</transition>
-                  </is-fireable>
-                </finally>
-              </globally>
-            </conjunction>
-          </finally>
+            </next>
+            <finally>
+              <is-fireable>
+                <transition>t1_1_7_2_7</transition>
+              </is-fireable>
+            </finally>
+          </disjunction>
         </globally>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-01</id>
+    <id>Diffusion2D-PT-D10N010-04</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <conjunction>
-          <next>
-            <negation>
-              <next>
-                <is-fireable>
-                  <transition>SampleLW_on</transition>
-                  <transition>SampleLW_off</transition>
-                </is-fireable>
-              </next>
-            </negation>
-          </next>
-          <next>
+        <negation>
+          <globally>
             <finally>
-              <is-fireable>
-                <transition>t3_2_10</transition>
-                <transition>t3_2_11</transition>
-                <transition>t3_2_12</transition>
-                <transition>t3_2_13</transition>
-                <transition>t3_2_14</transition>
-                <transition>t3_2_15</transition>
-                <transition>t3_2_16</transition>
-                <transition>t3_2_17</transition>
-                <transition>t3_2_18</transition>
-                <transition>t3_2_19</transition>
-                <transition>t3_2_20</transition>
-              </is-fireable>
+              <globally>
+                <finally>
+                  <next>
+                    <finally>
+                      <until>
+                        <before>
+                          <next>
+                            <finally>
+                              <is-fireable>
+                                <transition>t1_2_7_1_7</transition>
+                              </is-fireable>
+                            </finally>
+                          </next>
+                        </before>
+                        <reach>
+                          <disjunction>
+                            <is-fireable>
+                              <transition>t1_10_6_10_5</transition>
+                            </is-fireable>
+                            <globally>
+                              <is-fireable>
+                                <transition>t1_2_7_1_7</transition>
+                              </is-fireable>
+                            </globally>
+                          </disjunction>
+                        </reach>
+                      </until>
+                    </finally>
+                  </next>
+                </finally>
+              </globally>
             </finally>
-          </next>
-        </conjunction>
+          </globally>
+        </negation>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-02</id>
+    <id>Diffusion2D-PT-D10N010-05</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <finally>
-          <globally>
-            <disjunction>
+        <next>
+          <finally>
+            <globally>
               <until>
                 <before>
-                  <negation>
+                  <globally>
                     <is-fireable>
-                      <transition>t5_2_1</transition>
-                      <transition>t5_2_2</transition>
-                      <transition>t5_2_3</transition>
-                      <transition>t5_2_4</transition>
-                      <transition>t5_2_5</transition>
-                      <transition>t5_2_10</transition>
+                      <transition>t1_8_1_7_1</transition>
                     </is-fireable>
-                  </negation>
+                  </globally>
                 </before>
                 <reach>
-                  <is-fireable>
-                    <transition>getAlt_1</transition>
-                    <transition>getAlt_2</transition>
-                    <transition>getAlt_3</transition>
-                    <transition>getAlt_4</transition>
-                    <transition>getAlt_5</transition>
-                    <transition>getAlt_6</transition>
-                    <transition>getAlt_7</transition>
-                    <transition>getAlt_8</transition>
-                    <transition>getAlt_9</transition>
-                    <transition>getAlt_10</transition>
-                    <transition>getAlt_11</transition>
-                    <transition>getAlt_12</transition>
-                    <transition>getAlt_13</transition>
-                    <transition>getAlt_14</transition>
-                    <transition>getAlt_15</transition>
-                    <transition>getAlt_16</transition>
-                    <transition>getAlt_17</transition>
-                    <transition>getAlt_18</transition>
-                    <transition>getAlt_19</transition>
-                    <transition>getAlt_20</transition>
-                  </is-fireable>
+                  <globally>
+                    <is-fireable>
+                      <transition>t1_8_7_7_7</transition>
+                    </is-fireable>
+                  </globally>
                 </reach>
               </until>
+            </globally>
+          </finally>
+        </next>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Diffusion2D-PT-D10N010-06</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <until>
+            <before>
               <negation>
-                <next>
-                  <globally>
-                    <finally>
-                      <globally>
-                        <is-fireable>
-                          <transition>t4_2_1</transition>
-                          <transition>t4_2_2</transition>
-                          <transition>t4_2_3</transition>
-                          <transition>t4_2_4</transition>
-                          <transition>t4_2_5</transition>
-                          <transition>t4_2_10</transition>
-                        </is-fireable>
-                      </globally>
-                    </finally>
-                  </globally>
-                </next>
-              </negation>
-            </disjunction>
-          </globally>
-        </finally>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>AirplaneLD-PT-0010-03</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <finally>
-          <next>
-            <next>
-              <next>
-                <next>
-                  <next>
+                <finally>
+                  <disjunction>
                     <is-fireable>
-                      <transition>t2_1_on</transition>
+                      <transition>t1_4_2_5_1</transition>
                     </is-fireable>
-                  </next>
-                </next>
-              </next>
-            </next>
-          </next>
-        </finally>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>AirplaneLD-PT-0010-04</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <finally>
-          <globally>
-            <until>
-              <before>
-                <conjunction>
-                  <finally>
-                    <is-fireable>
-                      <transition>t1_1_on</transition>
-                    </is-fireable>
-                  </finally>
-                  <globally>
                     <conjunction>
                       <is-fireable>
-                        <transition>t1_1_on</transition>
+                        <transition>t1_10_8_9_8</transition>
                       </is-fireable>
-                      <next>
-                        <is-fireable>
-                          <transition>t1_1_on</transition>
-                        </is-fireable>
-                      </next>
+                      <finally>
+                        <next>
+                          <is-fireable>
+                            <transition>t1_4_2_5_1</transition>
+                          </is-fireable>
+                        </next>
+                      </finally>
                     </conjunction>
-                  </globally>
-                </conjunction>
-              </before>
-              <reach>
-                <next>
-                  <is-fireable>
-                    <transition>t4_1_6</transition>
-                    <transition>t4_1_7</transition>
-                    <transition>t4_1_8</transition>
-                    <transition>t4_1_9</transition>
-                  </is-fireable>
-                </next>
-              </reach>
-            </until>
-          </globally>
+                  </disjunction>
+                </finally>
+              </negation>
+            </before>
+            <reach>
+              <globally>
+                <is-fireable>
+                  <transition>t1_4_2_5_2</transition>
+                </is-fireable>
+              </globally>
+            </reach>
+          </until>
         </finally>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-05</id>
+    <id>Diffusion2D-PT-D10N010-07</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <next>
           <until>
             <before>
-              <disjunction>
-                <is-fireable>
-                  <transition>SpeedRW_1</transition>
-                  <transition>SpeedRW_2</transition>
-                  <transition>SpeedRW_3</transition>
-                  <transition>SpeedRW_4</transition>
-                  <transition>SpeedRW_5</transition>
-                  <transition>SpeedRW_6</transition>
-                  <transition>SpeedRW_7</transition>
-                  <transition>SpeedRW_8</transition>
-                  <transition>SpeedRW_9</transition>
-                  <transition>SpeedRW_10</transition>
-                </is-fireable>
-                <is-fireable>
-                  <transition>SpeedLW_1</transition>
-                  <transition>SpeedLW_2</transition>
-                  <transition>SpeedLW_3</transition>
-                  <transition>SpeedLW_4</transition>
-                  <transition>SpeedLW_5</transition>
-                  <transition>SpeedLW_6</transition>
-                  <transition>SpeedLW_7</transition>
-                  <transition>SpeedLW_8</transition>
-                  <transition>SpeedLW_9</transition>
-                  <transition>SpeedLW_10</transition>
-                </is-fireable>
-              </disjunction>
+              <negation>
+                <finally>
+                  <disjunction>
+                    <is-fireable>
+                      <transition>t1_7_7_6_7</transition>
+                    </is-fireable>
+                    <is-fireable>
+                      <transition>t1_2_7_2_6</transition>
+                    </is-fireable>
+                    <finally>
+                      <is-fireable>
+                        <transition>t1_3_3_4_4</transition>
+                      </is-fireable>
+                    </finally>
+                  </disjunction>
+                </finally>
+              </negation>
             </before>
             <reach>
-              <conjunction>
-                <finally>
-                  <is-fireable>
-                    <transition>t3_1_1</transition>
-                    <transition>t3_1_2</transition>
-                    <transition>t3_1_3</transition>
-                    <transition>t3_1_4</transition>
-                    <transition>t3_1_5</transition>
-                    <transition>t3_1_6</transition>
-                    <transition>t3_1_7</transition>
-                    <transition>t3_1_8</transition>
-                    <transition>t3_1_9</transition>
-                  </is-fireable>
-                </finally>
-                <globally>
-                  <is-fireable>
-                    <transition>SpeedLW_1</transition>
-                    <transition>SpeedLW_2</transition>
-                    <transition>SpeedLW_3</transition>
-                    <transition>SpeedLW_4</transition>
-                    <transition>SpeedLW_5</transition>
-                    <transition>SpeedLW_6</transition>
-                    <transition>SpeedLW_7</transition>
-                    <transition>SpeedLW_8</transition>
-                    <transition>SpeedLW_9</transition>
-                    <transition>SpeedLW_10</transition>
-                  </is-fireable>
-                </globally>
-              </conjunction>
+              <is-fireable>
+                <transition>t1_5_6_6_6</transition>
+              </is-fireable>
             </reach>
           </until>
         </next>
@@ -274,402 +304,375 @@
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-06</id>
+    <id>Diffusion2D-PT-D10N010-08</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <negation>
-          <conjunction>
-            <globally>
-              <negation>
-                <is-fireable>
-                  <transition>SpeedLW_1</transition>
-                  <transition>SpeedLW_2</transition>
-                  <transition>SpeedLW_3</transition>
-                  <transition>SpeedLW_4</transition>
-                  <transition>SpeedLW_5</transition>
-                  <transition>SpeedLW_6</transition>
-                  <transition>SpeedLW_7</transition>
-                  <transition>SpeedLW_8</transition>
-                  <transition>SpeedLW_9</transition>
-                  <transition>SpeedLW_10</transition>
-                </is-fireable>
-              </negation>
-            </globally>
-            <disjunction>
-              <is-fireable>
-                <transition>t2_1_on</transition>
-              </is-fireable>
-              <finally>
-                <is-fireable>
-                  <transition>t5_1_6</transition>
-                  <transition>t5_1_7</transition>
-                  <transition>t5_1_8</transition>
-                  <transition>t5_1_9</transition>
-                </is-fireable>
-              </finally>
-            </disjunction>
-            <finally>
+          <until>
+            <before>
               <conjunction>
-                <is-fireable>
-                  <transition>t2_1_on</transition>
-                </is-fireable>
-                <is-fireable>
-                  <transition>SpeedRW_1</transition>
-                  <transition>SpeedRW_2</transition>
-                  <transition>SpeedRW_3</transition>
-                  <transition>SpeedRW_4</transition>
-                  <transition>SpeedRW_5</transition>
-                  <transition>SpeedRW_6</transition>
-                  <transition>SpeedRW_7</transition>
-                  <transition>SpeedRW_8</transition>
-                  <transition>SpeedRW_9</transition>
-                  <transition>SpeedRW_10</transition>
-                </is-fireable>
+                <finally>
+                  <is-fireable>
+                    <transition>t1_6_7_5_7</transition>
+                  </is-fireable>
+                </finally>
+                <finally>
+                  <is-fireable>
+                    <transition>t1_1_5_1_6</transition>
+                  </is-fireable>
+                </finally>
               </conjunction>
-            </finally>
-          </conjunction>
+            </before>
+            <reach>
+              <next>
+                <conjunction>
+                  <is-fireable>
+                    <transition>t1_8_9_8_10</transition>
+                  </is-fireable>
+                  <next>
+                    <is-fireable>
+                      <transition>t1_4_4_4_5</transition>
+                    </is-fireable>
+                  </next>
+                </conjunction>
+              </next>
+            </reach>
+          </until>
         </negation>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-07</id>
+    <id>Diffusion2D-PT-D10N010-09</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <negation>
-          <finally>
-            <next>
-              <finally>
-                <is-fireable>
-                  <transition>SpeedRW_1</transition>
-                  <transition>SpeedRW_2</transition>
-                  <transition>SpeedRW_3</transition>
-                  <transition>SpeedRW_4</transition>
-                  <transition>SpeedRW_5</transition>
-                  <transition>SpeedRW_6</transition>
-                  <transition>SpeedRW_7</transition>
-                  <transition>SpeedRW_8</transition>
-                  <transition>SpeedRW_9</transition>
-                  <transition>SpeedRW_10</transition>
-                </is-fireable>
-              </finally>
-            </next>
-          </finally>
-        </negation>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>AirplaneLD-PT-0010-08</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <conjunction>
-          <next>
-            <is-fireable>
-              <transition>SampleRW_on</transition>
-            </is-fireable>
-          </next>
-          <disjunction>
-            <finally>
+          <until>
+            <before>
               <is-fireable>
-                <transition>t3_2_16</transition>
+                <transition>t1_5_2_5_3</transition>
               </is-fireable>
-            </finally>
-            <globally>
-              <is-fireable>
-                <transition>SampleRW_on</transition>
-              </is-fireable>
-            </globally>
-            <next>
+            </before>
+            <reach>
               <until>
                 <before>
-                  <finally>
-                    <negation>
+                  <until>
+                    <before>
+                      <until>
+                        <before>
+                          <is-fireable>
+                            <transition>t1_5_2_5_3</transition>
+                          </is-fireable>
+                        </before>
+                        <reach>
+                          <finally>
+                            <is-fireable>
+                              <transition>t1_5_2_5_3</transition>
+                            </is-fireable>
+                          </finally>
+                        </reach>
+                      </until>
+                    </before>
+                    <reach>
                       <is-fireable>
-                        <transition>SampleRW_on</transition>
+                        <transition>t1_1_8_2_9</transition>
                       </is-fireable>
-                    </negation>
-                  </finally>
+                    </reach>
+                  </until>
                 </before>
                 <reach>
-                  <is-fireable>
-                    <transition>t1_1_on</transition>
-                  </is-fireable>
+                  <negation>
+                    <next>
+                      <is-fireable>
+                        <transition>t1_5_10_4_10</transition>
+                      </is-fireable>
+                    </next>
+                  </negation>
                 </reach>
               </until>
-            </next>
-          </disjunction>
-        </conjunction>
+            </reach>
+          </until>
+        </negation>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-09</id>
+    <id>Diffusion2D-PT-D10N010-10</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <finally>
-          <conjunction>
-            <finally>
-              <next>
+          <until>
+            <before>
+              <negation>
                 <globally>
+                  <disjunction>
+                    <is-fireable>
+                      <transition>t1_2_2_3_2</transition>
+                    </is-fireable>
+                    <globally>
+                      <negation>
+                        <is-fireable>
+                          <transition>t1_2_2_3_2</transition>
+                        </is-fireable>
+                      </negation>
+                    </globally>
+                  </disjunction>
+                </globally>
+              </negation>
+            </before>
+            <reach>
+              <until>
+                <before>
+                  <until>
+                    <before>
+                      <finally>
+                        <is-fireable>
+                          <transition>t1_2_2_3_2</transition>
+                        </is-fireable>
+                      </finally>
+                    </before>
+                    <reach>
+                      <is-fireable>
+                        <transition>t1_7_4_8_3</transition>
+                      </is-fireable>
+                    </reach>
+                  </until>
+                </before>
+                <reach>
                   <is-fireable>
-                    <transition>t3_2_19</transition>
+                    <transition>t1_2_2_3_2</transition>
                   </is-fireable>
-                </globally>
-              </next>
-            </finally>
-            <until>
-              <before>
-                <negation>
-                  <next>
-                    <is-fireable>
-                      <transition>t1_1_on</transition>
-                    </is-fireable>
-                  </next>
-                </negation>
-              </before>
-              <reach>
-                <globally>
-                  <negation>
-                    <is-fireable>
-                      <transition>t2_2_off</transition>
-                    </is-fireable>
-                  </negation>
-                </globally>
-              </reach>
-            </until>
-          </conjunction>
+                </reach>
+              </until>
+            </reach>
+          </until>
         </finally>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-10</id>
+    <id>Diffusion2D-PT-D10N010-11</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <globally>
-          <finally>
-            <disjunction>
-              <next>
-                <finally>
+        <disjunction>
+          <is-fireable>
+            <transition>t1_1_6_2_7</transition>
+          </is-fireable>
+          <is-fireable>
+            <transition>t1_3_4_3_3</transition>
+          </is-fireable>
+          <conjunction>
+            <next>
+              <is-fireable>
+                <transition>t1_5_4_4_5</transition>
+              </is-fireable>
+            </next>
+            <finally>
+              <until>
+                <before>
                   <is-fireable>
-                    <transition>SpeedLW_4</transition>
+                    <transition>t1_2_7_3_7</transition>
                   </is-fireable>
-                </finally>
-              </next>
-              <finally>
-                <next>
-                  <finally>
-                    <next>
-                      <is-fireable>
-                        <transition>SampleRW_off</transition>
-                      </is-fireable>
-                    </next>
-                  </finally>
-                </next>
-              </finally>
-            </disjunction>
-          </finally>
-        </globally>
+                </before>
+                <reach>
+                  <next>
+                    <is-fireable>
+                      <transition>t1_3_4_3_3</transition>
+                    </is-fireable>
+                  </next>
+                </reach>
+              </until>
+            </finally>
+          </conjunction>
+        </disjunction>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-11</id>
+    <id>Diffusion2D-PT-D10N010-12</id>
+    <description>Automatically generated</description>
+    <formula>
+      <all-paths>
+        <disjunction>
+          <is-fireable>
+            <transition>t1_4_9_3_9</transition>
+          </is-fireable>
+          <globally>
+            <until>
+              <before>
+                <finally>
+                  <is-fireable>
+                    <transition>t1_9_5_10_5</transition>
+                  </is-fireable>
+                </finally>
+              </before>
+              <reach>
+                <globally>
+                  <disjunction>
+                    <negation>
+                      <is-fireable>
+                        <transition>t1_8_3_8_2</transition>
+                      </is-fireable>
+                    </negation>
+                    <globally>
+                      <is-fireable>
+                        <transition>t1_9_3_10_2</transition>
+                      </is-fireable>
+                    </globally>
+                  </disjunction>
+                </globally>
+              </reach>
+            </until>
+          </globally>
+        </disjunction>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Diffusion2D-PT-D10N010-13</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <until>
           <before>
-            <globally>
-              <disjunction>
-                <is-fireable>
-                  <transition>t3_1_8</transition>
-                </is-fireable>
-                <next>
-                  <negation>
-                    <is-fireable>
-                      <transition>SampleLW_off</transition>
-                    </is-fireable>
-                  </negation>
-                </next>
-              </disjunction>
-            </globally>
+            <conjunction>
+              <is-fireable>
+                <transition>t1_7_4_8_5</transition>
+              </is-fireable>
+              <is-fireable>
+                <transition>t1_6_1_5_1</transition>
+              </is-fireable>
+            </conjunction>
           </before>
           <reach>
-            <next>
-              <next>
-                <next>
+            <disjunction>
+              <conjunction>
+                <negation>
                   <is-fireable>
-                    <transition>SampleLW_off</transition>
+                    <transition>t1_7_4_8_5</transition>
                   </is-fireable>
-                </next>
-              </next>
-            </next>
+                </negation>
+                <is-fireable>
+                  <transition>t1_6_5_7_6</transition>
+                </is-fireable>
+              </conjunction>
+              <globally>
+                <finally>
+                  <next>
+                    <next>
+                      <next>
+                        <is-fireable>
+                          <transition>t1_6_1_5_1</transition>
+                        </is-fireable>
+                      </next>
+                    </next>
+                  </next>
+                </finally>
+              </globally>
+            </disjunction>
           </reach>
         </until>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-12</id>
+    <id>Diffusion2D-PT-D10N010-14</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
-        <next>
+        <disjunction>
+          <globally>
+            <next>
+              <is-fireable>
+                <transition>t1_1_2_2_3</transition>
+              </is-fireable>
+            </next>
+          </globally>
           <next>
-            <conjunction>
-              <negation>
-                <globally>
+            <until>
+              <before>
+                <next>
                   <is-fireable>
-                    <transition>t5_2_5</transition>
+                    <transition>t1_6_3_6_2</transition>
                   </is-fireable>
-                </globally>
-              </negation>
-              <negation>
+                </next>
+              </before>
+              <reach>
                 <until>
                   <before>
-                    <until>
-                      <before>
-                        <is-fireable>
-                          <transition>t5_2_5</transition>
-                        </is-fireable>
-                      </before>
-                      <reach>
-                        <is-fireable>
-                          <transition>t1_2_off</transition>
-                        </is-fireable>
-                      </reach>
-                    </until>
+                    <globally>
+                      <is-fireable>
+                        <transition>t1_1_2_2_3</transition>
+                      </is-fireable>
+                    </globally>
                   </before>
                   <reach>
                     <finally>
                       <is-fireable>
-                        <transition>t5_2_5</transition>
+                        <transition>t1_8_9_8_8</transition>
                       </is-fireable>
                     </finally>
                   </reach>
                 </until>
-              </negation>
-            </conjunction>
+              </reach>
+            </until>
           </next>
-        </next>
+        </disjunction>
       </all-paths>
     </formula>
   </property>
   <property>
-    <id>AirplaneLD-PT-0010-13</id>
+    <id>Diffusion2D-PT-D10N010-15</id>
     <description>Automatically generated</description>
     <formula>
       <all-paths>
         <conjunction>
-          <is-fireable>
-            <transition>getAlt_17</transition>
-          </is-fireable>
-          <next>
-            <next>
-              <conjunction>
-                <is-fireable>
-                  <transition>SpeedLW_7</transition>
-                </is-fireable>
-                <is-fireable>
-                  <transition>t2_2_off</transition>
-                </is-fireable>
-              </conjunction>
-            </next>
-          </next>
-          <globally>
-            <next>
-              <negation>
-                <finally>
+          <until>
+            <before>
+              <until>
+                <before>
                   <next>
-                    <next>
-                      <is-fireable>
-                        <transition>t2_2_off</transition>
-                      </is-fireable>
-                    </next>
+                    <is-fireable>
+                      <transition>t1_7_4_6_3</transition>
+                    </is-fireable>
                   </next>
-                </finally>
-              </negation>
-            </next>
-          </globally>
-        </conjunction>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>AirplaneLD-PT-0010-14</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <finally>
-          <negation>
-            <until>
-              <before>
-                <negation>
-                  <finally>
-                    <is-fireable>
-                      <transition>t5_2_1</transition>
-                    </is-fireable>
-                  </finally>
-                </negation>
-              </before>
-              <reach>
-                <conjunction>
+                </before>
+                <reach>
                   <is-fireable>
-                    <transition>SpeedLW_5</transition>
+                    <transition>t1_8_8_9_9</transition>
                   </is-fireable>
-                  <disjunction>
+                </reach>
+              </until>
+            </before>
+            <reach>
+              <negation>
+                <is-fireable>
+                  <transition>t1_10_10_9_10</transition>
+                </is-fireable>
+              </negation>
+            </reach>
+          </until>
+          <negation>
+            <next>
+              <next>
+                <disjunction>
+                  <is-fireable>
+                    <transition>t1_10_10_9_10</transition>
+                  </is-fireable>
+                  <next>
                     <is-fireable>
-                      <transition>t4_2_1</transition>
+                      <transition>t1_4_4_4_3</transition>
                     </is-fireable>
-                    <is-fireable>
-                      <transition>SpeedLW_5</transition>
-                    </is-fireable>
-                  </disjunction>
-                </conjunction>
-              </reach>
-            </until>
+                  </next>
+                </disjunction>
+              </next>
+            </next>
           </negation>
-        </finally>
-      </all-paths>
-    </formula>
-  </property>
-  <property>
-    <id>AirplaneLD-PT-0010-15</id>
-    <description>Automatically generated</description>
-    <formula>
-      <all-paths>
-        <negation>
-          <globally>
-            <conjunction>
-              <is-fireable>
-                <transition>SpeedRW_6</transition>
-              </is-fireable>
-              <globally>
-                <negation>
-                  <conjunction>
-                    <finally>
-                      <is-fireable>
-                        <transition>SampleLW_off</transition>
-                      </is-fireable>
-                    </finally>
-                    <next>
-                      <is-fireable>
-                        <transition>SpeedRW_6</transition>
-                      </is-fireable>
-                    </next>
-                  </conjunction>
-                </negation>
-              </globally>
-            </conjunction>
-          </globally>
-        </negation>
+        </conjunction>
       </all-paths>
     </formula>
   </property>

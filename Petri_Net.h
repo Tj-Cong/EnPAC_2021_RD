@@ -81,6 +81,7 @@ typedef struct Place {
     unsigned int initialMarking = 0;  //初值token
     index_t myunit;              //该库所所在单元号
     index_t myoffset;            //该库所在单元中的偏移量
+    vector<unsigned char> atomicLinks; //库所关联原子命题序列
 } *Place_P;
 
 typedef struct Place_NUPN_info {
@@ -144,6 +145,8 @@ public:
     bool NUPN;
     bool SAFE;
     bool PINVAR;
+
+
 
     //P不变量 矩阵和重要库所
     float **Pinvar;                     //所有的P不变量

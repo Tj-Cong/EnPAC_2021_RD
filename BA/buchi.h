@@ -164,6 +164,8 @@ typedef struct Vertex {
     bool accepted = false;         /*indicate if this state is an accepted state*/
     bool trueaccpted = false;      /*indicate if this state (accepeted) could infinitely appear in a sequence*/
     string label;                  /*conjunction of propositions*/
+    bool invalid = false;          /**/
+    vector<atomic> links;          /**/
     double cost;                   /*the sum of heuristic information*/
     int mindistance = MAXINT;      /*minimum distance to a true accepted state*/
     int difficulty = 1;            /*the difficulty to satisfy this state's propositions*/
@@ -191,6 +193,7 @@ public:
     bool simplest;
     CStack<int> tarjanstack;
     int *visited;
+    atomictable *pAT;
 public:
     StateBuchi(){vex_num=0;};
     void Build_SBA(const Buchi &ba);
@@ -201,10 +204,13 @@ public:
     void Complete2();
     void self_check();
     void PrintStateBuchi();
+    void linkAtomics(atomictable &AT);
 private:
     void Simplify_state();
     void Merge_state(int s1,int s2);
     void Redirect_transitions(int removeid, int redirectid);
     void Tarjan(int stateid);
     void Backward(int stateid);
+    static void parseLabel(vector<atomic> &links, const string &label, const atomictable &AT);
+    static void judgeInvalid(bool &invalid, const vector<atomic> &links);
 };

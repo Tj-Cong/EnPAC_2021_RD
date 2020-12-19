@@ -10,6 +10,7 @@
 #include <malloc.h>
 #include <gperftools/malloc_extension.h>
 #include "BA/set.h"
+#include "BA/atomic.h"
 
 using namespace std;
 
@@ -93,7 +94,7 @@ public:
 //    void getFireSet(RGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
     ~RGNode();
-    index_t readPlace(int placeid) const {};
+    index_t readPlace(int placeid) const;
     void writePlace(int placeid){};
     void writePlace(int placeid,index_t tokencount){};
     void clearPlace(int placeid){};
@@ -127,8 +128,9 @@ public:
     unsigned long nodecount;//状态个数
     int hash_conflict_times;//哈希冲突次数
     ofstream outRG;
+    atomictable &AT;
 public:
-    RG(Petri *pt);
+    RG(Petri *pt, atomictable &AT);
 
     void addRGNode(RGNode *mark);
 
@@ -158,8 +160,9 @@ public:
     unsigned long nodecount;
     int hash_conflict_times;
     ofstream outRG;
+    atomictable &AT;
 public:
-    BitRG(Petri *pt);
+    BitRG(Petri *pt, atomictable &AT);
 
     void addRGNode(BitRGNode *mark);
 

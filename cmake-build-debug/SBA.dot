@@ -1,14 +1,35 @@
 digraph SBA{
 	rankdir=LR
-	0 [shape=doublecircle,style=filled,label="0.1"]
-	1 [shape=doublecircle,style=filled,label="1.1"]
-	2 [shape=doublecircle,label="4"]
-	3 [shape=doublecircle,label="4.1"]
+	0 [shape=doublecircle,style=filled,label="2"]
+	1 [shape=doublecircle,style=filled,label="3"]
+	2 [shape=doublecircle,style=filled,label="3.1"]
+	3 [shape=doublecircle,style=filled,label="2.1"]
+	4 [shape=doublecircle,label="1.2"]
+	5 [shape=doublecircle,label="0.1"]
+	9 [shape=doublecircle,label="3.1"]
+	10 [shape=doublecircle,label="4.2"]
+	11 [shape=doublecircle,label="4.2"]
+	12 [shape=doublecircle,label="4"]
+	13 [shape=doublecircle,label="3"]
+	14 [shape=doublecircle,label="2.2"]
+	15 [shape=doublecircle,label="2.2"]
 
-	0->0
-	1->2
-	1->3
+	0->11
+	1->9
+	1->10
+	2->0
+	2->1
 	2->2
-	2->3
-	3->0
+	3->4
+	3->5
+	4->13
+	5->12
+	9->9
+	9->10
+	10->11
+	11->14
+	12->15
+	13->14
+	14->14
+	15->14
 }

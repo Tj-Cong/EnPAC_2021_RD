@@ -30,7 +30,7 @@ public:
     int constnum;
     cardmeta *expression;
 
-    cardexp(){constnum=-1;expression=new cardmeta;}
+    cardexp(){constnum=-1;expression = NULL;/*expression=new cardmeta;*/}
     ~cardexp();
     void DestroyExp();
     cardmeta *locate(unsigned int placeid);
@@ -45,7 +45,16 @@ public:
     string mystr;
     cardexp leftexp;
     cardexp rightexp;
-    set<unsigned int> fires;
+    vector<unsigned int> fires;
+
+    bool last_check;
+    bool last_check_avaliable;
+
+public:
+    atomicmeta(){last_check_avaliable= false;}
+
+    void addPlace2Exp(bool left, const string &placeName);
+
 
     int parse();
     int parse_card();
@@ -53,15 +62,20 @@ public:
     void transform();
 };
 
-typedef struct atomic
-{
+typedef struct atomic {
     bool negation;
     unsigned short atomicmeta_link;
-} atomic;
+} atomic, Atomic;
 
 class atomictable
 {
+public:
     atomicmeta atomics[ATOMICTABLESIZE];
     int atomiccount;
+public:
+    atomictable(){atomiccount = 0;}//init, atomics[0] always empty
+
+    void checkRepeat();//check the latest one. If repeated, delete and release memory.
+    void linkPlace2atomictable();    //构建库所影响的原子命题序列
 };
 #endif //ENPAC_2021_ATOMIC_H
