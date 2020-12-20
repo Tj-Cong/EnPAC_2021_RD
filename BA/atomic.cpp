@@ -63,9 +63,6 @@ void cardexp::DestroyExp() {
     }
 };
 
-
-
-
 int atomicmeta::parse() {
     int pos = mystr.find("<=");
     if (pos == string::npos)
@@ -231,7 +228,6 @@ void atomictable::checkRepeat() {
 
         atomiccount--;
     }
-
 }
 
 /* 构建库所影响的原子命题序列

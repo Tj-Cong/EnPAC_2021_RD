@@ -256,7 +256,7 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
             }
             stnode->formula += ")";
         }
-        else if (mValue == "integer-constant")
+        else if (nValue == "integer-constant")
         {
             stnode->formula += n->GetText();
             AT.atomics[AT.atomiccount].rightexp.constnum = atoi(n->GetText());                  //AT
