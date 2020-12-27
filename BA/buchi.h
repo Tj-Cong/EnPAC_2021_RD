@@ -182,6 +182,14 @@ typedef struct Vertex {
     void CalDifficulty();
     void DelArc(ArcNode *p);
     void AddArc(int target);
+
+    bool operator > (const Vertex &vex) const {
+        return this->cost > vex.cost;
+    }
+    bool operator < (const Vertex &vex) const {
+        return this->cost < vex.cost;
+    }
+
 } Vextex;
 
 class StateBuchi

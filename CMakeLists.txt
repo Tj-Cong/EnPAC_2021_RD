@@ -34,6 +34,8 @@ add_executable(EnPAC_2021
         product.h
         RG.cpp
         RG.h
-        BA/set.h BA/atomic.h BA/atomic.cpp)
+        BA/set.h
+        BA/atomic.h
+        BA/atomic.cpp)
 
 target_link_libraries(EnPAC_2021 tcmalloc)

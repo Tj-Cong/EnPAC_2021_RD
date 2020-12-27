@@ -6,5 +6,5 @@ CXX_FLAGS =  -O3 -pthread -g   -std=gnu++14
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/hecong/文档/EnPAC_2021-master/. -I/home/hecong/文档/EnPAC_2021-master/BA 
+CXX_INCLUDES = -I/home/hecong/文档/EnPAC_2021/. -I/home/hecong/文档/EnPAC_2021/BA 
 

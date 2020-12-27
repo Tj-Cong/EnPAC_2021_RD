@@ -109,7 +109,10 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         else
             syntaxTree.ParseXML(ff,propertyid,i);
 
-
+        if(syntaxTree.root->groundtruth!=UNKNOW) {
+            cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
+            continue;
+        }
 //        cout<<"original tree:"<<endl;
 //        syntaxTree.PrintTree();
 //        cout << "-----------------------------------" << endl;
@@ -289,14 +292,14 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
 
     if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
         bitgraph = new BitRG(ptnet, syntaxTree.AT);
-        BitRGNode *initnode = bitgraph->RGinitialnode();
-        bitgraph->Generate(initnode);
-        cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
+//        BitRGNode *initnode = bitgraph->RGinitialnode();
+//        bitgraph->Generate(initnode);
+//        cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
     } else {
         graph = new RG(ptnet, syntaxTree.AT);
-        RGNode *initnode = graph->RGinitialnode();
-        graph->Generate(initnode);
-        cout<<"STATE SPACE:"<<graph->nodecount<<endl;
+//        RGNode *initnode = graph->RGinitialnode();
+//        graph->Generate(initnode);
+//        cout<<"STATE SPACE:"<<graph->nodecount<<endl;
     }
 
 
@@ -332,7 +335,7 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
 int main() {
     CHECKMEM();
     cout << "=================================================" << endl;
-    cout << "=====This is our tool-EnPAC for the MCC'2020=====" << endl;
+    cout << "=====This is our tool-EnPAC for the MCC'2021=====" << endl;
     cout << "=================================================" << endl;
 
     double starttime, endtime;
@@ -340,7 +343,7 @@ int main() {
 
     CONSTRUCTPETRI();
     CHECKLTL(petri,1);
-    CHECKLTL(petri,0);
+//    CHECKLTL(petri,0);
     endtime = get_time();
     cout<<"RUNTIME:"<<endtime-starttime<<endl;
     delete petri;
@@ -351,7 +354,7 @@ int main2(int argc,char *argv[])
 {
     CHECKMEM();
     cout << "=================================================" << endl;
-    cout << "=====This is our tool-EnPAC for the MCC'2020=====" << endl;
+    cout << "=====This is our tool-EnPAC for the MCC'2021=====" << endl;
     cout << "=================================================" << endl;
 
     CONSTRUCTPETRI();

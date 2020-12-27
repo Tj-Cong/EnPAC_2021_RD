@@ -1432,6 +1432,11 @@ bool Product_Automata<rgnode, rg_T>::checkLTLF(rgnode *state, atomicmeta &am) {
 // used above only (new HandleLTLC) for atomics table
 template<class rgnode, class rg_T>
 bool Product_Automata<rgnode, rg_T>::checkLTLC(rgnode *state, atomicmeta &am) {
+    if(am.groundtruth == TRUE)
+        return true;
+    else if(am.groundtruth == FALSE)
+        return false;
+
     unsigned int left = 0;
     unsigned int right = 0;
     const cardmeta *p;

@@ -92,6 +92,12 @@ void Syntax_Tree::ParseXML(char *filename, string &property, int number) {
     property = this->propertyid = id->GetText();
     TiXmlElement *formula = p->FirstChildElement("formula");
     BuildTree(formula->FirstChildElement(),this->root);
+//    cout<<"Original Tree:"<<endl;
+//    PrintTree();
+    Evaluate(this->root);
+//    Prune(this->root->nleft,this->root);
+//    cout<<"After evaluation:"<<endl;
+//    PrintTree();
     delete doc;
 }
 
@@ -272,6 +278,226 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
     else {
         cerr<<"Can not recognize operator:"<<nodename<<endl;
         exit(-1);
+    }
+}
+
+void Syntax_Tree::Evaluate(STNode *n) {
+    switch (n->ntyp) {
+        case ROOT: {
+            Evaluate(n->nleft);
+            n->groundtruth = n->nleft->groundtruth;
+            break;
+        }
+        case PREDICATE: {
+            for(int i=0;i<=AT.atomiccount;++i) {
+                if(n->formula == AT.atomics[i].mystr) {
+                    atomicmeta &aa = AT.atomics[i];
+                    aa.evaluate();
+                    n->groundtruth = aa.groundtruth;
+                    break;
+                }
+            }
+            break;
+        }
+        case NEG: {
+            Evaluate(n->nleft);
+            if(n->nleft->groundtruth == TRUE)
+                n->groundtruth = FALSE;
+            else if(n->nleft->groundtruth == FALSE)
+                n->groundtruth = TRUE;
+            break;
+        }
+        case CONJUNC: {
+            Evaluate(n->nleft);
+            Evaluate(n->nright);
+            if(n->nleft->groundtruth==FALSE || n->nright->groundtruth==FALSE) {
+                n->groundtruth = FALSE;
+            }
+            else if(n->nleft->groundtruth==TRUE && n->nright->groundtruth==TRUE) {
+                n->groundtruth = TRUE;
+            }
+            break;
+        }
+        case DISJUNC: {
+            Evaluate(n->nleft);
+            Evaluate(n->nright);
+            if(n->nleft->groundtruth==FALSE && n->nright->groundtruth==FALSE) {
+                n->groundtruth = FALSE;
+            }
+            else if(n->nleft->groundtruth==TRUE || n->nright->groundtruth==TRUE) {
+                n->groundtruth = TRUE;
+            }
+            break;
+        }
+        case NEXT:
+        case ALWAYS:
+        case EVENTUALLY: {
+            Evaluate(n->nleft);
+            n->groundtruth = n->nleft->groundtruth;
+            break;
+        }
+        case U_OPER: {
+            Evaluate(n->nleft);
+            Evaluate(n->nright);
+
+            if(n->nright->groundtruth == FALSE) {
+                n->groundtruth = FALSE;
+            }
+            else if(n->nright->groundtruth == TRUE) {
+                n->groundtruth = TRUE;
+            }
+            break;
+        }
+        case V_OPER: {
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+}
+
+void Syntax_Tree::Prune(STNode *curnode, STNode *predecessor) {
+    switch (curnode->ntyp) {
+        case CONJUNC: {
+            if(curnode->groundtruth == UNKNOW) {
+                if(curnode->nleft->groundtruth == TRUE) {
+                    Destroy(curnode->nleft);
+                    curnode->nleft = NULL;
+                    if(predecessor->nleft == curnode) {
+                        predecessor->nleft = curnode->nright;
+                        Prune(predecessor->nleft,predecessor);
+                        delete curnode;
+                    }
+                    else if(predecessor->nright == curnode) {
+                        predecessor->nright = curnode->nright;
+                        Prune(predecessor->nright,predecessor);
+                        delete curnode;
+                    }
+                }
+                else if(curnode->nright->groundtruth == TRUE) {
+                    Destroy(curnode->nright);
+                    curnode->nright = NULL;
+                    if(predecessor->nleft == curnode) {
+                        predecessor->nleft = curnode->nleft;
+                        Prune(predecessor->nleft,predecessor);
+                        delete curnode;
+                    }
+                    else if(predecessor->nright == curnode) {
+                        predecessor->nright = curnode->nleft;
+                        Prune(predecessor->nright,predecessor);
+                        delete curnode;
+                    }
+                }
+                else {
+                    Prune(curnode->nleft,curnode);
+                    Prune(curnode->nright,curnode);
+                }
+            }
+            else {
+                Destroy(curnode->nleft);
+                Destroy(curnode->nright);
+                curnode->nleft = curnode->nright = NULL;
+                curnode->ntyp = PREDICATE;
+                curnode->formula = curnode->groundtruth==TRUE?"true":"false";
+            }
+            break;
+        }
+        case DISJUNC: {
+            if(curnode->groundtruth == UNKNOW) {
+                if(curnode->nleft->groundtruth == FALSE) {
+                    Destroy(curnode->nleft);
+                    curnode->nleft = NULL;
+                    if(predecessor->nleft == curnode) {
+                        predecessor->nleft = curnode->nright;
+                        Prune(predecessor->nleft,predecessor);
+                        delete curnode;
+                    }
+                    else if(predecessor->nright == curnode) {
+                        predecessor->nright = curnode->nright;
+                        Prune(predecessor->nright,predecessor);
+                        delete curnode;
+                    }
+                }
+                else if(curnode->nright->groundtruth == FALSE) {
+                    Destroy(curnode->nright);
+                    curnode->nright = NULL;
+                    if(predecessor->nleft == curnode) {
+                        predecessor->nleft = curnode->nleft;
+                        Prune(predecessor->nleft,predecessor);
+                        delete curnode;
+                    }
+                    else if(predecessor->nright == curnode) {
+                        predecessor->nright = curnode->nleft;
+                        Prune(predecessor->nright,predecessor);
+                        delete curnode;
+                    }
+                }
+                else {
+                    Prune(curnode->nleft,curnode);
+                    Prune(curnode->nright,curnode);
+                }
+            }
+            else {
+                Destroy(curnode->nleft);
+                Destroy(curnode->nright);
+                curnode->nleft = curnode->nright = NULL;
+                curnode->ntyp = PREDICATE;
+                curnode->formula = curnode->groundtruth==TRUE?"true":"false";
+            }
+            break;
+        }
+        case U_OPER: {
+            if(curnode->groundtruth != UNKNOW) {
+                Destroy(curnode->nleft);
+                Destroy(curnode->nright);
+                curnode->nleft = curnode->nright = NULL;
+                curnode->ntyp = PREDICATE;
+                curnode->formula = curnode->groundtruth==TRUE?"true":"false";
+            }
+            else if(curnode->nleft->groundtruth == FALSE) {
+                Destroy(curnode->nleft);
+                curnode->nleft = NULL;
+                if(predecessor->nleft==curnode) {
+                    predecessor->nleft = curnode->nright;
+                    Prune(predecessor->nleft,predecessor);
+                    delete curnode;
+                }
+                else if(predecessor->nright==curnode) {
+                    predecessor->nright = curnode->nright;
+                    Prune(predecessor->nright,predecessor);
+                    delete curnode;
+                }
+            }
+            else {
+                Prune(curnode->nleft,curnode);
+                Prune(curnode->nright,curnode);
+            }
+            break;
+        }
+        case NEG:
+        case NEXT:
+        case ALWAYS:
+        case EVENTUALLY: {
+            if(curnode->groundtruth != UNKNOW) {
+                Destroy(curnode->nleft);
+                curnode->nleft = NULL;
+                curnode->ntyp = PREDICATE;
+                curnode->formula = curnode->groundtruth==TRUE?"true":"false";
+            }
+            else {
+                Prune(curnode->nleft,curnode);
+            }
+            break;
+        }
+        case V_OPER: {
+            Prune(curnode->nleft,curnode);
+            Prune(curnode->nright,curnode);
+            break;
+        }
+        default: {
+            break;
+        }
     }
 }
 

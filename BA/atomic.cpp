@@ -61,6 +61,27 @@ void cardexp::DestroyExp() {
         delete p;
         p=q;
     }
+}
+
+int cardexp::placenum() {
+    if(constnum!=-1)
+        return 0;
+    cardmeta *p = expression;
+    int i=0;
+    for(i,p;p!=NULL;p=p->next,++i);
+    return i;
+}
+
+int cardexp::unitnum() {
+    if(constnum!=-1)
+        return 0;
+    set<index_t> unitset;
+    cardmeta *p = expression;
+    while (p) {
+        unitset.insert(petri->place[p->placeid].myunit);
+        p=p->next;
+    }
+    return unitset.size();
 };
 
 int atomicmeta::parse() {
@@ -126,7 +147,6 @@ int atomicmeta::parse_card() {
     else {
         rightexp.constnum = atoi(rightplaces.c_str());
     }
-
     return OK;
 }
 
@@ -180,6 +200,35 @@ void atomicmeta::addPlace2Exp(bool left, const string &placeName) {
         }
         meta->placeid = idx_P;
         meta->coefficient = 1;
+    }
+}
+
+void atomicmeta::evaluate() {
+    if(mytype == PT_CARDINALITY) {
+        if(leftexp.constnum == 0) {
+            groundtruth = TRUE;
+//            cout<<"GroundTruth #1"<<endl;
+        }
+        else if(petri->SAFE) {
+            if(rightexp.constnum!=-1 && rightexp.constnum>=leftexp.placenum()) {
+                groundtruth = TRUE;
+//                cout<<"GroundTruth #2"<<endl;
+            }
+            else if(leftexp.constnum!=-1 && leftexp.constnum > rightexp.placenum()) {
+                groundtruth = FALSE;
+//                cout<<"GroundFalse #1"<<endl;
+            }
+        }
+        else if(petri->NUPN) {
+            if(rightexp.constnum!=-1 && rightexp.constnum>=leftexp.unitnum()) {
+                groundtruth = TRUE;
+//                cout<<"GroundTruth #2"<<endl;
+            }
+            else if(leftexp.constnum!=-1 && leftexp.constnum > rightexp.unitnum()) {
+                groundtruth = FALSE;
+//                cout<<"GroundFalse #1"<<endl;
+            }
+        }
     }
 }
 

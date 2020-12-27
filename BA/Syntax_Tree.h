@@ -33,6 +33,7 @@ typedef struct STNode
     int Uid;
     bool pure_even;     //whether the subformula is pure eventual, regarding the node as a root
     bool pure_univ;     //whether the subformula is pure universal, regarding the node as a root
+    Evaluation groundtruth;
     string formula;     //the string of the subformula, regarding the node as a root
     vector<set<const STNode *>> DNF;
     vector<VWAA_delta> transitions;    //the transition set of this node, regarding it as a VWAA state
@@ -40,12 +41,14 @@ typedef struct STNode
     STNode *nright;     //rightnode
 
     STNode() {
+        groundtruth = UNKNOW;
         Uid = 0;
         pure_even = pure_univ = false;
         nleft = nright = NULL;
     }
     STNode(NodeType type) {
         ntyp = type;
+        groundtruth = UNKNOW;
         Uid = 0;
         pure_even = pure_univ = false;
         nleft = nright = NULL;
@@ -98,6 +101,10 @@ public:
 
     /*Replace "G","F" with V_OPER and U_OPER. (recursive fucntion)*/
     void Universe(STNode *n);
+
+    void Evaluate(STNode *n);
+
+    void Prune(STNode *curnode, STNode *predecessor);
 
     /*VWAA operation*/
     int AssignUID();
