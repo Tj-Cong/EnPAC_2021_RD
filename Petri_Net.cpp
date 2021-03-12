@@ -693,7 +693,7 @@ void Petri::checkarc() {
             }
         }
     }
-    cout << "Arc Check Passed! ^_^" << endl;
+//    cout << "Arc Check Passed! ^_^" << endl;
     delete [] arc;
 }
 

@@ -6,13 +6,13 @@
 
 #IncludeRegexTransform: 
 
-../BA/tinystr.h
+/home/hecong/文档/EnPAC_2021/BA/tinystr.h
 assert.h
 -
 string.h
 -
 
-../BA/tinyxml.h
+/home/hecong/文档/EnPAC_2021/BA/tinyxml.h
 ctype.h
 -
 stdio.h
@@ -30,9 +30,21 @@ iostream
 sstream
 -
 tinystr.h
-../BA/tinystr.h
+/home/hecong/文档/EnPAC_2021/BA/tinystr.h
 
-../Petri_Net.h
+/home/hecong/文档/EnPAC_2021/Petri_Net.cpp
+iostream
+-
+Petri_Net.h
+/home/hecong/文档/EnPAC_2021/Petri_Net.h
+signal.h
+-
+unistd.h
+-
+csetjmp
+-
+
+/home/hecong/文档/EnPAC_2021/Petri_Net.h
 string
 -
 vector
@@ -44,9 +56,9 @@ iostream
 sstream
 -
 BA/tinyxml.h
-../BA/tinyxml.h
+/home/hecong/文档/EnPAC_2021/BA/tinyxml.h
 rref.h
-../rref.h
+/home/hecong/文档/EnPAC_2021/rref.h
 cmath
 -
 gperftools/tcmalloc.h
@@ -60,21 +72,5 @@ map
 csetjmp
 -
 
-../rref.h
-
-/home/hecong/文档/EnPAC_2021/BA/atomic.cpp
-atomic.h
-/home/hecong/文档/EnPAC_2021/BA/atomic.h
-algorithm
--
-
-/home/hecong/文档/EnPAC_2021/BA/atomic.h
-iostream
--
-string
--
-set
--
-Petri_Net.h
-/home/hecong/文档/EnPAC_2021/BA/Petri_Net.h
+/home/hecong/文档/EnPAC_2021/rref.h
 

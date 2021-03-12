@@ -69,7 +69,7 @@ void Syntax_Tree::PrintTree(STNode *n, int depth) const{
     }
 }
 
-void Syntax_Tree::ParseXML(char *filename, string &property, int number) {
+int Syntax_Tree::ParseXML(char *filename, string &property, int number) {
     if(number<=0 || number>16) {
         cerr<<"Number must be between [1,16]"<<endl;
         exit(-1);
@@ -91,7 +91,12 @@ void Syntax_Tree::ParseXML(char *filename, string &property, int number) {
     TiXmlElement *id = p->FirstChildElement("id");
     property = this->propertyid = id->GetText();
     TiXmlElement *formula = p->FirstChildElement("formula");
-    BuildTree(formula->FirstChildElement(),this->root);
+    bool consistency = true;
+    BuildTree(formula->FirstChildElement(),this->root,consistency);
+    if(!consistency) {
+        delete doc;
+        return CONSISTENCY_ERROR;
+    }
 //    cout<<"Original Tree:"<<endl;
 //    PrintTree();
     Evaluate(this->root);
@@ -99,23 +104,24 @@ void Syntax_Tree::ParseXML(char *filename, string &property, int number) {
 //    cout<<"After evaluation:"<<endl;
 //    PrintTree();
     delete doc;
+    return OK;
 }
 
-void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
+void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode,bool &consistency) {
     string nodename = xmlnode->Value();
     if(nodename == "all-paths") {
-        BuildTree(xmlnode->FirstChildElement(),stnode->nleft);
+        BuildTree(xmlnode->FirstChildElement(),stnode->nleft,consistency);
     }
     else if(nodename == "negation") {
         stnode = new STNode(NEG);
-        BuildTree(xmlnode->FirstChildElement(),stnode->nleft);
+        BuildTree(xmlnode->FirstChildElement(),stnode->nleft,consistency);
     }
     else if(nodename == "conjunction") {
         stnode = new STNode(CONJUNC);
         TiXmlElement *m = xmlnode->FirstChildElement();
         STNode *temp=stnode,*parent;
         while (m) {
-            BuildTree(m,temp->nleft);
+            BuildTree(m,temp->nleft,consistency);
             m = m->NextSiblingElement();
             if(m) {
                 temp->nright = new STNode(CONJUNC);
@@ -134,7 +140,7 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
         TiXmlElement *m = xmlnode->FirstChildElement();
         STNode *temp=stnode,*parent;
         while (m) {
-            BuildTree(m,temp->nleft);
+            BuildTree(m,temp->nleft,consistency);
             m = m->NextSiblingElement();
             if(m) {
                 temp->nright = new STNode(DISJUNC);
@@ -150,15 +156,15 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
     }
     else if(nodename == "next") {
         stnode = new STNode(NEXT);
-        BuildTree(xmlnode->FirstChildElement(),stnode->nleft);
+        BuildTree(xmlnode->FirstChildElement(),stnode->nleft,consistency);
     }
     else if(nodename == "globally") {
         stnode = new STNode(ALWAYS);
-        BuildTree(xmlnode->FirstChildElement(),stnode->nleft);
+        BuildTree(xmlnode->FirstChildElement(),stnode->nleft,consistency);
     }
     else if(nodename == "finally") {
         stnode = new STNode(EVENTUALLY);
-        BuildTree(xmlnode->FirstChildElement(),stnode->nleft);
+        BuildTree(xmlnode->FirstChildElement(),stnode->nleft,consistency);
     }
     else if(nodename == "until") {
         stnode = new STNode(U_OPER);
@@ -177,8 +183,8 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
             cerr << "Error in XML file! The element until\'s second child is not reach!" << endl;
             exit(-1);
         }
-        BuildTree(m->FirstChildElement(),stnode->nleft);
-        BuildTree(n->FirstChildElement(),stnode->nright);
+        BuildTree(m->FirstChildElement(),stnode->nleft,consistency);
+        BuildTree(n->FirstChildElement(),stnode->nright,consistency);
     }
     else if(nodename == "is-fireable") {
         AT.atomiccount++;                                                                       //AT
@@ -193,14 +199,15 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
             {
                 stnode->formula += m->GetText();
                 stnode->formula += ",";
-                //AT.atomics[AT.atomiccount].fires.insert(petri->getTPosition(m->GetText()));   //AT
-                index_t idx_T = petri->getTPosition(m->GetText());                              //AT
-                if (idx_T == INDEX_ERROR){                                                      //AT
-                    cerr <<"Error in locate transition '"<<m->GetText()<<"'!"<<endl;            //AT
-                    exit(-1);                                                             //AT
+                index_t idx_T = petri->getTPosition(m->GetText());                           //AT
+                if (idx_T == INDEX_ERROR){
+                    consistency = false;
+                    return;
+//                    cerr <<"Error in locate transition '"<<m->GetText()<<"'!"<<endl;          //AT
+//                    exit(-1);                                                                 //AT
                 }                                                                               //AT
                 else                                                                            //AT
-                    AT.atomics[AT.atomiccount].fires.push_back(idx_T);                             //AT
+                    AT.atomics[AT.atomiccount].fires.push_back(idx_T);                          //AT
             }
             else
             {
@@ -232,7 +239,8 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
             {
                 stnode->formula += left->GetText();
                 stnode->formula += ",";
-                AT.atomics[AT.atomiccount].addPlace2Exp(1,left->GetText());                 //AT
+                if(AT.atomics[AT.atomiccount].addPlace2Exp(1,left->GetText())==CONSISTENCY_ERROR)
+                    consistency = false;
                 left = left->NextSiblingElement();
             }
             stnode->formula += ")";
@@ -257,7 +265,8 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode) {
             {
                 stnode->formula += right->GetText();
                 stnode->formula += ",";
-                AT.atomics[AT.atomiccount].addPlace2Exp(0,right->GetText());                //AT
+                if(AT.atomics[AT.atomiccount].addPlace2Exp(0,right->GetText())==CONSISTENCY_ERROR)
+                    consistency = false;
                 right = right->NextSiblingElement();
             }
             stnode->formula += ")";

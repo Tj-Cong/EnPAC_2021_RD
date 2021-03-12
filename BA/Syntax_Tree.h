@@ -72,13 +72,13 @@ public:
      * filename: filename of XML file;
      * number: spefies which formula to parse, number~[1,16];
      * */
-    void ParseXML(char *filename, string &property, int number=1);
+    int ParseXML(char *filename, string &property, int number=1);
 
     /*Build a syntax tree from a XML structure; (recursive function)
      * xmlnode: xml node;
      * stnode: syntax tree node;
      * */
-    void BuildTree(TiXmlElement *xmlnode, STNode* &stnode);
+    void BuildTree(TiXmlElement *xmlnode, STNode* &stnode,bool &consistency);
 
     /*Tree operator*/
     void Destroy(STNode *n);

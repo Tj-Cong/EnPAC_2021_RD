@@ -22,7 +22,7 @@
 #include <csetjmp>
 
 #define hash_table_num 1048576     //2^20
-#define PSTACKSIZE 67108864        //2^25
+#define PSTACKSIZE 67108864       //2^26
 #define HASHSIZE 1048576           //2^20
 #define UNREACHABLE 0xffffffff
 #define BOUND_BASE  2097151
@@ -159,7 +159,7 @@ Pstacknode<rgnode>* PStack<rgnode>::search(Pstacknode<rgnode> *qnode) {
     index_t hashpos = hashfunction(qnode);
     index_t pos = hashlink[hashpos];
     Pstacknode<rgnode>* p;
-    while(pos!=UNREACHABLE)
+    while(pos!=UNREACHABLE && !ready2exit)
     {
         p = mydata[pos];
         if(p->RGname_ptr==qnode->RGname_ptr && p->BAname_id==qnode->BAname_id)
@@ -622,6 +622,7 @@ Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnod
         if(rgseed == NULL)
         {
             data_flag = false;
+            ready2exit = true;
             return NULL;
         }
         while(q->pba)
@@ -799,6 +800,7 @@ int Product_Automata<rgnode,rg_T>::PUSH(Pstacknode<rgnode> *p0) {
     if(cstack.push(p0)==ERROR)
     {
         stack_flag = false;
+        ready2exit = true;
         return ERROR;
     }
     return OK;

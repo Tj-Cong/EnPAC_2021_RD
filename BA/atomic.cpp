@@ -176,7 +176,7 @@ void atomicmeta::transform() {
 }
 
 
-void atomicmeta::addPlace2Exp(bool left, const string &placeName) {
+int atomicmeta::addPlace2Exp(bool left, const string &placeName) {
     cardexp *exp = left ? &leftexp : &rightexp;
     if (exp->constnum != -1) {
         cerr << "Error, try to add place to integer-constant type" << endl;
@@ -184,8 +184,9 @@ void atomicmeta::addPlace2Exp(bool left, const string &placeName) {
     }
     index_t idx_P = petri->getPPosition(placeName);
     if (idx_P == INDEX_ERROR) {
-        cerr << "Error in locate place '" << placeName << "'!" << endl;
-        exit(-1);
+        return CONSISTENCY_ERROR;
+//        cerr << "Error in locate place '" << placeName << "'!" << endl;
+//        exit(-1);
     }
     else {
         cardmeta *meta = exp->expression;
@@ -201,6 +202,7 @@ void atomicmeta::addPlace2Exp(bool left, const string &placeName) {
         meta->placeid = idx_P;
         meta->coefficient = 1;
     }
+    return OK;
 }
 
 void atomicmeta::evaluate() {

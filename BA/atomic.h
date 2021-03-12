@@ -9,6 +9,7 @@
 #include <string>
 #include <set>
 #include "Petri_Net.h"
+
 using namespace std;
 
 #define OK 1
@@ -57,7 +58,7 @@ public:
 public:
     atomicmeta(){last_check_avaliable=false;groundtruth=UNKNOW;}
 
-    void addPlace2Exp(bool left, const string &placeName);
+    int addPlace2Exp(bool left, const string &placeName);
 
     void evaluate();
     int parse();

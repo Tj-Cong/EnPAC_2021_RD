@@ -104,13 +104,24 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             each_run_time=total_left_time/(16-ltlcount);
         }
         Syntax_Tree syntaxTree;
-        if(cardinality)
-            syntaxTree.ParseXML(cc,propertyid,i);
-        else
-            syntaxTree.ParseXML(ff,propertyid,i);
+        if(cardinality) {
+            if(syntaxTree.ParseXML(cc,propertyid,i)==CONSISTENCY_ERROR) {
+                cout << "FORMULA " << propertyid << " CANNOT_COMPUTE CONSISTENCY_ERROR"<<endl;
+                outresult << '?';
+                continue;
+            }
+        }
+        else {
+            if(syntaxTree.ParseXML(ff,propertyid,i)==CONSISTENCY_ERROR) {
+                cout << "FORMULA " << propertyid << " CANNOT_COMPUTE CONSISTENCY_ERROR"<<endl;
+                outresult << '?';
+                continue;
+            }
+        }
 
         if(syntaxTree.root->groundtruth!=UNKNOW) {
             cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
+            outresult << ((syntaxTree.root->groundtruth==TRUE)?'T':'F');
             continue;
         }
 //        cout<<"original tree:"<<endl;
@@ -222,21 +233,30 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     BitRG *bitgraph;
     RG *graph;
 
-    unsigned short each_run_time=300;
+    unsigned short each_run_time=900;
 
     string propertyid;
     char ff[]="LTLFireability.xml";
     char cc[]="LTLCardinality.xml";
     Syntax_Tree syntaxTree;
-    if(cardinality)
-        syntaxTree.ParseXML(cc,propertyid,num);
-    else
-        syntaxTree.ParseXML(ff,propertyid,num);
-
-
+    if(cardinality) {
+        if(syntaxTree.ParseXML(cc,propertyid,num)==CONSISTENCY_ERROR) {
+            cout << "FORMULA " << propertyid << " CANNOT_COMPUTE CONSISTENCY_ERROR"<<endl;
+            return;
+        }
+    }
+    else {
+        if(syntaxTree.ParseXML(ff,propertyid,num)==CONSISTENCY_ERROR) {
+            cout << "FORMULA " << propertyid << " CANNOT_COMPUTE CONSISTENCY_ERROR"<<endl;
+            return;
+        }
+    }
 
     cout<<"original tree:"<<endl;
     syntaxTree.PrintTree();
+    if(syntaxTree.root->groundtruth!=UNKNOW) {
+        cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
+    }
     cout<<"-----------------------------------"<<endl;
     if (0){
         //debug output (Atomicstable)
@@ -343,7 +363,7 @@ int main() {
 
     CONSTRUCTPETRI();
     CHECKLTL(petri,1);
-//    CHECKLTL(petri,0);
+    CHECKLTL(petri,0);
     endtime = get_time();
     cout<<"RUNTIME:"<<endtime-starttime<<endl;
     delete petri;
