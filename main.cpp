@@ -2,9 +2,6 @@
 #include "Petri_Net.h"
 #include <iostream>
 #include <sys/time.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <exception>
 using namespace std;
 
 //ofstream debugout("checkpoint.txt");
@@ -34,7 +31,6 @@ bool PINVAR = false;          //whether the checking process uses P-invariant en
 bool LONGBITPLACE = false;    //whether the checking process externs marking storage from short to int
 bool ready2exit = false;
 jmp_buf petrienv;
-jmp_buf productenv;
 
 //以MB为单位
 short int total_mem;          //memory limit
@@ -106,21 +102,21 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         Syntax_Tree syntaxTree;
         if(cardinality) {
             if(syntaxTree.ParseXML(cc,propertyid,i)==CONSISTENCY_ERROR) {
-                cout << "FORMULA " << propertyid << " CANNOT_COMPUTE CONSISTENCY_ERROR"<<endl;
+                cout << "FORMULA " << propertyid << " CANNOT_COMPUTE"<<endl;
                 outresult << '?';
                 continue;
             }
         }
         else {
             if(syntaxTree.ParseXML(ff,propertyid,i)==CONSISTENCY_ERROR) {
-                cout << "FORMULA " << propertyid << " CANNOT_COMPUTE CONSISTENCY_ERROR"<<endl;
+                cout << "FORMULA " << propertyid << " CANNOT_COMPUTE"<<endl;
                 outresult << '?';
                 continue;
             }
         }
 
         if(syntaxTree.root->groundtruth!=UNKNOW) {
-            cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
+            cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<" TECHNIQUES SEQUENTIAL_PROCESSING"<<endl;
             outresult << ((syntaxTree.root->groundtruth==TRUE)?'T':'F');
             continue;
         }
@@ -192,11 +188,10 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             Product_Automata<BitRGNode, BitRG> *product;
             product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, &SBA);
 
-            starttime = clock();
+            starttime = get_time();
             each_used_time=product->ModelChecker(propertyid,each_run_time);
-            endtime = clock();
-//            cout<<endl;
-            cout<<" NODECOUNT:"<<bitgraph->nodecount<<" TIME:"<<(endtime-starttime)/CLOCKS_PER_SEC<<endl;
+            endtime = get_time();
+            cout<<endl;
             int ret = product->getresult();
             outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
             //cout << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T')) << endl;
@@ -206,11 +201,10 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             Product_Automata<RGNode, RG> *product;
             product = new Product_Automata<RGNode, RG>(ptnet, graph, &SBA);
 
-            starttime = clock();
+            starttime = get_time();
             each_used_time=product->ModelChecker(propertyid,each_run_time);
-            endtime = clock();
-//            cout<<endl;
-            cout<<" NODECOUNT:"<<graph->nodecount<<" TIME:"<<(endtime-starttime)/CLOCKS_PER_SEC<<endl;
+            endtime = get_time();
+            cout<<endl;
             int ret = product->getresult();
 
             outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
@@ -352,7 +346,7 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     }
 }
 
-int main() {
+int main0() {
     CHECKMEM();
     cout << "=================================================" << endl;
     cout << "=====This is our tool-EnPAC for the MCC'2021=====" << endl;
@@ -370,7 +364,7 @@ int main() {
     return 0;
 }
 
-int main2(int argc,char *argv[])
+int main(int argc,char *argv[])
 {
     CHECKMEM();
     cout << "=================================================" << endl;

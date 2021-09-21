@@ -17,7 +17,7 @@
 #include <gperftools/malloc_extension.h>
 #include <set>
 #include <map>
-#include <csetjmp>
+#include <setjmp.h>
 
 using namespace std;
 
@@ -39,7 +39,6 @@ extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码
 extern bool LONGBITPLACE;
 extern jmp_buf petrienv;
-extern jmp_buf productenv;
 
 struct Small_Arc;
 struct Transition;

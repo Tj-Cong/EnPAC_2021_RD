@@ -5,13 +5,11 @@
 #ifndef ENPAC_2020_2_0_PRODUCT_H
 #define ENPAC_2020_2_0_PRODUCT_H
 
-#include <cstdio>
 #include <iostream>
 #include <algorithm>
 #include <set>
 #include <vector>
 #include <string>
-#include <cstdlib>
 #include <unistd.h>
 #include <signal.h>
 #include <fstream>
@@ -19,7 +17,6 @@
 #include "BA/buchi.h"
 #include <pthread.h>
 #include <thread>
-#include <csetjmp>
 
 #define hash_table_num 1048576     //2^20
 #define PSTACKSIZE 67108864       //2^26
@@ -535,45 +532,45 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
     if(timeflag && memory_flag && stack_flag && data_flag && consistency_flag)
     {
         string nupn = NUPN?" USE_NUPN":"";
-        string safe = SAFE?" SAFE":"";
-        string pinvar = PINVAR?" PINVAR":"";
+        string safe = SAFE?" STATE_COMPRESSION":"";
+        string pinvar = PINVAR?" STATE_COMPRESSION":"";
         string longbitplace = LONGBITPLACE?" LONGBITPLACE":"";
         if(result)
         {
             re="TRUE";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar+longbitplace;
+            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES SEQUENTIAL_PROCESSING ABSTRACTIONS EXPLICIT"+nupn+safe+pinvar;
             ret = 1;
         }
         else
         {
             re="FALSE";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES"+nupn+safe+pinvar+longbitplace;
+            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES SEQUENTIAL_PROCESSING ABSTRACTIONS EXPLICIT"+nupn+safe+pinvar;
             ret = 0;
         }
     }
     else if(!memory_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" MEMORY_OVERFLOW";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
         ret = -1;
     }
     else if(!stack_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" STACK_OVERFLOW";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
         ret = -1;
     }
     else if(!data_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" DATA_OVERFLOW";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
         ret = -1;
     }
     else if(!consistency_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" CONSISTENCY_ERROR";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
         ret = -1;
     }
     else if(!timeflag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE"<<" TIME_RUNOUT";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
         ret = -1;
     }
     unsigned short timeleft=alarm(0);
@@ -1273,7 +1270,7 @@ void Product_Automata<rgnode,rg_T>::detect_memory()
             }
             fclose(pf);
             size = size/1024;
-            if(100*size/total_mem > 85)
+            if(100*size/total_mem > 90)
             {
                 memory_flag = false;
                 ready2exit = true;
