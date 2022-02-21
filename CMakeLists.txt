@@ -3,7 +3,7 @@ project(EnPAC_2021)
 
 set(CMAKE_CXX_STANDARD 14)
 set(LINK_DIR /usr/local/lib)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -pthread")
 
 link_directories(${LINK_DIR})
 link_libraries(tcmalloc)
@@ -24,6 +24,9 @@ add_executable(EnPAC_2021
         BA/tinyxmlparser.cpp
         BA/VWAA.cpp
         BA/VWAA.h
+        BA/set.h
+        BA/Lexer.h
+        BA/Lexer.cpp
         BA/atomic.h
         BA/atomic.cpp
         main.cpp
@@ -34,9 +37,6 @@ add_executable(EnPAC_2021
         product.cpp
         product.h
         RG.cpp
-        RG.h
-        BA/set.h
-        BA/atomic.h
-        BA/atomic.cpp)
+        RG.h)
 
 target_link_libraries(EnPAC_2021 tcmalloc)

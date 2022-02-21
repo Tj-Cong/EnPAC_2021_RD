@@ -3,6 +3,30 @@
 //
 #include "Syntax_Tree.h"
 
+bool isoperand(int typenum)
+{
+    return (typenum == $ID) ? true : false;
+}
+
+NodeType DecideType(int typenum)
+{
+    switch (typenum)
+    {
+        case 1:return NEG;
+        case 6:return ALWAYS;
+        case 7:return EVENTUALLY;
+        case 10:return NEXT;
+        case 4:return CONJUNC;
+        case 5:return DISJUNC;
+        case 8:return U_OPER;
+        case 9:return V_OPER;
+        case 13:return PREDICATE; break;
+        default: {
+            cerr<<"Unexpected operand "<<typenum<<endl;
+        }
+    }
+}
+
 string DrawType(NodeType ntyp) {
     string character;
     switch (ntyp) {
@@ -21,10 +45,62 @@ string DrawType(NodeType ntyp) {
     return character;
 }
 
+privilege DecidePrilevel(int typenum)
+{
+    switch (typenum)
+    {
+        case 1:case 6:case 7:case 10:return unary;
+        case 8:case 9:return R_and_U;
+        case 4:return And;
+        case 5:return Or;
+        case 2:return Impli;
+        case 3:return Equ;
+        case 15:return root;
+        default:break;
+    }
+}
+
+void STACK::push(LSNode lsNode) {
+    elems.push(lsNode);
+}
+
+bool STACK::pop(LSNode &lsNode) {
+    if(elems.empty())
+        return false;
+    lsNode = elems.top();
+    elems.pop();
+    return true;
+}
+
+bool STACK::istoplpar() {
+    if(elems.empty())
+        return false;
+    return elems.top().w.typenum == $Lpar;
+}
+
+privilege STACK::topprilevel() {
+    return elems.top().prilevel;
+}
+
+bool STACK::empty() {
+    return elems.empty();
+}
+
+void STACK::pop() {
+    elems.pop();
+}
+
+
 Syntax_Tree::Syntax_Tree() {
     root = new STNode(ROOT);
     simplest = true;
     UID = 0;
+
+    LSNode node;
+    node.w.character = "#";
+    node.w.typenum = $root;
+    node.prilevel = privilege::root;
+    Operator.push(node);
 }
 
 Syntax_Tree::~Syntax_Tree() {
@@ -69,7 +145,152 @@ void Syntax_Tree::PrintTree(STNode *n, int depth) const{
     }
 }
 
-int Syntax_Tree::ParseXML(char *filename, string &property, int number) {
+bool Syntax_Tree::isBinaryOperator(NodeType ntype) {
+    if (ntype==CONJUNC
+        || ntype==DISJUNC
+        || ntype==U_OPER
+        || ntype==V_OPER)
+        return true;
+    return false;
+}
+bool Syntax_Tree::isUnaryOperator(NodeType ntype) {
+    if(ntype==NEG
+        || ntype==NEXT
+        || ntype==ALWAYS
+        || ntype==EVENTUALLY)
+        return true;
+    return false;
+}
+
+void Syntax_Tree::buildTreeFromCMD()
+{
+    STNode *last, *cur;
+    //build first node
+    LSNode temp;
+    Operand.pop(temp);
+    cur = new STNode;
+//    cur->formula = temp.w.character;
+    cur->ntyp = DecideType(temp.w.typenum);
+    cur->parent = root;
+    root->nleft = last = cur;
+    //first node was built
+
+    if (isBinaryOperator(cur->ntyp))
+    {
+        cur->nright = new STNode;
+        cur->nleft = NULL;
+        cur = cur->nright;
+    }
+    else if(isUnaryOperator(cur->ntyp))
+    {
+        cur->nleft = new STNode;
+        cur->nright = NULL;
+        cur = cur->nleft;
+    }
+    else if (cur->ntyp == PREDICATE)
+    {
+        cur->nleft = cur->nright = NULL;
+    }
+    while (!Operand.empty())
+    {
+        Operand.pop(temp);
+        cur->ntyp = DecideType(temp.w.typenum);
+        cur->parent = last;
+        last = cur;
+        if (isUnaryOperator(cur->ntyp))
+        {
+            cur->nleft = new STNode;
+            cur->nright = NULL;
+            cur = cur->nleft;
+        }
+        else if (isBinaryOperator(cur->ntyp))
+        {
+            cur->nright = new STNode;
+            cur->nleft = NULL;
+            cur = cur->nright;
+        }
+        else if (cur->ntyp == PREDICATE)
+        {
+            cur->formula = temp.w.character;
+            cur->nleft = cur->nright = NULL;
+            if (Operand.empty() == true)
+                return;
+            while (!(isBinaryOperator(cur->ntyp) && cur->nleft == NULL))
+            {
+                cur = cur->parent;
+            }
+            cur->nleft = new STNode;
+            last = cur;
+            cur = cur->nleft;
+        }
+    }
+}
+void Syntax_Tree::reverse_polish(Lexer lex)
+{
+    //get a word from lexer
+    word curw;
+    int result;
+    result = lex.GetWord(curw);
+
+    while (result != $End)
+    {
+        if (result == ERROR)
+            cout << "The LTL formula is incorrect! Please check!";
+
+        //copy word to node and decide privilege
+        LSNode node;
+        node.w = curw;
+        node.prilevel = DecidePrilevel(curw.typenum);
+
+        if (isoperand(curw.typenum))             //��ԭ������
+        {
+            Operand.push(node);
+        }
+        else if (curw.typenum == $Lpar)           //������
+        {
+            Operator.push(node);
+        }
+        else if (curw.typenum == $Rpar)            //������
+        {
+            LSNode temp;
+            while (!Operator.istoplpar())
+            {
+                if (Operator.pop(temp) == false)
+                {
+                    cout << "The LTL formula exists bracket mismatches! Please check!";
+                    exit(-1);
+                }
+                Operand.push(temp);
+            }
+            Operator.pop();        //����������
+        }
+        else
+        {
+            if (Operator.istoplpar())
+                Operator.push(node);
+            else if (node.prilevel <= Operator.topprilevel())    //��ջ��Ԫ�����ȼ�Ҫ�ߣ�ֱ��ѹջ
+            {
+                Operator.push(node);
+            }
+            else
+            {
+                while ((node.prilevel > Operator.topprilevel()) && (Operator.istoplpar()==false))
+                {
+                    LSNode temp;
+                    Operator.pop(temp);
+                    Operand.push(temp);
+                }
+                Operator.push(node);
+            }
+        }
+        result = lex.GetWord(curw);
+    }
+    LSNode temp;
+    while (Operator.pop(temp))
+        Operand.push(temp);
+    Operand.pop();
+}
+int Syntax_Tree::ParseXML(const char *filename, string &property, int number) {
     if(number<=0 || number>16) {
         cerr<<"Number must be between [1,16]"<<endl;
         exit(-1);
@@ -200,6 +421,7 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode,bool &consist
                 stnode->formula += m->GetText();
                 stnode->formula += ",";
                 index_t idx_T = petri->getTPosition(m->GetText());                           //AT
+                stnode->relPlaceOrTransition.insert(idx_T);
                 if (idx_T == INDEX_ERROR){
                     consistency = false;
                     return;
@@ -239,6 +461,8 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode,bool &consist
             {
                 stnode->formula += left->GetText();
                 stnode->formula += ",";
+                index_t idx_P = petri->getPPosition(left->GetText());
+                stnode->relPlaceOrTransition.insert(idx_P);
                 if(AT.atomics[AT.atomiccount].addPlace2Exp(1,left->GetText())==CONSISTENCY_ERROR)
                     consistency = false;
                 left = left->NextSiblingElement();
@@ -265,6 +489,8 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode,bool &consist
             {
                 stnode->formula += right->GetText();
                 stnode->formula += ",";
+                index_t idx_P = petri->getPPosition(right->GetText());
+                stnode->relPlaceOrTransition.insert(idx_P);
                 if(AT.atomics[AT.atomiccount].addPlace2Exp(0,right->GetText())==CONSISTENCY_ERROR)
                     consistency = false;
                 right = right->NextSiblingElement();
@@ -1144,4 +1370,42 @@ void Syntax_Tree::PrintAT() {
         cout<<endl;
     }
 
+}
+
+void Syntax_Tree::getVisibleIterms() {
+    getVisibleIterms(root);
+}
+
+void Syntax_Tree::getVisibleIterms(STNode *n) {
+    if(n->ntyp == ROOT)
+        getVisibleIterms(n->nleft);
+    if(n->ntyp == PREDICATE) {
+        visibleIterms.insert(n->relPlaceOrTransition.begin(),n->relPlaceOrTransition.end());
+    }
+    else {
+        if(n->nleft)
+            getVisibleIterms(n->nleft);
+        if(n->nright)
+            getVisibleIterms(n->nright);
+    }
+}
+
+bool Syntax_Tree::isNextFree() {
+    return isNextFree(root);
+}
+
+bool Syntax_Tree::isNextFree(STNode *n) {
+    if(n->ntyp == NEXT) {
+        return false;
+    }
+    else {
+        bool leftFree=true,rightFree=true;
+        if(n->nleft!=NULL) {
+            leftFree = isNextFree(n->nleft);
+        }
+        if(n->nright!=NULL) {
+            rightFree = isNextFree(n->nright);
+        }
+        return leftFree&&rightFree;
+    }
 }

@@ -1109,7 +1109,7 @@ void StateBuchi::linkAtomics(atomictable &AT) {
         judgeInvalid(vertics[i].invalid, vertics[i].links);
     }
 
-    AT.linkPlace2atomictable();
+//    AT.linkPlace2atomictable();
 }
 
 void StateBuchi::parseLabel(vector<atomic> &links, const string &lable, const atomictable &AT) {

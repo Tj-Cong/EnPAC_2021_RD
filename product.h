@@ -33,6 +33,7 @@ extern NUM_t placecount;
 extern bool NUPN;
 extern bool SAFE;
 extern bool ready2exit;
+extern bool SLICE;
 extern short int total_mem;
 extern pid_t mypid;
 extern Petri *petri;
@@ -72,14 +73,36 @@ Pstacknode<rgnode>::Pstacknode() {
 template<class rgnode>
 int Pstacknode<rgnode>::NEXTFIREABLE() {
     if(fireptr==0) {
-        if(RGname_ptr->isFirable(petri->transition[0])) {
+//        if(STUBBORN && RGname_ptr->stubbornFlags==NULL) {
+//            RGname_ptr->computeStubbornSet();
+//        }
+        int beginpos = 0;
+        while(SLICE && !petri->transition[beginpos].significant)
+            beginpos++;
+//        if(STUBBORN) {
+//            for(beginpos;beginpos<petri->transitioncount;beginpos++){
+//                if(RGname_ptr->stubbornFlags->test1(beginpos))
+//                    break;
+//            }
+//        }
+        if(RGname_ptr->isFirable(petri->transition[beginpos])) {
             deadmark = false;
+            fireptr = beginpos;
             return fireptr;
         }
         fireptr++;
     }
 
     for(fireptr;fireptr<petri->transitioncount;++fireptr) {
+//        if(STUBBORN && RGname_ptr->stubbornFlags->test0(fireptr))
+//            continue;
+//        if(STUBBORN && RGname_ptr->fireableFlags->test1(fireptr)) {
+//            deadmark = false;
+//            return fireptr;
+//        }
+        if(SLICE && !petri->transition[fireptr].significant) {
+            continue;
+        }
         if(RGname_ptr->isFirable(petri->transition[fireptr])) {
             deadmark = false;
             return fireptr;
@@ -477,6 +500,7 @@ public:
     int getgeneratecount();
     void printNegapth(ofstream &outpath);
     void detect_memory();
+    double get_current_mem();
     ~Product_Automata();
 
 };
@@ -535,42 +559,44 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
         string safe = SAFE?" STATE_COMPRESSION":"";
         string pinvar = PINVAR?" STATE_COMPRESSION":"";
         string longbitplace = LONGBITPLACE?" LONGBITPLACE":"";
+//        string stubborn = STUBBORN?" STUBBORN":"";
+        string slice = SLICE?" SLICE":"";
         if(result)
         {
             re="TRUE";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES SEQUENTIAL_PROCESSING ABSTRACTIONS EXPLICIT"+nupn+safe+pinvar;
+            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+slice;
             ret = 1;
         }
         else
         {
             re="FALSE";
-            cout << "FORMULA " + propertyid + " " + re + " TECHNIQUES SEQUENTIAL_PROCESSING ABSTRACTIONS EXPLICIT"+nupn+safe+pinvar;
+            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+slice;
             ret = 0;
         }
     }
     else if(!memory_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE MEMORY";
         ret = -1;
     }
     else if(!stack_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE STACK";
         ret = -1;
     }
     else if(!data_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE DATA";
         ret = -1;
     }
     else if(!consistency_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE CONSISTENCY";
         ret = -1;
     }
     else if(!timeflag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE TIME";
         ret = -1;
     }
     unsigned short timeleft=alarm(0);
@@ -1270,7 +1296,7 @@ void Product_Automata<rgnode,rg_T>::detect_memory()
             }
             fclose(pf);
             size = size/1024;
-            if(100*size/total_mem > 90)
+            if(100*size/total_mem > 85)
             {
                 memory_flag = false;
                 ready2exit = true;
@@ -1382,7 +1408,7 @@ bool Product_Automata<rgnode, rg_T>::isLabel(rgnode *state, int sj) {
 
     // debug
     //static ofstream debugoutput("checkpoint.txt");
-    extern ofstream debugout;
+//    extern ofstream debugout;
 
     // def
     atomictable &AT = *(ba->pAT);
@@ -1467,4 +1493,34 @@ bool Product_Automata<rgnode, rg_T>::checkLTLC(rgnode *state, atomicmeta &am) {
     return left <= right;
 }
 
+template<class rgnode, class rg_T>
+double Product_Automata<rgnode, rg_T>::get_current_mem() {
+    double size=0;
+    char filename[64];
+    sprintf(filename,"/proc/%d/status",mypid);
+    FILE *pf = fopen(filename,"r");
+    if(pf == nullptr)
+    {
+        cerr<<"未能检测到enPAC进程所占内存"<<endl;
+        pclose(pf);
+    }
+    else {
+        char line[128];
+        while(fgets(line,128,pf) != nullptr)
+        {
+            if(strncmp(line,"VmRSS:",6) == 0)
+            {
+                int len = strlen(line);
+                const char *p=line;
+                for(;std::isdigit(*p) == false;++p) {}
+                line[len-3]=0;
+                size = atoi(p);
+                break;
+            }
+        }
+        fclose(pf);
+        size = size/1024.0;
+    }
+    return size;
+}
 #endif //ENPAC_2020_2_0_PRODUCT_H

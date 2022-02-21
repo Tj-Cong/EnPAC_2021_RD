@@ -17,9 +17,11 @@ using namespace std;
 #define RGTABLE_SIZE 13131313
 #define SHORTMAX 0xffff
 
+extern bool ready2exit;
 extern NUM_t FIELDCOUNT;   //占用bitfield个数，仅仅用于NUPN和SAFE网
 extern NUM_t MARKLEN;      //Petri网
 extern NUM_t placecount;   //Petri网库所个数
+extern bool SLICE;
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码
@@ -81,22 +83,39 @@ void BinaryToDec(index_t &DecNum, unsigned short *Binarystr, NUM_t marklen);
 typedef unsigned short Mark;
 typedef unsigned long ID;
 
+class BitSequence {
+private:
+    myuint *bitUnits;
+    unsigned int sequenceLength;
+public:
+    BitSequence(int length);
+    ~BitSequence();
+    bool test0(int position);
+    bool test1(int position);
+    void set0(int position);
+    void set1(int position);
+};
 
 class RGNode {
-public:
+private:
     Mark *marking;
+public:
     RGNode *next;
+//    BitSequence *stubbornFlags;
+//    BitSequence *fireableFlags;
 //    set<index_t> fireset;
 public:
     RGNode();
+    RGNode(RGNode *oldnode);
     index_t Hash();
     bool isFirable(const Transition &t) const;
+    void computeStubbornSet();
 //    void getFireSet(RGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
     ~RGNode();
-    index_t readPlace(int placeid) const;
+    int readPlace(int placeid) const;
     void writePlace(int placeid){};
-    void writePlace(int placeid,index_t tokencount){};
+    int writePlace(int placeid,index_t tokencount);
     void clearPlace(int placeid){};
 };
 
@@ -105,17 +124,20 @@ class BitRGNode {
 public:
     myuint *marking;
     BitRGNode *next;
+//    BitSequence *stubbornFlags;
+//    BitSequence *fireableFlags;
 //    set<index_t> fireset;
 public:
     BitRGNode();
     index_t Hash();
     bool isFirable(const Transition &t) const;
+    void computeStubbornSet();
 //    void getFireSet(BitRGNode *lastnode, index_t lastid);
     void printMarking(const int &len);
     ~BitRGNode();
-    index_t readPlace(int placeid) const;
+    int readPlace(int placeid) const;
     void writePlace(int placeid);
-    void writePlace(int placeid,index_t tokencount);
+    int writePlace(int placeid,index_t tokencount);
     void clearPlace(int placeid);
 };
 

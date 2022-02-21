@@ -58,9 +58,9 @@ void setGlobalValue(Petri *ptnet) {
                 MARKLEN += ptnet->pinvarExtra[i].length;
         }
     } else if (LONGBITPLACE) {
-        MARKLEN = 32*placecount;
+        MARKLEN = 32*(ptnet->significantPlaceCount);
     } else {
-        MARKLEN = placecount;
+        MARKLEN = ptnet->significantPlaceCount;
     }
     FIELDCOUNT = ceil(double(MARKLEN) / (sizeof(myuint) * 8));
 }
@@ -805,6 +805,51 @@ bool Bitfielduint::test1(int index) {
     }
 }
 
+BitSequence::BitSequence(int length) {
+    sequenceLength = length;
+    int unitNums = ceil((float)length/32.0);
+    bitUnits = new myuint [unitNums];
+    memset(bitUnits,0,sizeof(myuint)*unitNums);
+}
+BitSequence::~BitSequence() {
+    delete [] bitUnits;
+}
+bool BitSequence::test0(int position) {
+    if(position>=sequenceLength) {
+        cerr<<"[BitSequence::test0] Bit sequence error position"<<endl;
+        exit(-1);
+    }
+    int unitIndex = position/32;
+    int offset = position%32;
+    return bitUnits[unitIndex].test0(offset);
+}
+bool BitSequence::test1(int position) {
+    if(position>=sequenceLength) {
+        cerr<<"[BitSequence::test0] Bit sequence error position"<<endl;
+        exit(-1);
+    }
+    int unitIndex = position/32;
+    int offset = position%32;
+    return bitUnits[unitIndex].test1(offset);
+}
+void BitSequence::set0(int position) {
+    if(position>=sequenceLength) {
+        cerr<<"[BitSequence::set0] Bit sequence error position"<<endl;
+        exit(-1);
+    }
+    int unitIndex = position/32;
+    int offset = position%32;
+    bitUnits[unitIndex].reset(offset);
+}
+void BitSequence::set1(int position) {
+    if(position>=sequenceLength) {
+        cerr<<"[BitSequence::set1] Bit sequence error position"<<endl;
+        exit(-1);
+    }
+    int unitIndex = position/32;
+    int offset = position%32;
+    bitUnits[unitIndex].set(offset);
+}
 /*****************************************************************/
 /*RGNode::RGNode(int marking_length)
  * function: 构造函数，为marking数组申请空间，申请大小为哈希表大小，
@@ -813,8 +858,21 @@ bool Bitfielduint::test1(int index) {
  * */
 RGNode::RGNode() {
     marking = new Mark[MARKLEN];
-    memset(marking, 0, sizeof(Mark) * MARKLEN);
+//    memset(marking, 0, sizeof(Mark) * MARKLEN);
     next = NULL;
+//    stubbornFlags = NULL;
+//    fireableFlags = NULL;
+}
+
+RGNode::RGNode(RGNode *oldnode) {
+    marking = new Mark[MARKLEN];
+    for(int i=0;i<MARKLEN;i++) {
+        marking[i] = oldnode->marking[i];
+    }
+//    memset(marking, 0, sizeof(Mark) * MARKLEN);
+    next = NULL;
+//    stubbornFlags = NULL;
+//    fireableFlags = NULL;
 }
 
 /*int RGNode::Hash(int length)
@@ -838,7 +896,11 @@ bool RGNode::isFirable(const Transition &t) const {
     bool isfirable = true;
     vector<SArc>::const_iterator tpre = t.producer.begin();
     for (tpre; tpre != t.producer.end(); ++tpre) {
-        if (marking[tpre->idx] < tpre->weight) {
+//        if(!petri->place[tpre->idx].significant) {
+//            cerr<<"获取非重要库所token判断使能条件"<<endl;
+//            continue;
+//        }
+        if (readPlace(tpre->idx) < tpre->weight) {
             isfirable = false;
             break;
         }
@@ -851,6 +913,10 @@ bool RGNode::isFirable(const Transition &t) const {
  * */
 RGNode::~RGNode() {
     delete [] marking;
+//    if(stubbornFlags)
+//        delete stubbornFlags;
+//    if(fireableFlags)
+//        delete fireableFlags;
     MallocExtension::instance()->ReleaseFreeMemory();
 }
 
@@ -870,9 +936,127 @@ void RGNode::printMarking(const int &len) {
 //    cout << "]"<<endl;
 }
 
-index_t RGNode::readPlace(int placeid) const {
-    return marking[placeid];
+int RGNode::readPlace(int placeid) const {
+    if(!SLICE)
+        return marking[placeid];
+    else if(petri->place[placeid].significant) {
+        int pos = petri->place[placeid].project_idx;
+        return marking[pos];
+    }
+    else {
+//        cerr<<"[ERROR] read redundant place."<<endl;
+        return -1;
+    }
 }
+
+int RGNode::writePlace(int placeid, index_t tokencount) {
+    const Place &p = petri->place[placeid];
+    if(!SLICE) {
+        marking[placeid] = tokencount;
+        return 0;
+    }
+    else if(p.significant) {
+        marking[p.project_idx] = tokencount;
+        return 0;
+    }
+    else {
+//        cerr<<"非重要库所无法写入token值！"<<endl;
+        return -1;
+    }
+}
+
+//void RGNode::computeStubbornSet() {
+//    stubbornFlags = new BitSequence(petri->transitioncount);
+//    fireableFlags = new BitSequence(petri->transitioncount);
+//
+//    //compute reachable(t) of every visible t
+////    set<index_t> stubbornSet;
+//    if(ready2exit) {
+//        return;
+//    }
+//    bool invisInclude = false;
+//    queue<index_t> expandQueue;
+//    for(index_t visT=0;visT<petri->transitioncount;visT++) {
+//        if(petri->transition[visT].visible==false) {
+//            continue;
+//        }
+//        //可视变迁必定属于顽固集合
+//        stubbornFlags->set1(visT);
+//        expandQueue.push(visT);
+//        //expand
+//        while (!expandQueue.empty()) {
+//            index_t indexT = expandQueue.front();
+//            expandQueue.pop();
+//            Transition &expandingTransition = petri->transition[indexT];
+//            //判断是否使能
+//            bool fireable = isFirable(expandingTransition);
+//            if(fireable) {
+//                fireableFlags->set1(indexT);
+//                for(int i=0;i<petri->transitioncount;i++) {
+//                    if(!petri->accordWithMatrix[indexT][i]) {
+//                        if(stubbornFlags->test0(i)) {
+//                            stubbornFlags->set1(i);
+//                            expandQueue.push(i);
+//                            if(petri->transition[i].visible==false && isFirable(petri->transition[i]))
+//                                invisInclude = true;
+//                        }
+//                    }
+//                }
+//            }
+//            else {
+//                set<index_t>::iterator increIter;
+//                for(increIter=expandingTransition.increasingSet.begin();
+//                    increIter!=expandingTransition.increasingSet.end();
+//                    increIter++)
+//                {
+//                    if(stubbornFlags->test0(*increIter)) {
+//                        stubbornFlags->set1(*increIter);
+//                        expandQueue.push(*increIter);
+//                        if(petri->transition[*increIter].visible==false && isFirable(petri->transition[*increIter]))
+//                            invisInclude = true;
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    if(!invisInclude) {
+//        //invisable expand
+//        for(int i=0;i<petri->transitioncount;i++) {
+//            if(petri->transition[i].visible == false && isFirable(petri->transition[i])) {
+//                //expand
+//                expandQueue.push(i);
+//                while(!expandQueue.empty()) {
+//                    index_t indexT = expandQueue.front();
+//                    expandQueue.pop();
+//                    Transition &tt = petri->transition[indexT];
+//                    bool fireable = isFirable(tt);
+//                    if(fireable) {
+//                        fireableFlags->set1(indexT);
+//                        for(index_t accordTi=0;accordTi<petri->transitioncount;accordTi++) {
+//                            if(stubbornFlags->test1(accordTi))
+//                                continue;
+//                            if(!petri->accordWithMatrix[indexT][accordTi]) {
+//                                stubbornFlags->set1(accordTi);
+//                                expandQueue.push(accordTi);
+//                            }
+//                        }
+//                    }
+//                    else {
+//                        set<index_t>::iterator increIter;
+//                        for(increIter=tt.increasingSet.begin();increIter!=tt.increasingSet.end();increIter++) {
+//                            if(stubbornFlags->test1(*increIter))
+//                                continue;
+//                            stubbornFlags->set1(*increIter);
+//                            expandQueue.push(*increIter);
+//                        }
+//                    }
+//                }
+//                break;
+//            }
+//        }
+//    }
+//}
 
 //void RGNode::getFireSet(RGNode *lastnode, index_t lastfid) {
 //    this->fireset = lastnode->fireset;
@@ -911,6 +1095,8 @@ BitRGNode::BitRGNode() {
     marking = new myuint[FIELDCOUNT];
     memset(marking, 0, sizeof(myuint) * FIELDCOUNT);
     next = NULL;
+//    stubbornFlags = NULL;
+//    fireableFlags = NULL;
 }
 
 
@@ -975,6 +1161,10 @@ bool BitRGNode::isFirable(const Transition &t) const {
  * */
 BitRGNode::~BitRGNode() {
     delete [] marking;
+//    if(stubbornFlags)
+//        delete stubbornFlags;
+//    if(fireableFlags)
+//        delete fireableFlags;
     MallocExtension::instance()->ReleaseFreeMemory();
 }
 
@@ -1031,7 +1221,110 @@ void BitRGNode::printMarking(const int &len) {
 //    }
 //}
 
-index_t BitRGNode::readPlace(int placeid) const{
+//void BitRGNode::computeStubbornSet() {
+//    stubbornFlags = new BitSequence(petri->transitioncount);
+//    fireableFlags = new BitSequence(petri->transitioncount);
+//
+//    //compute reachable(t) of every visible t
+////    set<index_t> stubbornSet;
+//    bool invisInclude = false;
+//    bool *expanded = new bool[petri->transitioncount];
+//    for(int i=0;i<petri->transitioncount;i++) {
+//        expanded[i] = false;
+//    }
+//
+//    queue<index_t> expandQueue;
+//    for(index_t visT=0;visT<petri->transitioncount;visT++) {
+//        if(ready2exit) {
+//            delete [] expanded;
+//            return;
+//        }
+//        if(petri->transition[visT].visible==false || expanded[visT]) {
+//            continue;
+//        }
+//        //可视变迁必定属于顽固集合
+//        stubbornFlags->set1(visT);
+//        expandQueue.push(visT);
+//        //expand
+//        while (!expandQueue.empty()) {
+//            index_t indexT = expandQueue.front();
+//            expandQueue.pop();
+//            if(expanded[indexT])
+//                continue;
+//            Transition &expandingTransition = petri->transition[indexT];
+//            //判断是否使能
+//            bool fireable = isFirable(expandingTransition);
+//            if(fireable) {
+//                fireableFlags->set1(indexT);
+//                for(int i=0;i<petri->transitioncount;i++) {
+//                    if(i!=indexT && !petri->accordWithMatrix[indexT][i]) {
+//                        if(stubbornFlags->test0(i)) {
+//                            stubbornFlags->set1(i);
+//                            expandQueue.push(i);
+//                            if(petri->transition[i].visible==false && isFirable(petri->transition[i]))
+//                                invisInclude = true;
+//                        }
+//                    }
+//                }
+//            }
+//            else {
+//                set<index_t>::iterator increIter;
+//                for(increIter=expandingTransition.increasingSet.begin();
+//                    increIter!=expandingTransition.increasingSet.end();
+//                    increIter++)
+//                {
+//                    if(stubbornFlags->test0(*increIter)) {
+//                        stubbornFlags->set1(*increIter);
+//                        expandQueue.push(*increIter);
+//                        if(petri->transition[*increIter].visible==false && isFirable(petri->transition[*increIter]))
+//                            invisInclude = true;
+//                    }
+//                }
+//            }
+//            expanded[indexT] = true;
+//        }
+//    }
+//
+//    if(!invisInclude) {
+//        //invisable expand
+//        for(int i=0;i<petri->transitioncount;i++) {
+//            if(petri->transition[i].visible == false && isFirable(petri->transition[i])) {
+//                //expand
+//                expandQueue.push(i);
+//                while(!expandQueue.empty()) {
+//                    index_t indexT = expandQueue.front();
+//                    expandQueue.pop();
+//                    Transition &tt = petri->transition[indexT];
+//                    bool fireable = isFirable(tt);
+//                    if(fireable) {
+//                        fireableFlags->set1(indexT);
+//                        for(index_t accordTi=0;accordTi<petri->transitioncount;accordTi++) {
+//                            if(stubbornFlags->test1(accordTi))
+//                                continue;
+//                            if(!petri->accordWithMatrix[indexT][accordTi]) {
+//                                stubbornFlags->set1(accordTi);
+//                                expandQueue.push(accordTi);
+//                            }
+//                        }
+//                    }
+//                    else {
+//                        set<index_t>::iterator increIter;
+//                        for(increIter=tt.increasingSet.begin();increIter!=tt.increasingSet.end();increIter++) {
+//                            if(stubbornFlags->test1(*increIter))
+//                                continue;
+//                            stubbornFlags->set1(*increIter);
+//                            expandQueue.push(*increIter);
+//                        }
+//                    }
+//                }
+//                break;
+//            }
+//        }
+//    }
+//    delete [] expanded;
+//}
+
+int BitRGNode::readPlace(int placeid) const{
     if(NUPN) {
         const NUPN_extra &pe = petri->placeExtra[placeid];
         if(!pe.cutoff) {
@@ -1147,7 +1440,7 @@ void BitRGNode::clearPlace(int placeid) {
     }
 }
 
-void BitRGNode::writePlace(int placeid, index_t tokencount) {
+int BitRGNode::writePlace(int placeid, index_t tokencount) {
     if(PINVAR) {
         const Place_PINVAR_info &pinvarInfo = petri->pinvarExtra[placeid];
         if(pinvarInfo.significant) {
@@ -1167,6 +1460,8 @@ void BitRGNode::writePlace(int placeid, index_t tokencount) {
                 write_mask1 = tokencount<<pinvarInfo.intoffset;
                 write_mask2 = tokencount>>len1;
                 if(tokencount>exp2(pinvarInfo.length)-1) {
+                    cout<<tokencount;
+                    int num = exp2(pinvarInfo.length)-1;
                     cerr<<"ERROR, token-count over bound in P-invariant"<<endl;
                     exit(4);
                 }
@@ -1186,6 +1481,8 @@ void BitRGNode::writePlace(int placeid, index_t tokencount) {
                 /*set corresponding place bits zero*/
                 markint = markint & zero_mask;
                 if(tokencount>exp2(pinvarInfo.length)-1) {
+                    cout<<tokencount;
+                    int num = exp2(pinvarInfo.length)-1;
                     cerr<<"ERROR, token-count over bound in P-invariant"<<endl;
                     exit(4);
                 }
@@ -1198,6 +1495,7 @@ void BitRGNode::writePlace(int placeid, index_t tokencount) {
     else if(LONGBITPLACE) {
         memcpy(&this->marking[placeid],&tokencount,sizeof(index_t));
     }
+    return 0;
 }
 
 /****************************RG*****************************/
@@ -1290,8 +1588,8 @@ RGNode *RG::RGinitialnode() {
     RGNode *rg = new RGNode;
 
     //计算状态
-    for (int i = 0; i < RGNodelength; i++) {
-        rg->marking[i] = ptnet->place[i].initialMarking;
+    for (int i = 0; i < placecount; i++) {
+        rg->writePlace(i,ptnet->place[i].initialMarking);
     }
 
     //将当前状态加入到rgnode哈希表中
@@ -1305,7 +1603,7 @@ RGNode *RG::RGinitialnode() {
 //若有数据类型溢出，则返回NULL
 RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
 
-    RGNode *newnode = new RGNode;
+    RGNode *newnode = new RGNode(curnode);
 
     Transition *firingTanx = &ptnet->transition[tranxnum];
     vector<SArc>::iterator iterpre = firingTanx->producer.begin();
@@ -1314,19 +1612,29 @@ RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
     vector<SArc>::iterator iterpost = firingTanx->consumer.begin();
     vector<SArc>::iterator postend = firingTanx->consumer.end();
 
-    memcpy(newnode->marking, curnode->marking, sizeof(Mark) * RGNodelength);
-
     //1.1 计算前继节点的token值；前继库所的token值=当前前继节点的token值-weight
     for (iterpre; iterpre != preend; iterpre++) {
-        newnode->marking[iterpre->idx] = newnode->marking[iterpre->idx] - iterpre->weight;
+//        if(!petri->place[iterpre->idx].significant)
+//            continue;
+        int ret = newnode->writePlace(iterpre->idx,newnode->readPlace(iterpre->idx)-iterpre->weight);
+        if(ret == -1) {
+            cerr<<"非重要库所无法写入token值！"<<endl;
+            exit(5);
+        }
     }
 
     //1.2 计算后继结点的token值；后继结点的token值=当前后继结点的token值+weight
     for (iterpost; iterpost != postend; iterpost++) {
+        if(!petri->place[iterpost->idx].significant)
+            continue;
         //判断数据类型溢出
-        unsigned short max = SHORTMAX;
-        if (max - newnode->marking[iterpost->idx] > iterpost->weight)
-            newnode->marking[iterpost->idx] = newnode->marking[iterpost->idx] + iterpost->weight;
+        if ((int)iterpost->weight+(int)newnode->readPlace(iterpost->idx)<65535) {
+            int ret = newnode->writePlace(iterpost->idx,newnode->readPlace(iterpost->idx)+iterpost->weight);
+            if(ret == -1) {
+                cerr<<"非重要库所无法写入token值！"<<endl;
+                exit(5);
+            }
+        }
         else {
             delete newnode;
             return NULL;
@@ -1344,7 +1652,9 @@ RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
         repeated = true;
         //比较每一位
         for (int i = 0; i < RGNodelength; i++) {
-            if (newnode->marking[i] != p->marking[i]) {
+            if(!petri->place[i].significant)
+                continue;
+            if (newnode->readPlace(i) != p->readPlace(i)) {
                 repeated = false;
                 break;
             }
@@ -1366,35 +1676,35 @@ RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
 //    debugout << ptnet->transition[tranxnum].id << endl;
 
     //6.更新值atomic check avaliable  不管是哪种类型的LTL公式都需要更新前继和后继
-    if (false) {
-        //static ofstream debugout("checkpoint.txt",ios::app);
-        iterpre = firingTanx->producer.begin();
-        iterpost = firingTanx->consumer.begin();
-        vector<unsigned char>::iterator temp_it, temp_end;
-        // producer
-        for (; iterpre != preend; iterpre++) {
-            temp_it = ptnet->place[iterpre->idx].atomicLinks.begin();
-            temp_end = ptnet->place[iterpre->idx].atomicLinks.end();
-            for (; temp_it != temp_end; temp_it++) {
-                AT.atomics[*temp_it].last_check_avaliable = false;
-            }
-        }
-        // consumer
-        for (; iterpost != postend; iterpost++) {
-            temp_it = ptnet->place[iterpost->idx].atomicLinks.begin();
-            temp_end = ptnet->place[iterpost->idx].atomicLinks.end();
-            for (; temp_it != temp_end; temp_it++) {
-                AT.atomics[*temp_it].last_check_avaliable = false;
-            }
-        }
-    }
+//    if (false) {
+//        //static ofstream debugout("checkpoint.txt",ios::app);
+//        iterpre = firingTanx->producer.begin();
+//        iterpost = firingTanx->consumer.begin();
+//        vector<unsigned char>::iterator temp_it, temp_end;
+//        // producer
+//        for (; iterpre != preend; iterpre++) {
+//            temp_it = ptnet->place[iterpre->idx].atomicLinks.begin();
+//            temp_end = ptnet->place[iterpre->idx].atomicLinks.end();
+//            for (; temp_it != temp_end; temp_it++) {
+//                AT.atomics[*temp_it].last_check_avaliable = false;
+//            }
+//        }
+//        // consumer
+//        for (; iterpost != postend; iterpost++) {
+//            temp_it = ptnet->place[iterpost->idx].atomicLinks.begin();
+//            temp_end = ptnet->place[iterpost->idx].atomicLinks.end();
+//            for (; temp_it != temp_end; temp_it++) {
+//                AT.atomics[*temp_it].last_check_avaliable = false;
+//            }
+//        }
+//    }
 
     return newnode;
 }
 
 RGNode *RG::RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist) {
 
-    RGNode *newnode = new RGNode;
+    RGNode *newnode = new RGNode(curnode);
 
     Transition *firingTanx = &ptnet->transition[tranxnum];
     vector<SArc>::iterator iterpre = firingTanx->producer.begin();
@@ -1403,19 +1713,26 @@ RGNode *RG::RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist) {
     vector<SArc>::iterator iterpost = firingTanx->consumer.begin();
     vector<SArc>::iterator postend = firingTanx->consumer.end();
 
-    memcpy(newnode->marking, curnode->marking, sizeof(Mark) * RGNodelength);
-
     //1.1 计算前继节点的token值；前继库所的token值=当前前继节点的token值-weight
     for (iterpre; iterpre != preend; iterpre++) {
-        newnode->marking[iterpre->idx] = newnode->marking[iterpre->idx] - iterpre->weight;
+        int ret = newnode->writePlace(iterpre->idx,newnode->readPlace(iterpre->idx)-iterpre->weight);
+        if(ret == -1) {
+            cerr<<"非重要库所无法写入token值！"<<endl;
+            exit(5);
+        }
     }
 
     //1.2 计算后继结点的token值；后继结点的token值=当前后继结点的token值+weight
     for (iterpost; iterpost != postend; iterpost++) {
         //判断数据类型溢出
         unsigned short max = SHORTMAX;
-        if (max - newnode->marking[iterpost->idx] > iterpost->weight)
-            newnode->marking[iterpost->idx] = newnode->marking[iterpost->idx] + iterpost->weight;
+        if (max - newnode->readPlace(iterpost->idx) > iterpost->weight) {
+            int ret = newnode->writePlace(iterpost->idx,newnode->readPlace(iterpost->idx)+iterpost->weight);
+            if(ret == -1) {
+                cerr<<"非重要库所无法写入token值！"<<endl;
+                exit(5);
+            }
+        }
         else {
             delete newnode;
             return NULL;
@@ -1433,7 +1750,9 @@ RGNode *RG::RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist) {
         repeated = true;
         //比较每一位
         for (int i = 0; i < RGNodelength; i++) {
-            if (newnode->marking[i] != p->marking[i]) {
+            if(!petri->place[i].significant)
+                continue;
+            if (newnode->readPlace(i) != p->readPlace(i)) {
                 repeated = false;
                 break;
             }
@@ -1855,27 +2174,27 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
     }
     //  执行至此表明该node添加成功
     //  更新值atomic check avaliable  不管是哪种类型的LTL公式都需要更新前继和后继
-    if (false) {
-        iterpre = firingTanx->producer.begin();
-        iterpost = firingTanx->consumer.begin();
-        vector<unsigned char>::iterator temp_it, temp_end;
-        // producer
-        for (; iterpre != preend; iterpre++) {
-            temp_it = ptnet->place[iterpre->idx].atomicLinks.begin();
-            temp_end = ptnet->place[iterpre->idx].atomicLinks.end();
-            for (; temp_it != temp_end; temp_it++) {
-                AT.atomics[*temp_it].last_check_avaliable = false;
-            }
-        }
-        // consumer
-        for (; iterpost != postend; iterpost++) {
-            temp_it = ptnet->place[iterpost->idx].atomicLinks.begin();
-            temp_end = ptnet->place[iterpost->idx].atomicLinks.end();
-            for (; temp_it != temp_end; temp_it++) {
-                AT.atomics[*temp_it].last_check_avaliable = false;
-            }
-        }
-    }
+//    if (false) {
+//        iterpre = firingTanx->producer.begin();
+//        iterpost = firingTanx->consumer.begin();
+//        vector<unsigned char>::iterator temp_it, temp_end;
+//        // producer
+//        for (; iterpre != preend; iterpre++) {
+//            temp_it = ptnet->place[iterpre->idx].atomicLinks.begin();
+//            temp_end = ptnet->place[iterpre->idx].atomicLinks.end();
+//            for (; temp_it != temp_end; temp_it++) {
+//                AT.atomics[*temp_it].last_check_avaliable = false;
+//            }
+//        }
+//        // consumer
+//        for (; iterpost != postend; iterpost++) {
+//            temp_it = ptnet->place[iterpost->idx].atomicLinks.begin();
+//            temp_end = ptnet->place[iterpost->idx].atomicLinks.end();
+//            for (; temp_it != temp_end; temp_it++) {
+//                AT.atomics[*temp_it].last_check_avaliable = false;
+//            }
+//        }
+//    }
 
     MallocExtension::instance()->ReleaseFreeMemory();
     return newnode;

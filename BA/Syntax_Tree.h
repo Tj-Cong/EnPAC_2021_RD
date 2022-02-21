@@ -8,6 +8,8 @@
 #include "tinyxml.h"
 #include "VWAA.h"
 #include "atomic.h"
+#include "Lexer.h"
+#include <stack>
 using namespace std;
 
 /*ROOT: root node of Syntax_Tree, non-sense
@@ -22,7 +24,25 @@ using namespace std;
  * V_OPER: "V/R";
  * */
 enum NodeType{ROOT,PREDICATE,NEG,CONJUNC,DISJUNC,NEXT,ALWAYS,EVENTUALLY,U_OPER,V_OPER};
+enum privilege {unary=1,R_and_U=2,And=3,Or=4,Impli=5,Equ=6,root=7};
+typedef struct stack_unit
+{
+    word w;
+    privilege prilevel;
+    stack_unit *next = NULL;
+}LSNode;
 
+class STACK {
+private:
+    stack<LSNode> elems;
+public:
+    void push(LSNode lsNode);
+    bool pop(LSNode &lsNode);
+    void pop();
+    bool istoplpar();
+    privilege topprilevel();
+    bool empty();
+};
 
 /*The tree node structure of Syntax_Tree;
  * It also serves as a VWAA state
@@ -35,10 +55,12 @@ typedef struct STNode
     bool pure_univ;     //whether the subformula is pure universal, regarding the node as a root
     Evaluation groundtruth;
     string formula;     //the string of the subformula, regarding the node as a root
+    set<index_t> relPlaceOrTransition;
     vector<set<const STNode *>> DNF;
     vector<VWAA_delta> transitions;    //the transition set of this node, regarding it as a VWAA state
     STNode *nleft;      //leftnode
     STNode *nright;     //rightnode
+    STNode *parent;
 
     STNode() {
         groundtruth = UNKNOW;
@@ -62,17 +84,23 @@ public:
     string propertyid;
     bool simplest;
     int UID;
-
+    STACK Operand;
+    STACK Operator;
     //
     atomictable AT;
+    set<index_t> visibleIterms;
 public:
     Syntax_Tree();
     ~Syntax_Tree();
+    bool isBinaryOperator(NodeType ntype);
+    bool isUnaryOperator(NodeType ntype);
+    void reverse_polish(Lexer lex);
+    void buildTreeFromCMD();
     /*Parse XML file which stores LTL formula;
      * filename: filename of XML file;
      * number: spefies which formula to parse, number~[1,16];
      * */
-    int ParseXML(char *filename, string &property, int number=1);
+    int ParseXML(const char *filename, string &property, int number=1);
 
     /*Build a syntax tree from a XML structure; (recursive function)
      * xmlnode: xml node;
@@ -106,6 +134,8 @@ public:
 
     void Prune(STNode *curnode, STNode *predecessor);
 
+    void getVisibleIterms();
+    void getVisibleIterms(STNode *n);
     /*VWAA operation*/
     int AssignUID();
     void Get_DNF(STNode *n);
@@ -115,6 +145,8 @@ public:
     void VWAA_Simplify();
     void VWAA_Simplify(STNode *n);
 
+    bool isNextFree();
+    bool isNextFree(STNode *n);
     /*atomicstable operation*/
     void PrintAT();
 };

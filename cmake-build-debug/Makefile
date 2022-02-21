@@ -143,6 +143,33 @@ EnPAC_2021/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/build
 .PHONY : EnPAC_2021/fast
 
+BA/Lexer.o: BA/Lexer.cpp.o
+
+.PHONY : BA/Lexer.o
+
+# target to build an object file
+BA/Lexer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.o
+.PHONY : BA/Lexer.cpp.o
+
+BA/Lexer.i: BA/Lexer.cpp.i
+
+.PHONY : BA/Lexer.i
+
+# target to preprocess a source file
+BA/Lexer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.i
+.PHONY : BA/Lexer.cpp.i
+
+BA/Lexer.s: BA/Lexer.cpp.s
+
+.PHONY : BA/Lexer.s
+
+# target to generate assembly for a file
+BA/Lexer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EnPAC_2021.dir/build.make CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.s
+.PHONY : BA/Lexer.cpp.s
+
 BA/Syntax_Tree.o: BA/Syntax_Tree.cpp.o
 
 .PHONY : BA/Syntax_Tree.o
@@ -503,6 +530,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... EnPAC_2021"
+	@echo "... BA/Lexer.o"
+	@echo "... BA/Lexer.i"
+	@echo "... BA/Lexer.s"
 	@echo "... BA/Syntax_Tree.o"
 	@echo "... BA/Syntax_Tree.i"
 	@echo "... BA/Syntax_Tree.s"

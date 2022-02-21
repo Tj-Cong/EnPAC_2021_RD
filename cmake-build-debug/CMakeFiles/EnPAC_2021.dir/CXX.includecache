@@ -6,65 +6,13 @@
 
 #IncludeRegexTransform: 
 
-../BA/tinystr.h
-assert.h
--
-string.h
--
-
-../BA/tinyxml.h
-ctype.h
--
-stdio.h
--
-stdlib.h
--
-string.h
--
-assert.h
--
-string
--
+/home/hecong/文档/EnPAC_2021/BA/Lexer.h
 iostream
 -
-sstream
--
-tinystr.h
-../BA/tinystr.h
-
-../Petri_Net.h
 string
--
-vector
--
-fstream
--
-iostream
--
-sstream
--
-BA/tinyxml.h
-../BA/tinyxml.h
-rref.h
-../rref.h
-cmath
 -
 gperftools/tcmalloc.h
 -
-gperftools/malloc_extension.h
--
-set
--
-map
--
-setjmp.h
--
-
-../rref.h
-
-/home/hecong/文档/EnPAC_2021/BA/Syntax_Tree.cpp
-Syntax_Tree.h
-/home/hecong/文档/EnPAC_2021/BA/Syntax_Tree.h
 
 /home/hecong/文档/EnPAC_2021/BA/Syntax_Tree.h
 iostream
@@ -81,17 +29,15 @@ VWAA.h
 /home/hecong/文档/EnPAC_2021/BA/VWAA.h
 atomic.h
 /home/hecong/文档/EnPAC_2021/BA/atomic.h
+Lexer.h
+/home/hecong/文档/EnPAC_2021/BA/Lexer.h
+stack
+-
 
 /home/hecong/文档/EnPAC_2021/BA/VWAA.h
 set.h
 /home/hecong/文档/EnPAC_2021/BA/set.h
 vector
--
-
-/home/hecong/文档/EnPAC_2021/BA/atomic.cpp
-atomic.h
-/home/hecong/文档/EnPAC_2021/BA/atomic.h
-algorithm
 -
 
 /home/hecong/文档/EnPAC_2021/BA/atomic.h
@@ -103,10 +49,6 @@ set
 -
 Petri_Net.h
 /home/hecong/文档/EnPAC_2021/BA/Petri_Net.h
-
-/home/hecong/文档/EnPAC_2021/BA/buchi.cpp
-buchi.h
-/home/hecong/文档/EnPAC_2021/BA/buchi.h
 
 /home/hecong/文档/EnPAC_2021/BA/buchi.h
 Syntax_Tree.h
@@ -146,22 +88,12 @@ sstream
 tinystr.h
 /home/hecong/文档/EnPAC_2021/BA/tinystr.h
 
-/home/hecong/文档/EnPAC_2021/Petri_Net.cpp
-iostream
--
-Petri_Net.h
-/home/hecong/文档/EnPAC_2021/Petri_Net.h
-signal.h
--
-unistd.h
--
-csetjmp
--
-
 /home/hecong/文档/EnPAC_2021/Petri_Net.h
 string
 -
 vector
+-
+queue
 -
 fstream
 -
@@ -185,10 +117,8 @@ map
 -
 setjmp.h
 -
-
-/home/hecong/文档/EnPAC_2021/RG.cpp
-RG.h
-/home/hecong/文档/EnPAC_2021/RG.h
+iomanip
+-
 
 /home/hecong/文档/EnPAC_2021/RG.h
 Petri_Net.h
@@ -213,10 +143,6 @@ iostream
 -
 sys/time.h
 -
-
-/home/hecong/文档/EnPAC_2021/product.cpp
-product.h
-/home/hecong/文档/EnPAC_2021/product.h
 
 /home/hecong/文档/EnPAC_2021/product.h
 iostream

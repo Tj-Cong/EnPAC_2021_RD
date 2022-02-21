@@ -6,7 +6,7 @@ using namespace std;
 
 //ofstream debugout("checkpoint.txt");
 
-#define TOTALTOOLTIME 3580
+#define TOTALTOOLTIME 3500
 
 size_t  heap_malloc_total, heap_free_total,mmap_total, mmap_count;
 void print_info() {
@@ -29,6 +29,8 @@ bool NUPN = false;            //whether the checking process uses NUPN encoding
 bool SAFE = false;            //whether the checking process uses SAFE encoding
 bool PINVAR = false;          //whether the checking process uses P-invariant encoding
 bool LONGBITPLACE = false;    //whether the checking process externs marking storage from short to int
+//bool STUBBORN = false;         //whether the checking process uses stubborn set strategy
+bool SLICE = true;
 bool ready2exit = false;
 jmp_buf petrienv;
 
@@ -59,22 +61,20 @@ void CONSTRUCTPETRI() {
     else {
         ptnet->readPNML(filename);
     }
+    ptnet->constructMatrix();
     ptnet->judgeSAFE();
     ptnet->judgePINVAR();
-    setGlobalValue(ptnet);
-
-//    starttime = get_time();
-//    ptnet->computeDI();
-//    endtime = get_time();
-//    cout<<"COMPUTEDI TIME:"<<endtime-starttime<<endl;
+    ptnet->computeDI();
+    ptnet->computeAccordWith();
+//    ptnet->printAccordWith();
 
     petri = ptnet;
 //    if(NUPN)
 //        ptnet->printUnit();
     ptnet->checkarc();
 //    ptnet->printGraph();
-//    ptnet->printPlace();
-//    ptnet->printTransition();
+    ptnet->printPlace();
+    ptnet->printTransition();
 //    ptnet->printTransition2CSV();
 }
 void CHECKLTL(Petri *ptnet, bool cardinality) {
@@ -116,7 +116,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         }
 
         if(syntaxTree.root->groundtruth!=UNKNOW) {
-            cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<" TECHNIQUES SEQUENTIAL_PROCESSING"<<endl;
+            cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
             outresult << ((syntaxTree.root->groundtruth==TRUE)?'T':'F');
             continue;
         }
@@ -147,6 +147,22 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         syntaxTree.Build_VWAA();
         syntaxTree.VWAA_Simplify();
 
+        SLICE = syntaxTree.isNextFree();
+//        SLICE = false;
+        if(SLICE) {
+            //implement slice
+            syntaxTree.getVisibleIterms();
+            petri->implementSlice(syntaxTree.visibleIterms,cardinality);
+            setGlobalValue(ptnet);
+        }
+        else {
+            //undoSlice
+            petri->undoSlice();
+            setGlobalValue(ptnet);
+        }
+
+//        petri->printVisTransitions();
+
         General GBA;
         GBA.Build_GBA(syntaxTree);
         GBA.Simplify();
@@ -167,7 +183,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         SBA.Add_heuristic();
         SBA.Complete2();
         SBA.self_check();
-//        SBA.PrintStateBuchi();
+        SBA.PrintStateBuchi();
         SBA.linkAtomics(syntaxTree.AT);
 
         if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
@@ -191,7 +207,8 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             starttime = get_time();
             each_used_time=product->ModelChecker(propertyid,each_run_time);
             endtime = get_time();
-            cout<<endl;
+            cout<<" NODECOUNT "<<bitgraph->nodecount<<" TIME "<<(endtime-starttime)
+                <<" MEM "<<product->get_current_mem()<<endl;
             int ret = product->getresult();
             outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
             //cout << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T')) << endl;
@@ -204,7 +221,8 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             starttime = get_time();
             each_used_time=product->ModelChecker(propertyid,each_run_time);
             endtime = get_time();
-            cout<<endl;
+            cout<<" NODECOUNT "<<graph->nodecount<<" TIME "<<(endtime-starttime)
+                <<" MEM "<<product->get_current_mem()<<endl;
             int ret = product->getresult();
 
             outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
@@ -227,7 +245,7 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     BitRG *bitgraph;
     RG *graph;
 
-    unsigned short each_run_time=900;
+    unsigned short each_run_time=300;
 
     string propertyid;
     char ff[]="LTLFireability.xml";
@@ -272,11 +290,22 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     syntaxTree.PrintTree();
     cout<<"-----------------------------------"<<endl;
 
-
-
     syntaxTree.Get_DNF(syntaxTree.root);
     syntaxTree.Build_VWAA();
     syntaxTree.VWAA_Simplify();
+
+    SLICE = syntaxTree.isNextFree();
+    if(SLICE) {
+        //implement slice
+        syntaxTree.getVisibleIterms();
+        petri->implementSlice(syntaxTree.visibleIterms,cardinality);
+        setGlobalValue(ptnet);
+    }
+    else {
+        //undoSlice
+        petri->undoSlice();
+        setGlobalValue(ptnet);
+    }
 
     General GBA;
     GBA.Build_GBA(syntaxTree);
@@ -346,11 +375,8 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     }
 }
 
-int main0() {
+int main() {
     CHECKMEM();
-    cout << "=================================================" << endl;
-    cout << "=====This is our tool-EnPAC for the MCC'2021=====" << endl;
-    cout << "=================================================" << endl;
 
     double starttime, endtime;
     starttime = get_time();
@@ -359,12 +385,13 @@ int main0() {
     CHECKLTL(petri,1);
     CHECKLTL(petri,0);
     endtime = get_time();
-    cout<<"RUNTIME:"<<endtime-starttime<<endl;
+    cout<<"RUNTIME "<<endtime-starttime<<endl;
+    cout<<endl;
     delete petri;
     return 0;
 }
 
-int main(int argc,char *argv[])
+int main0(int argc,char *argv[])
 {
     CHECKMEM();
     cout << "=================================================" << endl;

@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <queue>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -18,6 +19,7 @@
 #include <set>
 #include <map>
 #include <setjmp.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -33,16 +35,16 @@ typedef unsigned int NUM_t;      //个数数据类型
 
 extern NUM_t FIELDCOUNT;   //占用bitfield个数，仅仅用于NUPN和SAFE网
 extern NUM_t MARKLEN;      //Petri网
-extern NUM_t placecount;   //Petri网库所个数
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码
 extern bool LONGBITPLACE;
+extern bool SLICE;
 extern jmp_buf petrienv;
 
 struct Small_Arc;
 struct Transition;
-
+class IncidenceMatrix;
 /****************Global Functions**************/
 unsigned int BKDRHash(string str);
 
@@ -51,6 +53,7 @@ unsigned int stringToNum(const string &str);
 void intersection(const vector<Small_Arc> &t1pre, const vector<Small_Arc> &t2pre, vector<int> &secidx);
 
 int my_atoi(string str);
+
 
 /**********************************************/
 
@@ -75,6 +78,8 @@ typedef struct Small_Arc {
 
 typedef struct Place {
     string id = "";
+    bool significant = false;
+    index_t project_idx;
     vector<SArc> producer;       //前继
     vector<SArc> consumer;       //后继
     unsigned int initialMarking = 0;  //初值token
@@ -107,10 +112,11 @@ typedef struct Place_PINVAR_info {
 
 typedef struct Transition {
     string id = "";
+    bool significant = false;
     vector<SArc> producer;
     vector<SArc> consumer;
-//    set<index_t> increasing;
-//    set<index_t> decreasing;
+    set<index_t> increasingSet;
+//    set<index_t> decreasingSet;
 } *Transition_P;
 
 typedef struct Arc {
@@ -138,16 +144,19 @@ public:
     Unit *unittable;            //单元表
     Place_NUPN_info *placeExtra;     //NUPN编码的额外信息
     NUM_t placecount;           //库所个数
+    NUM_t significantPlaceCount;
     NUM_t transitioncount;      //变迁个数
     NUM_t arccount;             //弧个数
     NUM_t unitcount;            //单元个数
     bool NUPN;
     bool SAFE;
     bool PINVAR;
-
-
+    //stubborn set
+    bool **accordWithMatrix;
+//    set<index_t> visTransition;
 
     //P不变量 矩阵和重要库所
+    IncidenceMatrix *incidenceMatrix;
     float **Pinvar;                     //所有的P不变量
     int *weightsum0;
     short int RankOfmatrix;             //关联矩阵的秩
@@ -164,24 +173,51 @@ public:
     index_t getTPosition(string str);               //根据变迁id得到他在变迁表中的索引位置
     index_t getPosition(string str, bool &isplace); //根据id得到他相应所表中的索引位置，并指明是库所还是变迁
     void readPNML(char *filename);                  //第二次解析PNML
+    void constructMatrix();
     void computeUnitMarkLen();                      //计算每一个unit的marking长度
     void judgeSAFE();
     void judgePINVAR();
     void checkarc();
-//    void computeDI();
+    void VISInitialize();
+    void computeVIS(const set<index_t> &vis,bool cardinality);
+//    void VISpread();
+    void computeProjectIDX();
+    void implementSlice(const set<index_t> &vis,bool cardinality);
+    void undoSlice();
+
+    void computeAccordWith();
+    void destroyStubbornAidInfo();
+    void unaccordWithReachable(index_t indexT,set<index_t> &reachable);
+    void computeDI();
     void printPlace();
+    void printVisTransitions();
     void printTransition();
     void printTransition2CSV();
     void printGraph();
     void printUnit();
 
     //计算P不变量和重要库所部分
+    bool existIntersection(index_t t1, index_t t2, const vector<Small_Arc> &sa, const vector<Small_Arc> &sb);
     int computePinvariant();      //计算得到P不变量
     void computeBound();
     void destroyPINVAR();
+    void destroyAccordWithMatrix();
     void printPinvar();
-    void printIncidenceMatrix(float **matrix);
+    void printVisTransition();
+    void printAccordWith();
     ~Petri();
 };
 
+class IncidenceMatrix {
+private:
+    int **incidenceMatrix;
+    Petri *petri;
+public:
+    IncidenceMatrix(Petri *petri);
+    ~IncidenceMatrix();
+    void constructMatrix();
+    void printMatrix();
+    int getValue(int row,int col);
+    friend class Petri;
+};
 #endif //ENPAC_2020_3_0_PETRI_NET_H

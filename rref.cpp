@@ -5,19 +5,19 @@
 #include <cmath>
 #include "rref.h"
 
-ComputeRref::ComputeRref(int r, int c, float **M) {
+ComputeRref::ComputeRref(int r, int c, int **M) {
     row = r;
     col = c;
-    Matrix = M;
-//    Matrix = new float *[row];
-//    for (int i = 0; i < row; i++) {
-//        Matrix[i] = new float[col];
-//        memset(Matrix[i], 0, sizeof(float) * col);
-//    }
-//    for (int i = 0; i < row; i++) {
-//        for (int j = 0; j < col; j++)
-//            Matrix[i][j] = M[i][j];
-//    }
+//    Matrix = M;
+    Matrix = new float *[row];
+    for (int i = 0; i < row; i++) {
+        Matrix[i] = new float[col];
+        memset(Matrix[i], 0, sizeof(float) * col);
+    }
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col; j++)
+            Matrix[i][j] = M[i][j];
+    }
 }
 
 void ComputeRref::rref() {
@@ -69,5 +69,10 @@ bool ComputeRref::judgezero(float num) {
 }
 
 
-ComputeRref::~ComputeRref() {}
+ComputeRref::~ComputeRref() {
+    for (int i = 0; i < row; i++) {
+        delete [] Matrix[i];
+    }
+    delete [] Matrix;
+}
 

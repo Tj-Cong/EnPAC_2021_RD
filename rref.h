@@ -10,7 +10,7 @@ public:
     int col;
     float **Matrix;
 public:
-    ComputeRref(int r, int c, float **M);
+    ComputeRref(int r, int c, int **M);
 
     void rref();
 

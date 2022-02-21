@@ -168,9 +168,22 @@ CMakeFiles/EnPAC_2021.dir/BA/VWAA.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/EnPAC_2021.dir/BA/VWAA.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/hecong/文档/EnPAC_2021/BA/VWAA.cpp -o CMakeFiles/EnPAC_2021.dir/BA/VWAA.cpp.s
 
+CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.o: CMakeFiles/EnPAC_2021.dir/flags.make
+CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.o: ../BA/Lexer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.o -c /home/hecong/文档/EnPAC_2021/BA/Lexer.cpp
+
+CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/hecong/文档/EnPAC_2021/BA/Lexer.cpp > CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.i
+
+CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/hecong/文档/EnPAC_2021/BA/Lexer.cpp -o CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.s
+
 CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o: CMakeFiles/EnPAC_2021.dir/flags.make
 CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o: ../BA/atomic.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o -c /home/hecong/文档/EnPAC_2021/BA/atomic.cpp
 
 CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.i: cmake_force
@@ -183,7 +196,7 @@ CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.s: cmake_force
 
 CMakeFiles/EnPAC_2021.dir/main.cpp.o: CMakeFiles/EnPAC_2021.dir/flags.make
 CMakeFiles/EnPAC_2021.dir/main.cpp.o: ../main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/EnPAC_2021.dir/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/EnPAC_2021.dir/main.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/EnPAC_2021.dir/main.cpp.o -c /home/hecong/文档/EnPAC_2021/main.cpp
 
 CMakeFiles/EnPAC_2021.dir/main.cpp.i: cmake_force
@@ -196,7 +209,7 @@ CMakeFiles/EnPAC_2021.dir/main.cpp.s: cmake_force
 
 CMakeFiles/EnPAC_2021.dir/rref.cpp.o: CMakeFiles/EnPAC_2021.dir/flags.make
 CMakeFiles/EnPAC_2021.dir/rref.cpp.o: ../rref.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/EnPAC_2021.dir/rref.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/EnPAC_2021.dir/rref.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/EnPAC_2021.dir/rref.cpp.o -c /home/hecong/文档/EnPAC_2021/rref.cpp
 
 CMakeFiles/EnPAC_2021.dir/rref.cpp.i: cmake_force
@@ -209,7 +222,7 @@ CMakeFiles/EnPAC_2021.dir/rref.cpp.s: cmake_force
 
 CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o: CMakeFiles/EnPAC_2021.dir/flags.make
 CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o: ../Petri_Net.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.o -c /home/hecong/文档/EnPAC_2021/Petri_Net.cpp
 
 CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.i: cmake_force
@@ -222,7 +235,7 @@ CMakeFiles/EnPAC_2021.dir/Petri_Net.cpp.s: cmake_force
 
 CMakeFiles/EnPAC_2021.dir/product.cpp.o: CMakeFiles/EnPAC_2021.dir/flags.make
 CMakeFiles/EnPAC_2021.dir/product.cpp.o: ../product.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/EnPAC_2021.dir/product.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/EnPAC_2021.dir/product.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/EnPAC_2021.dir/product.cpp.o -c /home/hecong/文档/EnPAC_2021/product.cpp
 
 CMakeFiles/EnPAC_2021.dir/product.cpp.i: cmake_force
@@ -235,7 +248,7 @@ CMakeFiles/EnPAC_2021.dir/product.cpp.s: cmake_force
 
 CMakeFiles/EnPAC_2021.dir/RG.cpp.o: CMakeFiles/EnPAC_2021.dir/flags.make
 CMakeFiles/EnPAC_2021.dir/RG.cpp.o: ../RG.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/EnPAC_2021.dir/RG.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/EnPAC_2021.dir/RG.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/EnPAC_2021.dir/RG.cpp.o -c /home/hecong/文档/EnPAC_2021/RG.cpp
 
 CMakeFiles/EnPAC_2021.dir/RG.cpp.i: cmake_force
@@ -255,6 +268,7 @@ EnPAC_2021_OBJECTS = \
 "CMakeFiles/EnPAC_2021.dir/BA/tinyxmlerror.cpp.o" \
 "CMakeFiles/EnPAC_2021.dir/BA/tinyxmlparser.cpp.o" \
 "CMakeFiles/EnPAC_2021.dir/BA/VWAA.cpp.o" \
+"CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.o" \
 "CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o" \
 "CMakeFiles/EnPAC_2021.dir/main.cpp.o" \
 "CMakeFiles/EnPAC_2021.dir/rref.cpp.o" \
@@ -272,6 +286,7 @@ EnPAC_2021: CMakeFiles/EnPAC_2021.dir/BA/tinyxml.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/BA/tinyxmlerror.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/BA/tinyxmlparser.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/BA/VWAA.cpp.o
+EnPAC_2021: CMakeFiles/EnPAC_2021.dir/BA/Lexer.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/BA/atomic.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/main.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/rref.cpp.o
@@ -280,7 +295,7 @@ EnPAC_2021: CMakeFiles/EnPAC_2021.dir/product.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/RG.cpp.o
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/build.make
 EnPAC_2021: CMakeFiles/EnPAC_2021.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX executable EnPAC_2021"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/hecong/文档/EnPAC_2021/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Linking CXX executable EnPAC_2021"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/EnPAC_2021.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
