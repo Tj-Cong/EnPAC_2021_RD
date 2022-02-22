@@ -117,7 +117,7 @@ Petri::~Petri() {
     delete [] transition;
     //delete[] arc;
     if (NUPN) {
-        delete [] placeExtra;
+        delete [] nupnExtra;
         delete [] unittable;
     }
     if(PINVAR) {
@@ -125,8 +125,8 @@ Petri::~Petri() {
         delete [] pinvarExtra;
         delete [] weightsum0;
      }
-    delete incidenceMatrix;
-    destroyAccordWithMatrix();
+//    delete incidenceMatrix;
+//    destroyAccordWithMatrix();
 }
 
 void Petri::getSize(char *filename) {
@@ -234,9 +234,8 @@ void Petri::preNUPN(TiXmlElement *structure) {
             if(placestr[endpos]==HT || placestr[endpos]==space || placestr[endpos]==CR)
             {
                 singleplace = placestr.substr(startpos,endpos-startpos);
-
-                place[pptr].myunit = ut_iter;
-                place[pptr].myoffset = localplaces_count;
+                nupnExtra[pptr].myunit = ut_iter;
+                nupnExtra[pptr].myoffset = localplaces_count;
                 place[pptr].id = singleplace;
                 mapPlace.insert(pair<string,index_t>(singleplace,pptr));
 
@@ -274,7 +273,7 @@ void Petri::allocHashTable() {
 
     if (NUPN) {
         unittable = new Unit[unitcount];
-        placeExtra = new NUPN_extra[placecount];
+        nupnExtra = new NUPN_extra[placecount];
     }
 }
 
@@ -614,20 +613,20 @@ void Petri::computeUnitMarkLen() {
 
     //compute every place's patterns
     for(int i=0;i<placecount;++i) {
-        NUPN_extra &pe = placeExtra[i];
-        const Unit &uu = unittable[place[i].myunit];
+        NUPN_extra &pe = nupnExtra[i];
+        const Unit &uu = unittable[pe.myunit];
         pe.intnum = uu.mark_sp / 32;
         pe.intoffset = uu.mark_sp % 32;
         if(pe.intoffset+uu.mark_length > 32)
             pe.cutoff = true;
         pe.low_read_mask = (((unsigned int)1<<uu.mark_length)-1) << pe.intoffset;
         pe.low_zero_mask = ~(pe.low_read_mask);
-        pe.low_write_mask = (place[i].myoffset+1) << pe.intoffset;
+        pe.low_write_mask = (pe.myoffset+1) << pe.intoffset;
 
         if(pe.cutoff) {
             pe.high_read_mask = (((unsigned int)1<<uu.mark_length)-1) >> (32-pe.intoffset);
             pe.high_zero_mask = ~(pe.high_read_mask);
-            pe.high_write_mask = (place[i].myoffset+1) >> (32-pe.intoffset);
+            pe.high_write_mask = (pe.myoffset+1) >> (32-pe.intoffset);
         }
     }
 }
@@ -739,14 +738,14 @@ void Petri::printPlace() {
     int i;
     for (i = 0; i < placecount; i++) {
         const Place &p = place[i];
-        const NUPN_extra &pe = placeExtra[i];
+        const NUPN_extra &pe = nupnExtra[i];
         outplace << endl;
         outplace << i << endl;
         outplace << "id:" << p.id << endl;
         outplace << "initialMarking:" << p.initialMarking << endl;
         if(NUPN) {
-            outplace << "myUnit:" << p.myunit << endl;
-            outplace << "myOffset:" << p.myoffset << endl;
+            outplace << "myUnit:" << pe.myunit << endl;
+            outplace << "myOffset:" << pe.myoffset << endl;
             outplace << "cutoff:" << (pe.cutoff?"TRUE":"FALSE") << endl;
             outplace << "intnum:" << pe.intnum << endl;
             outplace << "intoffset:" << pe.intoffset << endl;
@@ -1096,7 +1095,7 @@ void Petri::judgePINVAR() {
         return;
     }
     if(computePinvariant() == 1) {
-//        printPinvar();
+        printPinvar();
         PINVAR = true;
         computeBound();
         if(!PINVAR) {
@@ -1151,7 +1150,8 @@ void Petri::computeBound() {
         if(weightsum0[semi_positive_index[i]]<=0)
             continue;
         for(int k=0; k<placecount; ++k) {
-            if(Pinvar[semi_positive_index[i]][k]<1e-6 || pinvarExtra[k].significant==false)
+//            if(Pinvar[semi_positive_index[i]][k]<1e-6 || pinvarExtra[k].significant==false)
+            if(Pinvar[semi_positive_index[i]][k]<1e-6)
                 continue;
             else {
                 double bb = ceil((double)weightsum0[semi_positive_index[i]]/Pinvar[semi_positive_index[i]][k]);
@@ -1161,6 +1161,11 @@ void Petri::computeBound() {
             }
         }
     }
+
+    for(int i=0;i<placecount;i++) {
+        cout<<bound[i]<<" ";
+    }
+    cout<<endl;
 
     NUM_t bitcounter = 0;
     for(int j=0;j<placecount;++j) {
@@ -1207,7 +1212,7 @@ void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
         if(!significantPlaces.empty()) {
             placePointer = significantPlaces.begin();
             Place &pp = place[*placePointer];
-            pp.significant = true;
+            sliceExtra[*placePointer].significant = true;
             sigPlaceCount++;
             vector<SArc>::iterator sarcIter;
             for(sarcIter=pp.producer.begin();sarcIter!=pp.producer.end();sarcIter++) {
@@ -1229,7 +1234,7 @@ void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
             tt.significant = true;
             vector<SArc>::iterator sarcIter;
             for(sarcIter=tt.producer.begin();sarcIter!=tt.producer.end();sarcIter++) {
-                if(place[sarcIter->idx].significant)
+                if(sliceExtra[sarcIter->idx].significant)
                     continue;
                 significantPlaces.insert(sarcIter->idx);
             }
@@ -1237,7 +1242,7 @@ void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
         }
     }
     if(double(sigPlaceCount)/(double)placecount>0.8) {
-        SLICE = false;
+        SLICEPLACE = false;
     }
 }
 //void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
@@ -1408,32 +1413,35 @@ void Petri::destroyStubbornAidInfo() {
 }
 
 void Petri::VISInitialize() {
+    sliceExtra = new P_SLICE_extra[placecount];
     for(int i=0;i<placecount;i++) {
-        place[i].project_idx = i;
-        place[i].significant = false;
+        sliceExtra[i].project_idx = i;
+        sliceExtra[i].significant = false;
     }
     for(int i=0;i<transitioncount;i++) {
         transition[i].significant = false;
     }
-    significantPlaceCount = placecount;
+    slicePlaceCount = placecount;
 }
 
 void Petri::computeProjectIDX() {
     int count = 0;
     for(int i=0;i<placecount;i++) {
-        if(place[i].significant)
-            place[i].project_idx = count++;
+        if(sliceExtra[i].significant)
+            sliceExtra[i].project_idx = count++;
     }
-    significantPlaceCount = count;
+    slicePlaceCount = count;
 }
 
-void Petri::undoSlice() {
-    significantPlaceCount = placecount;
-    for(int i=0;i<placecount;i++) {
-        Place &pp = place[i];
-        pp.significant = true;
-        pp.project_idx = i;
-    }
+void Petri::undoSlicePlace() {
+    slicePlaceCount = placecount;
+    if(sliceExtra!=NULL)
+        delete [] sliceExtra;
+    sliceExtra = NULL;
+    MallocExtension::instance()->ReleaseFreeMemory();
+}
+
+void Petri::undoSliceTrans() {
     for(int i=0;i<transitioncount;i++) {
         Transition &tt = transition[i];
         tt.significant = true;
@@ -1443,8 +1451,33 @@ void Petri::undoSlice() {
 void Petri::implementSlice(const set<index_t> &vis,bool cardinality) {
     VISInitialize();
     computeVIS(vis,cardinality);
-    if(SLICE)
+
+    //判断P不变量和切片如何选择
+    if(SLICEPLACE && PINVAR) {
+        //计算切片后marking总长度 & 计算P不变量压缩后marking总长度
+        int sliceLength=0,pinvarLength=0;
+        for(int i=0;i<placecount;i++) {
+            if(sliceExtra[i].significant) {
+                sliceLength += pinvarExtra[i].length;
+            }
+            if(pinvarExtra[i].significant) {
+                pinvarLength += pinvarExtra[i].length;
+            }
+        }
+        if(sliceLength>pinvarLength)
+            SLICEPLACE = false;
+    }
+
+    if(SLICEPLACE)
         computeProjectIDX();
+    else
+        undoSlicePlace();
+}
+
+void Petri::destroyMatrix() {
+    delete incidenceMatrix;
+    incidenceMatrix = NULL;
+    MallocExtension::instance()->ReleaseFreeMemory();
 }
 
 IncidenceMatrix::IncidenceMatrix(Petri *petri) {

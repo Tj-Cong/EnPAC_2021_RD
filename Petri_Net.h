@@ -39,7 +39,7 @@ extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码
 extern bool LONGBITPLACE;
-extern bool SLICE;
+extern bool SLICEPLACE;
 extern jmp_buf petrienv;
 
 struct Small_Arc;
@@ -78,18 +78,25 @@ typedef struct Small_Arc {
 
 typedef struct Place {
     string id = "";
-    bool significant = false;
-    index_t project_idx;
+//    bool significant = false;
+//    index_t project_idx;
     vector<SArc> producer;       //前继
     vector<SArc> consumer;       //后继
     unsigned int initialMarking = 0;  //初值token
-    index_t myunit;              //该库所所在单元号
-    index_t myoffset;            //该库所在单元中的偏移量
+//    index_t myunit;              //该库所所在单元号
+//    index_t myoffset;            //该库所在单元中的偏移量
     vector<unsigned char> atomicLinks; //库所关联原子命题序列
 } *Place_P;
 
+typedef struct Place_Slice_info {
+    bool significant = false;
+    index_t project_idx;
+} P_SLICE_extra;
+
 typedef struct Place_NUPN_info {
     bool cutoff = false;
+    index_t myunit;              //该库所所在单元号
+    index_t myoffset;            //该库所在单元中的偏移量
     int intnum;
     int intoffset;
     index_t low_read_mask=0;
@@ -136,18 +143,26 @@ typedef struct Equation_variables {
 
 class Petri {
 public:
+    //Petri网主要信息
     map<string,index_t> mapPlace;
     map<string,index_t> mapTransition;
     Place *place;               //库所表
     Transition *transition;     //变迁表
     Arc *arc;                   //弧表
     Unit *unittable;            //单元表
-    Place_NUPN_info *placeExtra;     //NUPN编码的额外信息
+
+    //辅助信息
+    Place_NUPN_info *nupnExtra;     //NUPN编码的额外信息
+    P_SLICE_extra *sliceExtra;
+    NUM_t slicePlaceCount;
+
+    //资源数目
     NUM_t placecount;           //库所个数
-    NUM_t significantPlaceCount;
     NUM_t transitioncount;      //变迁个数
     NUM_t arccount;             //弧个数
     NUM_t unitcount;            //单元个数
+
+    //使用策略
     bool NUPN;
     bool SAFE;
     bool PINVAR;
@@ -174,6 +189,7 @@ public:
     index_t getPosition(string str, bool &isplace); //根据id得到他相应所表中的索引位置，并指明是库所还是变迁
     void readPNML(char *filename);                  //第二次解析PNML
     void constructMatrix();
+    void destroyMatrix();
     void computeUnitMarkLen();                      //计算每一个unit的marking长度
     void judgeSAFE();
     void judgePINVAR();
@@ -183,7 +199,8 @@ public:
 //    void VISpread();
     void computeProjectIDX();
     void implementSlice(const set<index_t> &vis,bool cardinality);
-    void undoSlice();
+    void undoSlicePlace();
+    void undoSliceTrans();
 
     void computeAccordWith();
     void destroyStubbornAidInfo();

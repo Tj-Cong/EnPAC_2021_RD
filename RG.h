@@ -21,7 +21,7 @@ extern bool ready2exit;
 extern NUM_t FIELDCOUNT;   //占用bitfield个数，仅仅用于NUPN和SAFE网
 extern NUM_t MARKLEN;      //Petri网
 extern NUM_t placecount;   //Petri网库所个数
-extern bool SLICE;
+extern bool SLICEPLACE;
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码

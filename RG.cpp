@@ -52,15 +52,20 @@ void setGlobalValue(Petri *ptnet) {
         }
     } else if (SAFE) {
         MARKLEN = ptnet->placecount;
-    } else if(PINVAR) {
+    } else if (PINVAR && SLICEPLACE) {
+        for(int i=0;i<placecount;++i) {
+            if(ptnet->sliceExtra[i].significant)
+                MARKLEN += ptnet->pinvarExtra[i].length;
+        }
+    } else if (PINVAR) {
         for(int i=0;i<placecount;++i) {
             if(ptnet->pinvarExtra[i].significant)
                 MARKLEN += ptnet->pinvarExtra[i].length;
         }
     } else if (LONGBITPLACE) {
-        MARKLEN = 32*(ptnet->significantPlaceCount);
+        MARKLEN = 32*(ptnet->slicePlaceCount);
     } else {
-        MARKLEN = ptnet->significantPlaceCount;
+        MARKLEN = ptnet->slicePlaceCount;
     }
     FIELDCOUNT = ceil(double(MARKLEN) / (sizeof(myuint) * 8));
 }
@@ -937,10 +942,10 @@ void RGNode::printMarking(const int &len) {
 }
 
 int RGNode::readPlace(int placeid) const {
-    if(!SLICE)
+    if(!SLICEPLACE)
         return marking[placeid];
-    else if(petri->place[placeid].significant) {
-        int pos = petri->place[placeid].project_idx;
+    else if(petri->sliceExtra[placeid].significant) {
+        int pos = petri->sliceExtra[placeid].project_idx;
         return marking[pos];
     }
     else {
@@ -950,13 +955,12 @@ int RGNode::readPlace(int placeid) const {
 }
 
 int RGNode::writePlace(int placeid, index_t tokencount) {
-    const Place &p = petri->place[placeid];
-    if(!SLICE) {
+    if(!SLICEPLACE) {
         marking[placeid] = tokencount;
         return 0;
     }
-    else if(p.significant) {
-        marking[p.project_idx] = tokencount;
+    else if(petri->sliceExtra[placeid].significant) {
+        marking[petri->sliceExtra[placeid].project_idx] = tokencount;
         return 0;
     }
     else {
@@ -1143,7 +1147,7 @@ bool BitRGNode::isFirable(const Transition &t) const {
         }
         return isfirable;
     }
-    else if (PINVAR || LONGBITPLACE) {
+    else if ((PINVAR && SLICEPLACE) || PINVAR || LONGBITPLACE) {
         bool isfirable = true;
         vector<SArc>::const_iterator tpre = t.producer.begin();
         for (tpre; tpre != t.producer.end(); ++tpre) {
@@ -1326,11 +1330,11 @@ void BitRGNode::printMarking(const int &len) {
 
 int BitRGNode::readPlace(int placeid) const{
     if(NUPN) {
-        const NUPN_extra &pe = petri->placeExtra[placeid];
+        const NUPN_extra &pe = petri->nupnExtra[placeid];
         if(!pe.cutoff) {
             index_t markint;
             memcpy(&markint,&this->marking[pe.intnum],sizeof(index_t));
-            if((markint & pe.low_read_mask)>>pe.intoffset == (petri->place[placeid].myoffset+1))
+            if((markint & pe.low_read_mask)>>pe.intoffset == (pe.myoffset+1))
                 return true;
             else
                 return false;
@@ -1340,7 +1344,7 @@ int BitRGNode::readPlace(int placeid) const{
             memcpy(&markint1,&this->marking[pe.intnum],sizeof(index_t));
             memcpy(&markint2,&this->marking[pe.intnum+1],sizeof(index_t));
             index_t read_content = ((markint1 & pe.low_read_mask)>>pe.intoffset) + ((markint2 & pe.high_read_mask)<<(32-pe.intoffset));
-            return (read_content == (petri->place[placeid].myoffset)+1);
+            return (read_content == pe.myoffset+1);
         }
     }
     else if(SAFE) {
@@ -1392,7 +1396,7 @@ int BitRGNode::readPlace(int placeid) const{
 
 void BitRGNode::writePlace(int placeid) {
     if(NUPN) {
-        const NUPN_extra &pe = petri->placeExtra[placeid];
+        const NUPN_extra &pe = petri->nupnExtra[placeid];
         if(!pe.cutoff) {
             index_t markint;
             memcpy(&markint,&this->marking[pe.intnum],sizeof(index_t));
@@ -1417,7 +1421,7 @@ void BitRGNode::writePlace(int placeid) {
 
 void BitRGNode::clearPlace(int placeid) {
     if(NUPN) {
-        const NUPN_extra &pe = petri->placeExtra[placeid];
+        const NUPN_extra &pe = petri->nupnExtra[placeid];
         if(!pe.cutoff) {
             index_t markint;
             memcpy(&markint,&this->marking[pe.intnum],sizeof(index_t));
@@ -1625,7 +1629,7 @@ RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
 
     //1.2 计算后继结点的token值；后继结点的token值=当前后继结点的token值+weight
     for (iterpost; iterpost != postend; iterpost++) {
-        if(!petri->place[iterpost->idx].significant)
+        if(SLICEPLACE && !petri->sliceExtra[iterpost->idx].significant)
             continue;
         //判断数据类型溢出
         if ((int)iterpost->weight+(int)newnode->readPlace(iterpost->idx)<65535) {
@@ -1652,7 +1656,7 @@ RGNode *RG::RGcreatenode(RGNode *curnode, int tranxnum, bool &exist) {
         repeated = true;
         //比较每一位
         for (int i = 0; i < RGNodelength; i++) {
-            if(!petri->place[i].significant)
+            if(SLICEPLACE && !petri->sliceExtra[i].significant)
                 continue;
             if (newnode->readPlace(i) != p->readPlace(i)) {
                 repeated = false;
@@ -1725,8 +1729,10 @@ RGNode *RG::RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist) {
     //1.2 计算后继结点的token值；后继结点的token值=当前后继结点的token值+weight
     for (iterpost; iterpost != postend; iterpost++) {
         //判断数据类型溢出
-        unsigned short max = SHORTMAX;
-        if (max - newnode->readPlace(iterpost->idx) > iterpost->weight) {
+        if(SLICEPLACE && !petri->sliceExtra[iterpost->idx].significant)
+            continue;
+        //判断数据类型溢出
+        if ((int)iterpost->weight+(int)newnode->readPlace(iterpost->idx)<65535) {
             int ret = newnode->writePlace(iterpost->idx,newnode->readPlace(iterpost->idx)+iterpost->weight);
             if(ret == -1) {
                 cerr<<"非重要库所无法写入token值！"<<endl;
@@ -1750,7 +1756,7 @@ RGNode *RG::RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist) {
         repeated = true;
         //比较每一位
         for (int i = 0; i < RGNodelength; i++) {
-            if(!petri->place[i].significant)
+            if(SLICEPLACE && !petri->sliceExtra[i].significant)
                 continue;
             if (newnode->readPlace(i) != p->readPlace(i)) {
                 repeated = false;

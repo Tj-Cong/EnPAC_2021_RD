@@ -78,7 +78,7 @@ int cardexp::unitnum() {
     set<index_t> unitset;
     cardmeta *p = expression;
     while (p) {
-        unitset.insert(petri->place[p->placeid].myunit);
+        unitset.insert(petri->nupnExtra[p->placeid].myunit);
         p=p->next;
     }
     return unitset.size();

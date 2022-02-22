@@ -29,8 +29,8 @@ bool NUPN = false;            //whether the checking process uses NUPN encoding
 bool SAFE = false;            //whether the checking process uses SAFE encoding
 bool PINVAR = false;          //whether the checking process uses P-invariant encoding
 bool LONGBITPLACE = false;    //whether the checking process externs marking storage from short to int
-//bool STUBBORN = false;         //whether the checking process uses stubborn set strategy
-bool SLICE = true;
+bool SLICEPLACE = true;       //whether using Petri-nets slice (cut off places)
+bool SLICETRANSITION = true;  //whether using Petri-nets slice (cut off transitions)
 bool ready2exit = false;
 jmp_buf petrienv;
 
@@ -64,8 +64,9 @@ void CONSTRUCTPETRI() {
     ptnet->constructMatrix();
     ptnet->judgeSAFE();
     ptnet->judgePINVAR();
-    ptnet->computeDI();
-    ptnet->computeAccordWith();
+    ptnet->destroyMatrix();
+//    ptnet->computeDI();
+//    ptnet->computeAccordWith();
 //    ptnet->printAccordWith();
 
     petri = ptnet;
@@ -147,17 +148,20 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         syntaxTree.Build_VWAA();
         syntaxTree.VWAA_Simplify();
 
-        SLICE = syntaxTree.isNextFree();
-//        SLICE = false;
-        if(SLICE) {
+        bool slice = syntaxTree.isNextFree();
+//        SLICEPLACE = false;
+        if(slice) {
+            SLICEPLACE = SLICETRANSITION = true;
             //implement slice
             syntaxTree.getVisibleIterms();
             petri->implementSlice(syntaxTree.visibleIterms,cardinality);
             setGlobalValue(ptnet);
         }
         else {
+            SLICEPLACE = SLICETRANSITION = false;
             //undoSlice
-            petri->undoSlice();
+            petri->undoSlicePlace();
+            petri->undoSliceTrans();
             setGlobalValue(ptnet);
         }
 
@@ -211,8 +215,6 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
                 <<" MEM "<<product->get_current_mem()<<endl;
             int ret = product->getresult();
             outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
-            //cout << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T')) << endl;
-            //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
             delete product;
         } else {
             Product_Automata<RGNode, RG> *product;
@@ -226,14 +228,20 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             int ret = product->getresult();
 
             outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
-            //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
             delete product;
         }
+
+        //资源释放
         if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
             delete bitgraph;
         } else {
             delete graph;
         }
+        if(SLICEPLACE)
+            petri->undoSlicePlace();
+        if(SLICETRANSITION)
+            petri->undoSliceTrans();
+
         total_left_time-=each_used_time;
         ltlcount++;
         MallocExtension::instance()->ReleaseFreeMemory();
@@ -294,16 +302,19 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     syntaxTree.Build_VWAA();
     syntaxTree.VWAA_Simplify();
 
-    SLICE = syntaxTree.isNextFree();
-    if(SLICE) {
+    bool slice = syntaxTree.isNextFree();
+    if(slice) {
+        SLICETRANSITION = SLICEPLACE = true;
         //implement slice
         syntaxTree.getVisibleIterms();
         petri->implementSlice(syntaxTree.visibleIterms,cardinality);
         setGlobalValue(ptnet);
     }
     else {
+        SLICETRANSITION = SLICEPLACE = false;
         //undoSlice
-        petri->undoSlice();
+        petri->undoSlicePlace();
+        petri->undoSliceTrans();
         setGlobalValue(ptnet);
     }
 
@@ -367,6 +378,11 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
         //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
         delete product;
     }
+
+    if(SLICEPLACE)
+        petri->undoSlicePlace();
+    if(SLICETRANSITION)
+        petri->undoSliceTrans();
 
     if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
         delete bitgraph;

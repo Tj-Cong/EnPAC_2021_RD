@@ -33,7 +33,8 @@ extern NUM_t placecount;
 extern bool NUPN;
 extern bool SAFE;
 extern bool ready2exit;
-extern bool SLICE;
+extern bool SLICEPLACE;
+extern bool SLICETRANSITION;
 extern short int total_mem;
 extern pid_t mypid;
 extern Petri *petri;
@@ -47,15 +48,15 @@ template <class rgnode>
 class Pstacknode
 {
 public:
-    int id;
     bool deadmark;
-    rgnode *RGname_ptr;
+    int id;
     int BAname_id;
+    int fireptr;
     index_t next;
 
     //non-recursion extra information
     ArcNode *pba;
-    int fireptr;
+    rgnode *RGname_ptr;
 
     Pstacknode();
     ~Pstacknode(){};
@@ -77,7 +78,7 @@ int Pstacknode<rgnode>::NEXTFIREABLE() {
 //            RGname_ptr->computeStubbornSet();
 //        }
         int beginpos = 0;
-        while(SLICE && !petri->transition[beginpos].significant)
+        while(SLICETRANSITION && !petri->transition[beginpos].significant)
             beginpos++;
 //        if(STUBBORN) {
 //            for(beginpos;beginpos<petri->transitioncount;beginpos++){
@@ -100,7 +101,7 @@ int Pstacknode<rgnode>::NEXTFIREABLE() {
 //            deadmark = false;
 //            return fireptr;
 //        }
-        if(SLICE && !petri->transition[fireptr].significant) {
+        if(SLICETRANSITION && !petri->transition[fireptr].significant) {
             continue;
         }
         if(RGname_ptr->isFirable(petri->transition[fireptr])) {
@@ -560,17 +561,18 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
         string pinvar = PINVAR?" STATE_COMPRESSION":"";
         string longbitplace = LONGBITPLACE?" LONGBITPLACE":"";
 //        string stubborn = STUBBORN?" STUBBORN":"";
-        string slice = SLICE?" SLICE":"";
+        string sliceplace = SLICEPLACE ? " SLICEPLACE" : "";
+        string slicetransition = SLICETRANSITION ? " SLICETRANSITION" : "";
         if(result)
         {
             re="TRUE";
-            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+slice;
+            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+sliceplace+slicetransition;
             ret = 1;
         }
         else
         {
             re="FALSE";
-            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+slice;
+            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+sliceplace+slicetransition;
             ret = 0;
         }
     }
