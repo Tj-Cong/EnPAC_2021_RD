@@ -1179,6 +1179,9 @@ void Petri::computeBound() {
             if(pinvarInfo.intoffset+pinvarInfo.length>32)
                 pinvarInfo.cutoff = true;
         }
+        else {
+            pinvarInfo.length = ceil(log2(bound[j]+1));
+        }
     }
 
     if((double)bitcounter/(16*placecount) > 0.8) {
@@ -1199,7 +1202,6 @@ void Petri::destroyPINVAR() {
 }
 
 void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
-    int sigPlaceCount = 0;
     set<index_t> significantPlaces,significantTrans;
     if(cardinality) {
         significantPlaces = vis;
@@ -1207,6 +1209,7 @@ void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
     else {
         significantTrans = vis;
     }
+    int sigPlaceCount = 0;
     while(!significantTrans.empty() || !significantPlaces.empty()) {
         set<index_t>::iterator placePointer,transPointer;
         if(!significantPlaces.empty()) {
@@ -1232,6 +1235,7 @@ void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
             transPointer = significantTrans.begin();
             Transition &tt = transition[*transPointer];
             tt.significant = true;
+            sliceTransitionCount++;
             vector<SArc>::iterator sarcIter;
             for(sarcIter=tt.producer.begin();sarcIter!=tt.producer.end();sarcIter++) {
                 if(sliceExtra[sarcIter->idx].significant)
@@ -1422,6 +1426,7 @@ void Petri::VISInitialize() {
         transition[i].significant = false;
     }
     slicePlaceCount = placecount;
+    sliceTransitionCount = 0;
 }
 
 void Petri::computeProjectIDX() {
@@ -1466,6 +1471,24 @@ void Petri::implementSlice(const set<index_t> &vis,bool cardinality) {
         }
         if(sliceLength>pinvarLength)
             SLICEPLACE = false;
+        else {
+            //计算切片+P不变量的辅助信息
+            pinvarSliceExtra = new Place_PINVAR_info[placecount];
+            NUM_t bitcounter = 0;
+            for(int i=0;i<placecount;i++) {
+                Place_PINVAR_info &pinvarSliceInfo = pinvarSliceExtra[i];
+                pinvarSliceInfo.significant = sliceExtra[i].significant;
+                if(sliceExtra[i].significant) {
+                    pinvarSliceInfo.length = pinvarExtra[i].length;
+                    pinvarSliceInfo.startpos = bitcounter;
+                    pinvarSliceInfo.intnum = pinvarSliceInfo.startpos/32;
+                    pinvarSliceInfo.intoffset = pinvarSliceInfo.startpos%32;
+                    bitcounter += pinvarSliceInfo.length;
+                    if(pinvarSliceInfo.intoffset+pinvarSliceInfo.length>32)
+                        pinvarSliceInfo.cutoff = true;
+                }
+            }
+        }
     }
 
     if(SLICEPLACE)
@@ -1477,6 +1500,12 @@ void Petri::implementSlice(const set<index_t> &vis,bool cardinality) {
 void Petri::destroyMatrix() {
     delete incidenceMatrix;
     incidenceMatrix = NULL;
+    MallocExtension::instance()->ReleaseFreeMemory();
+}
+
+void Petri::undoPinvarSlicePlace() {
+    undoSlicePlace();
+    delete [] pinvarSliceExtra;
     MallocExtension::instance()->ReleaseFreeMemory();
 }
 
@@ -1497,6 +1526,7 @@ IncidenceMatrix::~IncidenceMatrix() {
         delete [] incidenceMatrix[i];
     }
     delete [] incidenceMatrix;
+    MallocExtension::instance()->ReleaseFreeMemory();
 }
 
 void IncidenceMatrix::constructMatrix() {
@@ -1583,4 +1613,436 @@ int IncidenceMatrix::getValue(int row,int col) {
         return 0;
     }
     return incidenceMatrix[row][col];
+}
+
+/**
+ * 下面部分是PNML Parser的函数
+ */
+
+PNMLParser *PNMLParser::getInstance() {
+    static PNMLParser inst;
+    return &inst;
+}
+
+void PNMLParser::test_function() {
+    cout << "777" << endl;
+    exit(0);
+    return;
+}
+
+bool PNMLParser::parse(Petri *ptnet_) {
+    net = ptnet_;
+    // 打开文件，依次读取
+    TiXmlDocument *doc = new TiXmlDocument(this->filename);
+    if (!doc->LoadFile()) {
+        cerr << doc->ErrorDesc() << endl;
+        return false;
+    }
+    // 根元素
+    TiXmlElement *root = doc->RootElement();
+    if (!root) {
+        cerr << "Failed to load file: no root element!" << endl;
+        return false;
+    }
+    getSize(root);                      // 获取大小后填写入Petri结构
+    net->placecount = p_cnt, net->transitioncount = t_cnt,
+    net->arccount = a_cnt, net->unitcount = u_cnt;
+
+    net->allocHashTable();              // 根据读取到的网规模大小申请空间
+    // printf("%u--%u--%u--%u\n", p_cnt, t_cnt, a_cnt, u_cnt);
+
+    // 依次读取各项内容
+    readContent(root);
+
+    // 链接Petri网（弧与库所、变迁）
+    linkPetriNet();
+
+    if (net->NUPN)
+        net->computeUnitMarkLen();
+
+    delete doc;
+    return true;
+}
+
+/**
+ * @brief 获取Petri网的规模参数，便于后续申请空间
+ * 单词申请大空间性能优于多次申请
+ *
+ * @param root_ pnml文件的根节点
+ */
+bool PNMLParser::getSize(TiXmlElement *root_) {
+    p_cnt = t_cnt = a_cnt = 0;          // 初始化
+    // cout << root_->Value() << endl;
+
+    TiXmlElement *page = root_->FirstChildElement("net")->FirstChildElement("page");
+    while (page) {
+        // cout << page->Value() << endl;
+        TiXmlElement *node = page->FirstChildElement();
+        while (node) {
+            // cout << node->Value() << endl;
+            string node_name = node->Value();
+            if (node_name == "place")
+                p_cnt++;
+            else if (node_name == "transition")
+                t_cnt++;
+            else if (node_name == "arc")
+                a_cnt++;
+            else if (node_name == "toolspecific") {
+                // cout << p_cnt << "---" << t_cnt << "---" << a_cnt << endl;
+                handle_toolspecific__(node);
+                break;
+            }
+            node = node->NextSiblingElement();
+        }
+        page = page->NextSiblingElement();
+    }
+    return true;
+}
+
+/**
+ * @brief 专门用于处理tool specific节点的函数。
+ * 独立出来，为更复杂的类型准备
+ *
+ * @param toolspecific_ 节点指针
+ */
+bool PNMLParser::handle_toolspecific__(TiXmlElement *toolspecific_) {
+    // cout << "handle tool specific node" << endl;
+    TiXmlElement *sizeNode = toolspecific_->FirstChildElement("size");
+    // 首先考虑库所、变迁、弧数量，后考虑特殊网类
+    TiXmlAttribute *attribute = sizeNode->FirstAttribute();
+    while (attribute) {
+        if (!handle_toolspecific__match_nameAndValue(attribute->Name(), attribute->IntValue())) {
+            cerr << "failed to match attribute name and it's value" << endl;
+            return false;
+        }
+        attribute = attribute->Next();
+    }
+    // cout << p_cnt << "---" << t_cnt << "---" << a_cnt << endl;
+    // 执行至此，开始考虑网的特殊类型，目前有NUPN以及SAFE
+
+    handle_toolspecific__specialNetType(
+            toolspecific_->FirstChildElement("structure"));
+
+    return true;
+}
+
+/**
+ * @brief 将tool specific中的属性名和值相匹配，填入具体的位置
+ *
+ * @param name_ 属性
+ * @param value_ 值
+ * @return true 成功
+ * @return false 失败，伴随错误输出
+ */
+bool PNMLParser::handle_toolspecific__match_nameAndValue(const char*name_, NUM_t value_) {
+    // 目前考虑的匹配类型：库所、变迁、弧
+    // 增加units数量
+    if (!strcmp(name_, "places"))
+        p_cnt = value_;
+    else if (!strcmp(name_, "transitions"))
+        t_cnt = value_;
+    else if (!strcmp(name_, "arcs"))
+        a_cnt = value_;
+    else if (!strcmp(name_, "units"))
+        u_cnt = value_;
+    else {
+        cerr << "unknown type of toolspecific-attribute \'" << name_ << "\'"
+             << endl;
+        return false;
+    }
+    return true;
+}
+
+/**
+ * @brief 专门处理特殊类型的网，目前NUPN、SAFE
+ *
+ * @param structure_ pnml中的structure节点
+ * @return true 成功
+ * @return false 失败，伴随错误输出cerr
+ */
+bool PNMLParser::handle_toolspecific__specialNetType(TiXmlElement *structure_) {
+    // 此处沿用EnPAC逻辑，默认存在tool specific节点即为NUPN类型，后续再调整
+    // 处理NUPN部分的代码
+
+    // 获取unit数量，默认第一个属性为units？(假设属性排序为units-root-safe)
+    TiXmlAttribute* attribute = structure_->FirstAttribute();
+    handle_toolspecific__match_nameAndValue(attribute->Name(),
+                                            attribute->IntValue());
+
+    // 获取safe状态(第三属性)，并填写标志位
+    attribute = attribute->Next()->Next();
+    string safe = attribute->Value();
+
+    // 填写规则使用EnPAC-2021
+    net->NUPN = (safe == "false") ? false : true;
+    net->SAFE = (safe == "false") ? true : false;
+
+    // NUPN类型的网，需要额外的处理---读取每个unit的库所
+    if (net->NUPN)
+        return true;
+
+    return true;
+}
+
+/**
+ * @brief 具体解析每一个节点，读取文件内容
+ *
+ * @param root_ 文件的根节点
+ * @return true 正常返回
+ * @return false 错误，伴随错误输出
+ */
+bool PNMLParser::readContent(TiXmlElement *root_) {
+    // 首先读取库所、变迁、弧，最后如果是NUPN类型的网，则需要对其做特殊的增加标记
+    index_t p_iter = 0, t_iter = 0, a_iter = 0, u_iter = 0; // 各循环变量
+
+    TiXmlElement *page = root_->FirstChildElement("net")->FirstChildElement("page");
+    while (page) {
+        TiXmlElement *node = page->FirstChildElement();
+        while (node) {
+            string node_name = node->Value();
+            if (node_name == "place")
+                readContent__place(node, p_iter++);
+            else if (node_name == "transition")
+                readContent__transition(node, t_iter++);
+            else if (node_name == "arc")
+                readContent__arc(node, a_iter++);
+            else if (node_name == "toolspecific" && net->NUPN) {
+                // 遍历每个unit
+                TiXmlElement *unit_node = node->FirstChildElement("structure")
+                        ->FirstChildElement("unit");
+                while (unit_node) {
+                    readContent__unit(unit_node, u_iter++);
+                    unit_node = unit_node->NextSiblingElement();
+                }
+            }
+
+            node = node->NextSiblingElement();
+        }
+
+        page = page->NextSiblingElement();
+    }
+    // printf("%u---%u---%u\n", p_cnt, t_cnt, a_cnt);
+    // printf("%u---%u---%u\n", p_iter, t_iter, a_iter);
+
+    return true;
+}
+
+/**
+ * @brief 解析文件，用于处理place标签的函数
+ *
+ * @param place_ place标签结构指针
+ * @param idx_ 下一个place该填入的表位置
+ * @return true 正常
+ * @return false 错误，伴随错误输出
+ */
+bool PNMLParser::readContent__place(TiXmlElement *place_, index_t idx_) {
+    // 需要处理的值-库所名、初始token、LONGBITPLACE、map字典
+    // cout << place_->FirstAttribute()->Value() << endl;
+    // 库所名
+    Place *p = &(net->place[idx_]);
+    p->id = place_->FirstAttribute()->Value(); // 赋值给id
+
+    // 初始token、LONGBITPLACE
+    TiXmlElement *initial_m = place_->FirstChildElement("initialMarking");
+    if (!initial_m)
+        p->initialMarking = 0;
+    else {
+        // 存在初始token，解析其字符串，数量为n
+        int n = stringToNum(initial_m->FirstChildElement("text")->GetText());
+        p->initialMarking = n;
+        LONGBITPLACE = n > 65535 ? true : false;
+    }
+
+    // map字典
+    net->mapPlace.insert(pair<string, index_t>(p->id, idx_));
+    // cout << p->id << "----" << p->initialMarking << endl;
+
+    return true;
+}
+
+/**
+ * @brief 解析文件，用于处理transition标签的部分
+ *
+ * @param transition_ transition标签的指针
+ * @param idx_ 下一个可填写的变迁位置
+ * @return true 正常
+ * @return false 错误，伴随错误输出
+ */
+bool PNMLParser::readContent__transition(TiXmlElement *transition_, index_t idx_) {
+    Transition *t = &(net->transition[idx_]);
+    // transition处理逻辑简单，默认所有transition节点格式固定
+    t->id = transition_->FirstAttribute()->Value();
+
+    net->mapTransition.insert(pair<string, index_t>(t->id, idx_));
+
+    return true;
+}
+
+/**
+ * @brief 解析文件，用于处理arc标签内容
+ *
+ * @param arc_ arc标签指针
+ * @param idx_ 下一个可填写的arc位置
+ * @return true 正确
+ * @return false 错误，伴随错误输出
+ */
+bool PNMLParser::readContent__arc(TiXmlElement *arc_, index_t idx_) {
+    Arc *a = &(net->arc[idx_]);
+    // 简单逻辑，arc第一个属性为名称，第二个为起点， 第三个为终点
+    TiXmlAttribute *attribute = arc_->FirstAttribute();
+    a->id = attribute->Value();
+    attribute = attribute->Next();
+    a->source_id = attribute->Value();
+    attribute = attribute->Next();
+    a->target_id = attribute->Value();
+
+    // 检查边权值，该部分沿用2021逻辑进行处理
+    TiXmlElement *inscription = arc_->FirstChildElement("inscription");
+    if (!inscription)
+        a->weight = 1;
+    else {
+        TiXmlElement *text = inscription->FirstChildElement("text");
+        if (text)
+            a->weight = stringToNum(text->GetText());
+    }
+
+    return true;
+}
+
+// 检查一个字符是否是变量名中可出现的字符
+inline bool checkVarName(char c_) {
+    if (c_ == '_')
+        return true;
+    if (c_ >= 'A' && c_ <= 'Z')
+        return true;
+    if (c_ >= 'a' && c_ <= 'z')
+        return true;
+    if (c_ >= '0' && c_ <= '9')
+        return true;
+
+    return false;
+}
+
+/**
+ * @brief 解析文件，用于处理unit标签
+ *
+ * @param unit_ 标签的指针
+ * @param idx_ 可填写的下一个unit下标
+ * @return true 正常
+ * @return false 错误，伴随错误输出
+ */
+bool PNMLParser::readContent__unit(TiXmlElement *unit_, index_t idx_) {
+    // 工作主要为解析出unit里的库所名，填写每个库所的位次
+    if (strcmp(unit_->Value(), "unit")) {
+        cerr << "readContent__unit function argument error: ";
+        cerr << unit_->Value() << endl;
+        return false;
+    }
+    // cout << unit_->FirstAttribute()->Value() << endl;
+    // 首先填写unit信息
+    Unit *u = &(net->unittable[idx_]);
+    u->uid = unit_->FirstAttribute()->Value();
+
+    // 解析place字符串，并填写unit所含库所数量
+    const char *tmp = unit_->FirstChildElement("places")->GetText();
+    if (!tmp) {
+        u->size = 0;
+        return true;
+    }
+    string places(tmp);
+    // cout << places << endl;
+
+    unsigned int unit_place_cnt = 0;
+    unsigned int st = 0, ed = 0;
+    // 首先初始化st，ed
+    while (!checkVarName(places[st]))
+        st++;
+    ed = st;
+    // 开始依次解析变量名
+    while (ed <= places.length()) {
+        // place命名规则假设：字母、数字下划线
+        if (checkVarName(places[ed])) {
+            ed++;
+            continue;
+        }
+        else {
+            string place_name = places.substr(st, ed - st);
+            index_t pid = net->getPPosition(place_name);
+            if (pid == INDEX_ERROR) {
+                cerr << "place can't find[place name:" << place_name << "]"
+                     << endl;
+                return false;
+            }
+            Place *p = &(net->place[pid]);
+//            p->myunit = idx_;
+//            p->myoffset = unit_place_cnt;
+            net->nupnExtra[pid].myunit = idx_;
+            net->nupnExtra[pid].myoffset = unit_place_cnt;
+
+            // cout << place_name << endl;
+            // 重置起点并计数place
+            st = ed;
+            while (!checkVarName(places[st]))
+                st++;
+            ed = st;
+            unit_place_cnt++;
+        }
+    }
+    u->size = unit_place_cnt;
+    return true;
+}
+
+/**
+ * @brief 链接网络
+ *
+ * @return true 正常
+ * @return false 错误，伴随错误输出
+ */
+bool PNMLParser::linkPetriNet() {
+    bool from_place;
+    for (int i = 0; i < net->arccount;i++) {
+        Arc *a = &(net->arc[i]);
+        int idx_src = net->getPosition(a->source_id, from_place);
+        if (idx_src == INDEX_ERROR) {
+            cerr << "link Petri Net error, can't locate source of: " << a->id
+                 << endl;
+            return true;
+        }
+        else {
+            a->isp2t = from_place;
+            a->source_idx = idx_src;
+            if (from_place) {
+                // place --> transition
+                index_t idx_des = net->getTPosition(a->target_id);
+                if (idx_des == INDEX_ERROR) {
+                    cerr << "target error, arc is: " << a->id << endl;
+                    return false;
+                } else {
+                    a->target_idx = idx_des;
+                    SArc p2t_consumer, p2t_producer;
+                    p2t_consumer.weight = p2t_producer.weight = a->weight;
+                    p2t_consumer.idx = idx_des;
+                    p2t_producer.idx = idx_src;
+                    net->place[idx_src].consumer.push_back(p2t_consumer);
+                    net->transition[idx_des].producer.push_back(p2t_producer);
+                }
+            } else {
+                // transition --> place
+                index_t idx_des = net->getPPosition(a->target_id);
+                if (idx_des == INDEX_ERROR) {
+                    cerr << "target error, arc is: " << a->id << endl;
+                    return false;
+                } else {
+                    a->target_idx = idx_des;
+                    SArc t2p_consumer, t2p_producer;
+                    t2p_consumer.weight = t2p_producer.weight = a->weight;
+                    t2p_consumer.idx = idx_des;
+                    t2p_producer.idx = idx_src;
+                    net->place[idx_des].producer.push_back(t2p_producer);
+                    net->transition[idx_src].consumer.push_back(t2p_consumer);
+                }
+            }
+        }
+    }
+    return true;
 }

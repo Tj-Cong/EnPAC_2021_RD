@@ -562,7 +562,7 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
         string longbitplace = LONGBITPLACE?" LONGBITPLACE":"";
 //        string stubborn = STUBBORN?" STUBBORN":"";
         string sliceplace = SLICEPLACE ? " SLICEPLACE" : "";
-        string slicetransition = SLICETRANSITION ? " SLICETRANSITION" : "";
+        string slicetransition = SLICETRANSITION ? " SLICETRANSITION"+to_string(petri->sliceTransitionCount)+"/"+to_string(petri->transitioncount) : "";
         if(result)
         {
             re="TRUE";

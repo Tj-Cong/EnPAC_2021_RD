@@ -54,13 +54,14 @@ void CONSTRUCTPETRI() {
     double starttime,endtime;
     Petri *ptnet = new Petri;
     char filename[]="model.pnml";
-    ptnet->getSize(filename);
-    if(ptnet->NUPN) {
-        ptnet->readNUPN(filename);
-    }
-    else {
-        ptnet->readPNML(filename);
-    }
+//    ptnet->getSize(filename);
+//    if(ptnet->NUPN) {
+//        ptnet->readNUPN(filename);
+//    }
+//    else {
+//        ptnet->readPNML(filename);
+//    }
+    PNMLParser::getInstance()->parse(ptnet);
     ptnet->constructMatrix();
     ptnet->judgeSAFE();
     ptnet->judgePINVAR();
@@ -72,11 +73,11 @@ void CONSTRUCTPETRI() {
     petri = ptnet;
 //    if(NUPN)
 //        ptnet->printUnit();
-    ptnet->checkarc();
 //    ptnet->printGraph();
-    ptnet->printPlace();
-    ptnet->printTransition();
+//    ptnet->printPlace();
+//    ptnet->printTransition();
 //    ptnet->printTransition2CSV();
+    ptnet->checkarc();
 }
 void CHECKLTL(Petri *ptnet, bool cardinality) {
     BitRG *bitgraph;
@@ -237,7 +238,10 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         } else {
             delete graph;
         }
-        if(SLICEPLACE)
+        if(SLICEPLACE && PINVAR) {
+            petri->undoPinvarSlicePlace();
+        }
+        else if(SLICEPLACE)
             petri->undoSlicePlace();
         if(SLICETRANSITION)
             petri->undoSliceTrans();
@@ -379,7 +383,10 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
         delete product;
     }
 
-    if(SLICEPLACE)
+    if(SLICEPLACE && PINVAR) {
+        petri->undoPinvarSlicePlace();
+    }
+    else if(SLICEPLACE)
         petri->undoSlicePlace();
     if(SLICETRANSITION)
         petri->undoSliceTrans();

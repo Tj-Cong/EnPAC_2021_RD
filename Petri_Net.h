@@ -35,6 +35,7 @@ typedef unsigned int NUM_t;      //个数数据类型
 
 extern NUM_t FIELDCOUNT;   //占用bitfield个数，仅仅用于NUPN和SAFE网
 extern NUM_t MARKLEN;      //Petri网
+extern NUM_t placecount;   //Petri网库所个数
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码
@@ -153,8 +154,11 @@ public:
 
     //辅助信息
     Place_NUPN_info *nupnExtra;     //NUPN编码的额外信息
-    P_SLICE_extra *sliceExtra;
+    P_SLICE_extra *sliceExtra;      //库所切片的辅助信息
+    Place_PINVAR_info *pinvarExtra; //P不变量编码的额外信息(个数和placecount一样)
+    Place_PINVAR_info *pinvarSliceExtra; //P不变量编码的额外信息(个数和placecount一样)
     NUM_t slicePlaceCount;
+    NUM_t sliceTransitionCount;
 
     //资源数目
     NUM_t placecount;           //库所个数
@@ -176,7 +180,6 @@ public:
     int *weightsum0;
     short int RankOfmatrix;             //关联矩阵的秩
     Equation_variables *eq_var;         //矩阵的变量（个数和placecount一样）
-    Place_PINVAR_info *pinvarExtra;     //P不变量编码的额外信息(个数和placecount一样)
 public:
     Petri();
     void getSize(char *filename);                   //预处理，得到库所，变迁，弧个数，如果是NUPN,会调用preNUPN进行NUPN的预处理
@@ -200,6 +203,7 @@ public:
     void computeProjectIDX();
     void implementSlice(const set<index_t> &vis,bool cardinality);
     void undoSlicePlace();
+    void undoPinvarSlicePlace();
     void undoSliceTrans();
 
     void computeAccordWith();
@@ -237,4 +241,32 @@ public:
     int getValue(int row,int col);
     friend class Petri;
 };
+
+class PNMLParser {
+public:
+    static PNMLParser *getInstance();   // 饿汉单例
+
+    void test_function();
+    bool parse(Petri *ptnet_);          // 解析PNML主函数，返回是否成功
+
+private:
+    const char filename[20] = "model.pnml";
+    Petri *net = NULL;
+    NUM_t p_cnt = 0, t_cnt = 0, a_cnt = 0;
+    NUM_t u_cnt = 0;
+
+    bool getSize(TiXmlElement *root_);
+    bool handle_toolspecific__(TiXmlElement *toolspecific_);
+    bool handle_toolspecific__match_nameAndValue(const char*name_, NUM_t value_);
+    bool handle_toolspecific__specialNetType(TiXmlElement *structure_);
+
+    bool readContent(TiXmlElement *root_);
+    bool readContent__place(TiXmlElement *place_, index_t idx_);
+    bool readContent__transition(TiXmlElement *transition_, index_t idx_);
+    bool readContent__arc(TiXmlElement *arc_, index_t idx_);
+    bool readContent__unit(TiXmlElement *unit_, index_t idx_);
+
+    bool linkPetriNet();
+};
+
 #endif //ENPAC_2020_3_0_PETRI_NET_H

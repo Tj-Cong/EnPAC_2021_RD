@@ -55,7 +55,7 @@ void setGlobalValue(Petri *ptnet) {
     } else if (PINVAR && SLICEPLACE) {
         for(int i=0;i<placecount;++i) {
             if(ptnet->sliceExtra[i].significant)
-                MARKLEN += ptnet->pinvarExtra[i].length;
+                MARKLEN += ptnet->pinvarSliceExtra[i].length;
         }
     } else if (PINVAR) {
         for(int i=0;i<placecount;++i) {
@@ -1352,6 +1352,31 @@ int BitRGNode::readPlace(int placeid) const{
         int offset = placeid % (sizeof(myuint) * 8);
         return this->marking[unit].test1(offset);
     }
+    else if(PINVAR && SLICEPLACE) {
+        if(!petri->sliceExtra[placeid].significant) {
+            cerr<<"[ERROR@BitRGNode::readPlace] can not read places cut off by Petri-net slice "<<endl;
+            return -1;
+        }
+        const Place_PINVAR_info &pinvarSliceInfo = petri->pinvarSliceExtra[placeid];
+        if(pinvarSliceInfo.cutoff) {
+            index_t markint1,markint2;
+            memcpy(&markint1,&this->marking[pinvarSliceInfo.intnum],sizeof(index_t));
+            memcpy(&markint2,&this->marking[pinvarSliceInfo.intnum+1],sizeof(index_t));
+            markint1=markint1>>(pinvarSliceInfo.intoffset);
+            int len1 = 32-pinvarSliceInfo.intoffset;
+            int len2 = pinvarSliceInfo.intoffset+pinvarSliceInfo.length-32;
+            markint2=markint2<<(32-len2);
+            markint2=markint2>>(32-len2-len1);
+            return (markint2+markint1);
+        }
+        else {
+            index_t markint1;
+            memcpy(&markint1,&this->marking[pinvarSliceInfo.intnum],sizeof(index_t));
+            markint1 = markint1<<(32-pinvarSliceInfo.intoffset-pinvarSliceInfo.length);
+            markint1 = markint1>>(32-pinvarSliceInfo.length);
+            return markint1;
+        }
+    }
     else if(PINVAR) {
         const Place_PINVAR_info &pinvarInfo = petri->pinvarExtra[placeid];
         if(petri->pinvarExtra[placeid].significant) {
@@ -1439,13 +1464,66 @@ void BitRGNode::clearPlace(int placeid) {
         }
     }
     else if(SAFE) {
-        cerr<<"ERROR, function clearPlace doesn't offer service for encoding of safe net."<<endl;
+        cerr<<"ERROR, function clearPlace doesn't offer service for encoding of safe nets."<<endl;
         exit(4);
     }
 }
 
 int BitRGNode::writePlace(int placeid, index_t tokencount) {
-    if(PINVAR) {
+    if(PINVAR && SLICEPLACE) {
+        if(!petri->sliceExtra[placeid].significant) {
+            cerr<<"[ERROR@BitRGNode::readPlace] can not write places cut off by Petri-net slice "<<endl;
+            return -1;
+        }
+        const Place_PINVAR_info &pinvarSliceInfo = petri->pinvarSliceExtra[placeid];
+        if(pinvarSliceInfo.cutoff) {
+            index_t zero_mask1,write_mask1,markint1;
+            index_t zero_mask2,write_mask2,markint2;
+            memcpy(&markint1,&this->marking[pinvarSliceInfo.intnum],sizeof(index_t));
+            memcpy(&markint2,&this->marking[pinvarSliceInfo.intnum+1],sizeof(index_t));
+            int len1,len2;
+            len1 = 32-pinvarSliceInfo.intoffset;
+            len2 = pinvarSliceInfo.intoffset + pinvarSliceInfo.length - 32;
+            zero_mask1 = (0xffffffff<<len1)>>len1;
+            zero_mask2 = (0xffffffff>>len2)<<len2;
+            markint1 = markint1 & zero_mask1;
+            markint2 = markint2 & zero_mask2;
+
+            write_mask1 = tokencount<<pinvarSliceInfo.intoffset;
+            write_mask2 = tokencount>>len1;
+            if(tokencount>exp2(pinvarSliceInfo.length)-1) {
+                cout<<tokencount;
+                int num = exp2(pinvarSliceInfo.length)-1;
+                cerr<<"ERROR, token-count over bound in P-invariant"<<endl;
+                exit(4);
+            }
+            markint1 = markint1 | write_mask1;
+            markint2 = markint2 | write_mask2;
+            memcpy(&this->marking[pinvarSliceInfo.intnum],&markint1,sizeof(index_t));
+            memcpy(&this->marking[pinvarSliceInfo.intnum+1],&markint2,sizeof(index_t));
+        }
+        else {
+            index_t zero_mask,write_mask,markint;
+            memcpy(&markint,&this->marking[pinvarSliceInfo.intnum],sizeof(index_t));
+            zero_mask = 0xffffffff;
+            zero_mask = zero_mask>>pinvarSliceInfo.intoffset;
+            zero_mask = zero_mask<<(32-pinvarSliceInfo.length);
+            zero_mask = zero_mask>>(32-pinvarSliceInfo.intoffset-pinvarSliceInfo.length);
+            zero_mask = ~zero_mask;
+            /*set corresponding place bits zero*/
+            markint = markint & zero_mask;
+            if(tokencount>exp2(pinvarSliceInfo.length)-1) {
+                cout<<tokencount;
+                int num = exp2(pinvarSliceInfo.length)-1;
+                cerr<<"ERROR, token-count over bound in P-invariant"<<endl;
+                exit(4);
+            }
+            write_mask = tokencount<<pinvarSliceInfo.intoffset;
+            markint = markint | write_mask;
+            memcpy(&this->marking[pinvarSliceInfo.intnum],&markint,sizeof(index_t));
+        }
+    }
+    else if(PINVAR) {
         const Place_PINVAR_info &pinvarInfo = petri->pinvarExtra[placeid];
         if(pinvarInfo.significant) {
             if(pinvarInfo.cutoff) {
@@ -1849,9 +1927,18 @@ BitRG::BitRG(Petri *pt, atomictable &argAT) : AT(argAT) {
         for (int i = 0; i < pt->unitcount; i++) {
             RGNodelength += pt->unittable[i].mark_length;
         }
-    } else if (SAFE) {
+    }
+    else if (SAFE) {
         RGNodelength = pt->placecount;
-    } else if (PINVAR) {
+    }
+    else if (PINVAR && SLICEPLACE) {
+        RGNodelength = 0;
+        for (int i = 0; i < pt->placecount; i++) {
+            if(pt->sliceExtra[i].significant)
+                RGNodelength += pt->pinvarSliceExtra[i].length;
+        }
+    }
+    else if (PINVAR) {
         RGNodelength = 0;
         for (int i = 0; i < pt->placecount; i++) {
             if(pt->pinvarExtra[i].significant)
@@ -1972,6 +2059,13 @@ BitRGNode *BitRG::RGinitialnode() {
                 rg->marking[unit].set(offset);
             } else {
                 rg->marking[unit].reset(offset);
+            }
+        }
+    }
+    else if(PINVAR && SLICEPLACE) {
+        for (index_t i = 0; i < placecount; i++) {
+            if(ptnet->sliceExtra[i].significant) {
+                rg->writePlace(i,ptnet->place[i].initialMarking);
             }
         }
     }
@@ -2098,6 +2192,47 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
         }
 
         //没有重复
+        addRGNode(newnode);
+    }
+    else if(PINVAR && SLICEPLACE) {
+        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
+        for(iterpre;iterpre!=preend;++iterpre) {
+            if(ptnet->sliceExtra[iterpre->idx].significant) {
+                index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
+                newnode->writePlace(iterpre->idx,remain);
+            }
+        }
+        for(iterpost;iterpost!=postend;++iterpost) {
+            if(ptnet->sliceExtra[iterpost->idx].significant) {
+                index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
+                newnode->writePlace(iterpost->idx,newtoken);
+            }
+        }
+
+        index_t hashvalue = getHashIndex(newnode);
+
+        bool repeated;
+        BitRGNode *p = rgnode[hashvalue];
+        while(p!=NULL) {
+            repeated = true;
+            index_t i=0;
+            for(i=0;i<FIELDCOUNT;++i) {
+                unsigned int equp;
+                unsigned int equnewnode;
+                memcpy(&equp, &p->marking[i], sizeof(unsigned int));
+                memcpy(&equnewnode, &newnode->marking[i], sizeof(unsigned int));
+                if(equp != equnewnode) {
+                    repeated = false;
+                    break;
+                }
+            }
+            if(repeated) {
+                exist = true;
+                delete newnode;
+                return p;
+            }
+            p=p->next;
+        }
         addRGNode(newnode);
     }
     else if (PINVAR) {
@@ -2256,7 +2391,8 @@ BitRGNode *BitRG::RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist) {
 
         //没有重复
 //        addRGNode(newnode);
-    } else if (SAFE) {
+    }
+    else if (SAFE) {
         memcpy(newnode->marking, curnode->marking, sizeof(myuint) * FIELDCOUNT);
 
         int unit;
@@ -2301,7 +2437,48 @@ BitRGNode *BitRG::RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist) {
 
         //没有重复
 //        addRGNode(newnode);
-    } else if (PINVAR) {
+    }
+    else if (PINVAR && SLICEPLACE) {
+        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
+        for(iterpre;iterpre!=preend;++iterpre) {
+            if(ptnet->sliceExtra[iterpre->idx].significant) {
+                index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
+                newnode->writePlace(iterpre->idx,remain);
+            }
+        }
+        for(iterpost;iterpost!=postend;++iterpost) {
+            if(ptnet->sliceExtra[iterpost->idx].significant) {
+                index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
+                newnode->writePlace(iterpost->idx,newtoken);
+            }
+        }
+
+        index_t hashvalue = getHashIndex(newnode);
+
+        bool repeated;
+        BitRGNode *p = rgnode[hashvalue];
+        while(p!=NULL) {
+            repeated = true;
+            index_t i=0;
+            for(i=0;i<FIELDCOUNT;++i) {
+                unsigned int equp;
+                unsigned int equnewnode;
+                memcpy(&equp, &p->marking[i], sizeof(unsigned int));
+                memcpy(&equnewnode, &newnode->marking[i], sizeof(unsigned int));
+                if(equp != equnewnode) {
+                    repeated = false;
+                    break;
+                }
+            }
+            if(repeated) {
+                exist = true;
+                delete newnode;
+                return p;
+            }
+            p=p->next;
+        }
+    }
+    else if (PINVAR) {
         memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
         for(iterpre;iterpre!=preend;++iterpre) {
             if(ptnet->pinvarExtra[iterpre->idx].significant) {

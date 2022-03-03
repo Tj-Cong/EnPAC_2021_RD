@@ -39,7 +39,11 @@ public:
     int placenum();
     int unitnum();
     void insert(cardmeta *meta);
+    void remove(unsigned int placeid);
     void MINUS (const cardexp &exp2);
+    void PLUS (const cardexp &exp2);
+    void SCALAR (int factor);
+    bool semi_positive();
 };
 
 class atomicmeta
@@ -60,11 +64,13 @@ public:
 
     int addPlace2Exp(bool left, const string &placeName);
 
+    /*Unify the form to k<=(k1p1+k2p2+...)-(kipi+k_(i+1)p_(i+1)+...) by shifting items*/
+    void tranpose();
+
     void evaluate();
     int parse();
     int parse_card();
     int parse_fire();
-    void transform();
 };
 
 typedef struct atomic {
