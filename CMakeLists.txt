@@ -3,7 +3,7 @@ project(EnPAC_2021)
 
 set(CMAKE_CXX_STANDARD 14)
 set(LINK_DIR /usr/local/lib)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -pthread")
 
 link_directories(${LINK_DIR})
 link_libraries(tcmalloc)

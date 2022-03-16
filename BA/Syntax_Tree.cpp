@@ -320,7 +320,7 @@ int Syntax_Tree::ParseXML(const char *filename, string &property, int number) {
     }
 //    cout<<"Original Tree:"<<endl;
 //    PrintTree();
-    Evaluate(this->root);
+//    Evaluate(this->root);
 //    Prune(this->root->nleft,this->root);
 //    cout<<"After evaluation:"<<endl;
 //    PrintTree();
@@ -508,6 +508,7 @@ void Syntax_Tree::BuildTree(TiXmlElement *xmlnode, STNode* &stnode,bool &consist
         }
         stnode->formula += "}";
         AT.atomics[AT.atomiccount].mystr = stnode->formula;                                     //AT
+        AT.atomics[AT.atomiccount].tranpose();
         AT.checkRepeat();                                                                       //AT
     }
     else {
@@ -524,11 +525,25 @@ void Syntax_Tree::Evaluate(STNode *n) {
             break;
         }
         case PREDICATE: {
+            string formula;
+            bool negation = false;
+            if(n->formula[0] == '!') {
+                formula = n->formula.substr(1);
+                negation = true;
+            }
+            else {
+                formula = n->formula;
+            }
             for(int i=0;i<=AT.atomiccount;++i) {
-                if(n->formula == AT.atomics[i].mystr) {
+                if(formula == AT.atomics[i].mystr) {
                     atomicmeta &aa = AT.atomics[i];
                     aa.evaluate();
-                    n->groundtruth = aa.groundtruth;
+                    if(negation && aa.groundtruth!=UNKNOW) {
+                        n->groundtruth = aa.groundtruth==FALSE ? TRUE : FALSE;
+                    }
+                    else {
+                        n->groundtruth = aa.groundtruth;
+                    }
                     break;
                 }
             }
@@ -1330,7 +1345,7 @@ void Syntax_Tree::PrintAT() {
         cout << "mystr:" << AT.atomics[i].mystr << endl;
         if (AT.atomics[i].mytype==PT_CARDINALITY){//c_type, print left and right
             //left
-            if (AT.atomics[i].leftexp.constnum != -1)
+            if (AT.atomics[i].leftexp.constnum != MAXUNSHORT16)
                 cout << "left: constnum = " << AT.atomics[i].leftexp.constnum << endl;
             else{//print left expression
                 cout << "left: exp:";
@@ -1344,7 +1359,7 @@ void Syntax_Tree::PrintAT() {
 
 
             //right
-            if (AT.atomics[i].rightexp.constnum != -1)
+            if (AT.atomics[i].rightexp.constnum != MAXUNSHORT16)
                 cout << "right: constnum = " << AT.atomics[i].rightexp.constnum << endl;
             else{//print right expression
                 cout << "right: exp:";

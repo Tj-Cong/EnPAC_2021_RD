@@ -462,18 +462,16 @@ private:
     int generatecount;
     bool result;
     int ret;
-    vector<int> negpath;
-    ofstream outcurdepth;
 
     //限界
     int bound;
     bool reachbound;
-    //内存检测
+    thread detect_mem_thread;
+public:
     bool memory_flag;
     bool stack_flag;
     bool data_flag;
     bool consistency_flag;
-    thread detect_mem_thread;
 public:
     Product_Automata(Petri *pt, rg_T* r, StateBuchi *sba);
     void getProduct();         //合成交自动机
@@ -485,7 +483,7 @@ public:
     void POP();
     void getProduct_Bound();                    //限界策略
     void addinitial_status(rgnode *initnode);  //生成交自动机的初始状态
-    unsigned short ModelChecker(string propertyid,unsigned short each_run_time);  //最外层的函数
+    void ModelChecker(string propertyid,NUM_t each_run_time,string &techniques);  //最外层的函数
     bool isLabel(rgnode *state, int sj);  //判断能否合成交状态
     bool isLabel2(rgnode *state, int sj); //测试
     bool isLabel1(rgnode *state, int sj); //测试
@@ -493,13 +491,13 @@ public:
     NUM_t sumtoken(string s, rgnode *state);   //计算s中所有库所的token和
     bool handleLTLF(string s, rgnode *state);
     bool handleLTLC(string s, rgnode *state);
-    bool checkLTLF(rgnode *state, atomicmeta &am);
-    bool checkLTLC(rgnode *state, atomicmeta &am);
+    bool check_LTL_Atomic_Fireability(rgnode *state, atomicmeta &am);
+    bool check_LTL_BAstate_Fireability(rgnode *state, int BAstateid);
+    bool check_LTL_Atomic_Cardinality(rgnode *state, atomicmeta &am);
     void handleLTLCstep(NUM_t &front_sum, NUM_t &latter_sum, string s, rgnode *state);
     int getresult();
     NUM_t getConflictTimes();
     int getgeneratecount();
-    void printNegapth(ofstream &outpath);
     void detect_memory();
     double get_current_mem();
     ~Product_Automata();
@@ -517,7 +515,6 @@ Product_Automata<rgnode,rg_T>::Product_Automata(Petri *pt, rg_T* r, StateBuchi *
     reachbound = false;
     data_flag = true;
     consistency_flag = true;
-    outcurdepth.open("curdepth.txt",ios::out);
 }
 
 /*bool Product_Automata::judgeF(string s)
@@ -541,7 +538,7 @@ bool Product_Automata<rgnode,rg_T>::judgeF(string s) {
  * out: void
  * */
 template <class rgnode, class rg_T>
-unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, unsigned short each_run_time) {
+void Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, NUM_t each_run_time, string &Techniques) {
     //预设超时机制
     signal(SIGALRM, sig_handler);
     alarm(each_run_time);
@@ -550,7 +547,7 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
     stack_flag = true;
     //核心部分
     result = true;
-    getProduct();     //合成交自动机并进行搜索
+    getProduct_Bound();     //合成交自动机并进行搜索
 
     //打印结果
     string re;
@@ -563,46 +560,46 @@ unsigned short Product_Automata<rgnode,rg_T>::ModelChecker(string propertyid, un
 //        string stubborn = STUBBORN?" STUBBORN":"";
         string sliceplace = SLICEPLACE ? " SLICEPLACE" : "";
         string slicetransition = SLICETRANSITION ? " SLICETRANSITION"+to_string(petri->sliceTransitionCount)+"/"+to_string(petri->transitioncount) : "";
+        Techniques = nupn+safe+pinvar+sliceplace+slicetransition;
         if(result)
         {
             re="TRUE";
-            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+sliceplace+slicetransition;
+            cout << "FORMULA " + propertyid + " " + re;
             ret = 1;
         }
         else
         {
             re="FALSE";
-            cout << "FORMULA " + propertyid + " " + re<<nupn+safe+pinvar+sliceplace+slicetransition;
+            cout << "FORMULA " + propertyid + " " + re;
             ret = 0;
         }
     }
     else if(!memory_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE MEMORY";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE_MEMORY";
         ret = -1;
     }
     else if(!stack_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE STACK";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE_STACK";
         ret = -1;
     }
     else if(!data_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE DATA";
+//        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE_DATA";
         ret = -1;
     }
     else if(!consistency_flag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE CONSISTENCY";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE_CONSISTENCY";
         ret = -1;
     }
     else if(!timeflag)
     {
-        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE TIME";
+        cout<<"FORMULA "+propertyid+" "+"CANNOT_COMPUTE_TIME";
         ret = -1;
     }
     unsigned short timeleft=alarm(0);
-    return (each_run_time - timeleft);
 }
 
 /*void Product_Automata::getProduct()
@@ -640,6 +637,8 @@ void Product_Automata<rgnode,rg_T>::getProduct() {
 
 template <class rgnode, class rg_T>
 Pstacknode<rgnode>* Product_Automata<rgnode,rg_T>::getNextChild(Pstacknode<rgnode> *q) {
+    if(q->BAname_id == 6)
+        int a=0;
     int firenum;
     while((firenum=q->NEXTFIREABLE())!=-1) {
         bool exist;
@@ -897,7 +896,6 @@ void Product_Automata<rgnode,rg_T>::getProduct_Bound() {
             init->RGname_ptr = initial_status[i].RGname_ptr;
             init->BAname_id = initial_status[i].BAname_id;
             init->pba = ba->vertics[init->BAname_id].firstarc;
-            init->fireptr = init->RGname_ptr->fireset.begin();
             TCHECK_BOUND(init);
             if(ready2exit || !data_flag)  //如果已经出结果或超时，则退出
                 break;
@@ -1262,14 +1260,6 @@ int Product_Automata<rgnode,rg_T>::getgeneratecount() {
 }
 
 template <class rgnode,class rg_T>
-void Product_Automata<rgnode,rg_T>::printNegapth(ofstream &outpath) {
-    vector<int>::reverse_iterator iter;
-    for(iter=negpath.rbegin(); iter!=negpath.rend(); iter++){
-        outpath<<(*iter)<<endl;
-    }
-}
-
-template <class rgnode,class rg_T>
 void Product_Automata<rgnode,rg_T>::detect_memory()
 {
     for(;;)
@@ -1363,7 +1353,7 @@ bool Product_Automata<rgnode, rg_T>::isLabel1(rgnode *state, int sj) {
             left = right = 0;
 
             //left
-            if (l_exp.constnum != -1) {
+            if (l_exp.constnum != MAXUNSHORT16) {
                 left = l_exp.constnum;
             } else {
                 const cardmeta *p = l_exp.expression;
@@ -1375,7 +1365,7 @@ bool Product_Automata<rgnode, rg_T>::isLabel1(rgnode *state, int sj) {
             }
 
             //right
-            if (r_exp.constnum != -1) {
+            if (r_exp.constnum != MAXUNSHORT16) {
                 right = r_exp.constnum;
             } else {
                 const cardmeta *p = r_exp.expression;
@@ -1407,29 +1397,26 @@ bool Product_Automata<rgnode, rg_T>::isLabel(rgnode *state, int sj) {
         return false;
     if (ba->vertics[sj].label == "true")
         return true;
+    if (ba->vertics[sj].label == "false")
+        return false;
 
-    // debug
-    //static ofstream debugoutput("checkpoint.txt");
-//    extern ofstream debugout;
-
-    // def
     atomictable &AT = *(ba->pAT);
     const vector<Atomic> &links = ba->vertics[sj].links;
     Atomic temp;
-    int atomic_num = links.size();
     bool atomicTrue = false;
     int i, j;
-    for (i = 0; i < atomic_num; i++){
+    for (i = 0; i < links.size(); i++){
         temp = links[i];
 
         if (AT.atomics[temp.atomicmeta_link].last_check_avaliable)
             atomicTrue = AT.atomics[temp.atomicmeta_link].last_check;
         else if (AT.atomics[temp.atomicmeta_link].mytype == PT_FIREABILITY)
             //call F handle
-            atomicTrue = checkLTLF(state, AT.atomics[temp.atomicmeta_link]);
+//            atomicTrue = check_LTL_Atomic_Fireability(state, AT.atomics[temp.atomicmeta_link]);
+            return check_LTL_BAstate_Fireability(state,sj);
         else if (AT.atomics[temp.atomicmeta_link].mytype == PT_CARDINALITY)
             //call C handle
-            atomicTrue = checkLTLC(state, AT.atomics[temp.atomicmeta_link]);
+            atomicTrue = check_LTL_Atomic_Cardinality(state, AT.atomics[temp.atomicmeta_link]);
 
         if ((atomicTrue&&temp.negation)||(!atomicTrue&&!temp.negation)) {
 //            debugout << "F " << ba->vertics[sj].label << endl;
@@ -1439,9 +1426,41 @@ bool Product_Automata<rgnode, rg_T>::isLabel(rgnode *state, int sj) {
 //    debugout << "T " << ba->vertics[sj].label << endl;
     return true;
 }
+
+
+template<class rgnode, class rg_T>
+bool Product_Automata<rgnode, rg_T>::check_LTL_BAstate_Fireability(rgnode *state, int BAstateid) {
+    const Vertex &BAstate = ba->vertics[BAstateid];
+    //check fires
+    vector<set<index_t>>::const_iterator firesetIter;
+    for(firesetIter=BAstate.fires.begin();firesetIter!=BAstate.fires.end();firesetIter++) {
+        bool ret = false;
+        set<index_t>::const_iterator firesIter;
+        for(firesIter=firesetIter->begin();firesIter!=firesetIter->end();firesIter++) {
+            if(state->isFirable(ptnet->transition[*firesIter])) {
+                ret = true;
+                break;
+            }
+        }
+        if(ret == false)
+            return false;
+    }
+
+    //check unfires
+    set<index_t>::const_iterator unfiresIter;
+    for(unfiresIter=BAstate.unfires.begin();unfiresIter!=BAstate.unfires.end();unfiresIter++) {
+        if(state->isFirable(ptnet->transition[*unfiresIter])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 // used above only (new HandleLTLF) for atomics table
 template<class rgnode, class rg_T>
-bool Product_Automata<rgnode, rg_T>::checkLTLF(rgnode *state, atomicmeta &am) {
+bool Product_Automata<rgnode, rg_T>::check_LTL_Atomic_Fireability(rgnode *state, atomicmeta &am) {
     bool ans = false;
     int t_num = am.fires.size();
     int i;
@@ -1458,34 +1477,40 @@ bool Product_Automata<rgnode, rg_T>::checkLTLF(rgnode *state, atomicmeta &am) {
 }
 // used above only (new HandleLTLC) for atomics table
 template<class rgnode, class rg_T>
-bool Product_Automata<rgnode, rg_T>::checkLTLC(rgnode *state, atomicmeta &am) {
+bool Product_Automata<rgnode, rg_T>::check_LTL_Atomic_Cardinality(rgnode *state, atomicmeta &am) {
     if(am.groundtruth == TRUE)
         return true;
     else if(am.groundtruth == FALSE)
         return false;
 
-    unsigned int left = 0;
-    unsigned int right = 0;
+    int left = 0;
+    int right = 0;
     const cardmeta *p;
 
     //left
-    if (am.leftexp.constnum != -1)
+    if (am.leftexp.constnum != MAXUNSHORT16)
         left = am.leftexp.constnum;
     else {
         p = am.leftexp.expression;
         while (p) {
-            left += state->readPlace(p->placeid);
+            if(p->coefficient == 1)
+                left += state->readPlace(p->placeid);
+            else if(p->coefficient == -1)
+                left -= state->readPlace(p->placeid);
             p = p->next;
         }
     }
 
     //right
-    if (am.rightexp.constnum != -1)
+    if (am.rightexp.constnum != MAXUNSHORT16)
         right = am.rightexp.constnum;
     else {
         p = am.rightexp.expression;
         while (p) {
-            right += state->readPlace(p->placeid);
+            if(p->coefficient == 1)
+                right += state->readPlace(p->placeid);
+            else if(p->coefficient == -1)
+                right -= state->readPlace(p->placeid);
             p = p->next;
         }
     }
@@ -1525,4 +1550,5 @@ double Product_Automata<rgnode, rg_T>::get_current_mem() {
     }
     return size;
 }
+
 #endif //ENPAC_2020_2_0_PRODUCT_H

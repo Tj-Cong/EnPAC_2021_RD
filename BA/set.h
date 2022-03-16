@@ -68,6 +68,24 @@ set<T> operator + (const set<T> &s1, const set<T> &s2) {
 }
 
 template <typename T>
+void operator -= (set<T> &s1, const set<T> &s2) {
+    typename set<T>::iterator iter1 = s1.begin();
+    typename set<T>::const_iterator iter2=s2.begin();
+    while(iter1!=s1.end() && iter2!=s2.end()) {
+        if(*iter1 == *iter2) {
+            iter1 = s1.erase(iter1);
+            iter2++;
+        }
+        else if(*iter1 < *iter2) {
+            iter1++;
+        }
+        else {
+            iter2++;
+        }
+    }
+}
+
+template <typename T>
 ostream & operator << (ostream &out, const set<T> &s) {
     out<<"{";
     typename set<T>::const_iterator item;

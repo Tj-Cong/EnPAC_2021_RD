@@ -21,6 +21,7 @@ extern bool ready2exit;
 extern NUM_t FIELDCOUNT;   //占用bitfield个数，仅仅用于NUPN和SAFE网
 extern NUM_t MARKLEN;      //Petri网
 extern NUM_t placecount;   //Petri网库所个数
+extern NUM_t transitioncount;
 extern bool SLICEPLACE;
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
@@ -86,28 +87,27 @@ typedef unsigned long ID;
 class BitSequence {
 private:
     myuint *bitUnits;
-    unsigned int sequenceLength;
+
 public:
     BitSequence(int length);
     ~BitSequence();
-    bool test0(int position);
-    bool test1(int position);
-    void set0(int position);
-    void set1(int position);
+    bool test0(int position,int sequenceLength);
+    bool test1(int position,int sequenceLength);
+    void set0(int position,int sequenceLength);
+    void set1(int position,int sequenceLength);
 };
 
 class RGNode {
-private:
-    Mark *marking;
 public:
+    Mark *marking;
     RGNode *next;
 //    BitSequence *stubbornFlags;
 //    BitSequence *fireableFlags;
-//    set<index_t> fireset;
 public:
     RGNode();
     RGNode(RGNode *oldnode);
     index_t Hash();
+    bool isFireable_by_flag(const Transition &t) const {return false;};
     bool isFirable(const Transition &t) const;
     void computeStubbornSet();
 //    void getFireSet(RGNode *lastnode, index_t lastid);
@@ -125,11 +125,21 @@ public:
     myuint *marking;
     BitRGNode *next;
 //    BitSequence *stubbornFlags;
-//    BitSequence *fireableFlags;
-//    set<index_t> fireset;
+    BitSequence *fireableFlags;
+    BitSequence *updateFlags;
+private:
+    bool fireable_test0(int position,int sequenceLength);
+    bool fireable_test1(int position,int sequenceLength);
+    void fireable_set0(int position,int sequenceLength);
+    void fireable_set1(int position,int sequenceLength);
+    bool update_test0(int position,int sequenceLength);
+    bool update_test1(int position,int sequenceLength);
+    void update_set0(int position,int sequenceLength);
+    void update_set1(int position,int sequenceLength);
 public:
     BitRGNode();
     index_t Hash();
+    bool isFireable_by_flag(const Transition &t) const;
     bool isFirable(const Transition &t) const;
     void computeStubbornSet();
 //    void getFireSet(BitRGNode *lastnode, index_t lastid);

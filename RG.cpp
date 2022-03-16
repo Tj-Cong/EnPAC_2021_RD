@@ -41,10 +41,6 @@ void BinaryToDec(index_t &DecNum, unsigned short *Binarystr, NUM_t marklen) {
 }
 
 void setGlobalValue(Petri *ptnet) {
-    NUPN = ptnet->NUPN;
-    SAFE = ptnet->SAFE;
-    PINVAR = ptnet->PINVAR;
-    placecount = ptnet->placecount;
     MARKLEN = 0;
     if (NUPN) {
         for (int i = 0; i < ptnet->unitcount; i++) {
@@ -811,7 +807,6 @@ bool Bitfielduint::test1(int index) {
 }
 
 BitSequence::BitSequence(int length) {
-    sequenceLength = length;
     int unitNums = ceil((float)length/32.0);
     bitUnits = new myuint [unitNums];
     memset(bitUnits,0,sizeof(myuint)*unitNums);
@@ -819,7 +814,7 @@ BitSequence::BitSequence(int length) {
 BitSequence::~BitSequence() {
     delete [] bitUnits;
 }
-bool BitSequence::test0(int position) {
+bool BitSequence::test0(int position,int sequenceLength) {
     if(position>=sequenceLength) {
         cerr<<"[BitSequence::test0] Bit sequence error position"<<endl;
         exit(-1);
@@ -828,7 +823,7 @@ bool BitSequence::test0(int position) {
     int offset = position%32;
     return bitUnits[unitIndex].test0(offset);
 }
-bool BitSequence::test1(int position) {
+bool BitSequence::test1(int position,int sequenceLength) {
     if(position>=sequenceLength) {
         cerr<<"[BitSequence::test0] Bit sequence error position"<<endl;
         exit(-1);
@@ -837,7 +832,7 @@ bool BitSequence::test1(int position) {
     int offset = position%32;
     return bitUnits[unitIndex].test1(offset);
 }
-void BitSequence::set0(int position) {
+void BitSequence::set0(int position,int sequenceLength) {
     if(position>=sequenceLength) {
         cerr<<"[BitSequence::set0] Bit sequence error position"<<endl;
         exit(-1);
@@ -846,7 +841,7 @@ void BitSequence::set0(int position) {
     int offset = position%32;
     bitUnits[unitIndex].reset(offset);
 }
-void BitSequence::set1(int position) {
+void BitSequence::set1(int position,int sequenceLength) {
     if(position>=sequenceLength) {
         cerr<<"[BitSequence::set1] Bit sequence error position"<<endl;
         exit(-1);
@@ -912,6 +907,7 @@ bool RGNode::isFirable(const Transition &t) const {
     }
     return isfirable;
 }
+
 
 /*RGNode::~RGNode()
  * function： 析构函数，释放空间
@@ -1160,6 +1156,10 @@ bool BitRGNode::isFirable(const Transition &t) const {
     }
 }
 
+bool BitRGNode::isFireable_by_flag(const Transition &t) const {
+    if(updateFlags->test1())
+}
+
 /*RGNode::~RGNode()
  * function： 析构函数，释放空间
  * */
@@ -1331,6 +1331,7 @@ void BitRGNode::printMarking(const int &len) {
 int BitRGNode::readPlace(int placeid) const{
     if(NUPN) {
         const NUPN_extra &pe = petri->nupnExtra[placeid];
+
         if(!pe.cutoff) {
             index_t markint;
             memcpy(&markint,&this->marking[pe.intnum],sizeof(index_t));
@@ -1358,6 +1359,7 @@ int BitRGNode::readPlace(int placeid) const{
             return -1;
         }
         const Place_PINVAR_info &pinvarSliceInfo = petri->pinvarSliceExtra[placeid];
+
         if(pinvarSliceInfo.cutoff) {
             index_t markint1,markint2;
             memcpy(&markint1,&this->marking[pinvarSliceInfo.intnum],sizeof(index_t));
@@ -1410,7 +1412,17 @@ int BitRGNode::readPlace(int placeid) const{
             int ssum = sum<0?(int)(sum-0.5):(int)(sum+0.5);
             return (petri->weightsum0[pinvarInfo.pinvarLink]-ssum);
         }
-    } else if(LONGBITPLACE) {
+    }
+    else if(SLICEPLACE && LONGBITPLACE) {
+        NUM_t markint;
+        const P_SLICE_extra &PS_extra = petri->sliceExtra[placeid];
+        if(PS_extra.significant)
+            memcpy(&markint,&this->marking[PS_extra.project_idx],sizeof(index_t));
+        else
+            markint = MAXUINT32;
+        return markint;
+    }
+    else if(LONGBITPLACE) {
         index_t markint;
         memcpy(&markint,&this->marking[placeid],sizeof(index_t));
         return markint;
@@ -1476,6 +1488,16 @@ int BitRGNode::writePlace(int placeid, index_t tokencount) {
             return -1;
         }
         const Place_PINVAR_info &pinvarSliceInfo = petri->pinvarSliceExtra[placeid];
+
+        /*if(pinvarSliceInfo.length==1) {
+            if(tokencount == 0) {
+                this->marking[pinvarSliceInfo.intnum].reset(pinvarSliceInfo.intoffset);
+            }
+            else if(tokencount == 1) {
+                this->marking[pinvarSliceInfo.intnum].set(pinvarSliceInfo.intoffset);
+            }
+        }*/
+
         if(pinvarSliceInfo.cutoff) {
             index_t zero_mask1,write_mask1,markint1;
             index_t zero_mask2,write_mask2,markint2;
@@ -1526,6 +1548,14 @@ int BitRGNode::writePlace(int placeid, index_t tokencount) {
     else if(PINVAR) {
         const Place_PINVAR_info &pinvarInfo = petri->pinvarExtra[placeid];
         if(pinvarInfo.significant) {
+
+            /*if(pinvarInfo.length == 1) {
+                if(tokencount == 0)
+                    this->marking[pinvarInfo.intnum].reset(pinvarInfo.intoffset);
+                else if(tokencount == 1)
+                    this->marking[pinvarInfo.intnum].set(pinvarInfo.intoffset);
+            }*/
+
             if(pinvarInfo.cutoff) {
                 index_t zero_mask1,write_mask1,markint1;
                 index_t zero_mask2,write_mask2,markint2;
@@ -1573,6 +1603,11 @@ int BitRGNode::writePlace(int placeid, index_t tokencount) {
                 memcpy(&this->marking[pinvarInfo.intnum],&markint,sizeof(index_t));
             }
         }
+    }
+    else if(SLICEPLACE && LONGBITPLACE) {
+        const P_SLICE_extra &PS_extra = petri->sliceExtra[placeid];
+        if(PS_extra.significant)
+            memcpy(&this->marking[PS_extra.project_idx], &tokencount, sizeof(index_t));
     }
     else if(LONGBITPLACE) {
         memcpy(&this->marking[placeid],&tokencount,sizeof(index_t));
@@ -1945,7 +1980,7 @@ BitRG::BitRG(Petri *pt, atomictable &argAT) : AT(argAT) {
                 RGNodelength += pt->pinvarExtra[i].length;
         }
     } else if (LONGBITPLACE) {
-        RGNodelength = 32*placecount;
+        RGNodelength = 32*pt->placecount;
     }
 
     int transcount = ptnet->transitioncount;

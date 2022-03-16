@@ -13,7 +13,7 @@
 using namespace std;
 
 #define OK 1
-#define CONSISTENCY_ERROR 0
+#define CONSISTENCY_ERROR -1
 #define ATOMICTABLESIZE 50
 
 extern Petri *petri;
@@ -32,7 +32,7 @@ public:
     int constnum;
     cardmeta *expression;
 
-    cardexp(){constnum=-1;expression = NULL;/*expression=new cardmeta;*/}
+    cardexp(){constnum=MAXUNSHORT16;expression = NULL;/*expression=new cardmeta;*/}
     ~cardexp();
     void DestroyExp();
     cardmeta *locate(unsigned int placeid);
@@ -44,6 +44,20 @@ public:
     void PLUS (const cardexp &exp2);
     void SCALAR (int factor);
     bool semi_positive();
+    bool semi_negative();
+
+    void operator = (const cardexp &exp) {
+        constnum = exp.constnum;
+        expression = NULL;
+        cardmeta *expmeta = exp.expression,*meta;
+        while (expmeta) {
+            meta = new cardmeta;
+            meta->placeid = expmeta->placeid;
+            meta->coefficient = expmeta->coefficient;
+            insert(meta);
+            expmeta = expmeta->next;
+        }
+    }
 };
 
 class atomicmeta

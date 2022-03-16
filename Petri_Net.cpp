@@ -1095,7 +1095,7 @@ void Petri::judgePINVAR() {
         return;
     }
     if(computePinvariant() == 1) {
-        printPinvar();
+        //printPinvar();
         PINVAR = true;
         computeBound();
         if(!PINVAR) {
@@ -1118,7 +1118,7 @@ void Petri::computeBound() {
         if(LONGBITPLACE)
             bound[i] = MAXUINT32;
         else
-            bound[i] = MAXUNSHORT16;
+            bound[i] = MAXUN18;
     }
     memset(weightsum0,0,sizeof(int)*(placecount-RankOfmatrix));
 
@@ -1162,10 +1162,80 @@ void Petri::computeBound() {
         }
     }
 
-    for(int i=0;i<placecount;i++) {
-        cout<<bound[i]<<" ";
+//    for(int i=0;i<placecount;i++) {
+//        cout<<bound[i]<<" ";
+//    }
+//    cout<<endl;
+
+    NUM_t bitcounter = 0;
+    for(int j=0;j<placecount;++j) {
+        Place_PINVAR_info &pinvarInfo = pinvarExtra[j];
+        if(pinvarInfo.significant) {
+            pinvarInfo.startpos = bitcounter;
+            pinvarInfo.length = ceil(log2(bound[j]+1));
+            pinvarInfo.intnum = pinvarInfo.startpos / 32;
+            pinvarInfo.intoffset = pinvarInfo.startpos % 32;
+            bitcounter += pinvarInfo.length;
+            if(pinvarInfo.intoffset+pinvarInfo.length>32)
+                pinvarInfo.cutoff = true;
+        }
+        else {
+            pinvarInfo.length = ceil(log2(bound[j]+1));
+        }
     }
-    cout<<endl;
+
+    if((double)bitcounter/(16*placecount) > 0.8) {
+        delete [] weightsum0;
+        PINVAR = false;
+    }
+    delete [] bound;
+    MallocExtension::instance()->ReleaseFreeMemory();
+}
+
+void Petri::reComputeBound() {
+    long *bound = new long [placecount];
+    for(int i=0;i<placecount;++i) {
+        if(LONGBITPLACE)
+            bound[i] = MAXUINT32;
+        else
+            bound[i] = MAXUN18;
+    }
+
+    /*筛选出semi-positive P不变量*/
+    vector<int> semi_positive_index;
+    for(int i = 0; i < placecount - RankOfmatrix; ++i) {
+        bool posflag = true;
+        for(int j=0;j<placecount;++j) {
+            if(Pinvar[i][j] < 0) {
+                posflag = false;
+                break;
+            }
+        }
+        if(posflag) {
+            semi_positive_index.push_back(i);
+        }
+    }
+
+    for(int i=0;i<semi_positive_index.size();++i) {
+        if(weightsum0[semi_positive_index[i]]<=0)
+            continue;
+        for(int k=0; k<placecount; ++k) {
+//            if(Pinvar[semi_positive_index[i]][k]<1e-6 || pinvarExtra[k].significant==false)
+            if(Pinvar[semi_positive_index[i]][k]<1e-6)
+                continue;
+            else {
+                double bb = ceil((double)weightsum0[semi_positive_index[i]]/Pinvar[semi_positive_index[i]][k]);
+                if((NUM_t)bb<bound[k]) {
+                    bound[k] = (NUM_t)bb;
+                }
+            }
+        }
+    }
+
+//    for(int i=0;i<placecount;i++) {
+//        cout<<bound[i]<<" ";
+//    }
+//    cout<<endl;
 
     NUM_t bitcounter = 0;
     for(int j=0;j<placecount;++j) {
@@ -1507,6 +1577,14 @@ void Petri::undoPinvarSlicePlace() {
     undoSlicePlace();
     delete [] pinvarSliceExtra;
     MallocExtension::instance()->ReleaseFreeMemory();
+}
+
+void Petri::setGlobalPetriAttribute() {
+    ::placecount = this->placecount;
+    ::transitioncount = this->transitioncount;
+    ::NUPN = this->NUPN;
+    ::SAFE = this->SAFE;
+    ::PINVAR = this->PINVAR;
 }
 
 IncidenceMatrix::IncidenceMatrix(Petri *petri) {
@@ -1982,10 +2060,13 @@ bool PNMLParser::readContent__unit(TiXmlElement *unit_, index_t idx_) {
             // cout << place_name << endl;
             // 重置起点并计数place
             st = ed;
-            while (!checkVarName(places[st]))
+            while (!checkVarName(places[st]) && places[st]!=0)
                 st++;
             ed = st;
             unit_place_cnt++;
+
+            if (places[st]==0)
+                break;
         }
     }
     u->size = unit_place_cnt;

@@ -772,7 +772,7 @@ void StateBuchi::Simplify() {
     do {
         simplest = true;
         Simplify_state();
-        PrintStateBuchi();
+//        PrintStateBuchi();
     } while (!simplest);
 }
 
@@ -1097,7 +1097,7 @@ void StateBuchi::linkAtomics(const atomictable &AT) {
 */
 
 
-void StateBuchi::linkAtomics(atomictable &AT) {
+void StateBuchi::linkAtomics(atomictable &AT,bool cardinality) {
     pAT = &AT;
     int i;
     for (i=0;i<=vex_num;i++){
@@ -1109,6 +1109,7 @@ void StateBuchi::linkAtomics(atomictable &AT) {
         judgeInvalid(vertics[i].invalid, vertics[i].links);
     }
 
+    MergeAtomics(cardinality);
 //    AT.linkPlace2atomictable();
 }
 
@@ -1168,5 +1169,39 @@ void StateBuchi::judgeInvalid(bool &invalid, const vector<atomic> &links) {
             return;
         table[link.atomicmeta_link] = link.negation ? EXISTED_TRUE : EXISTED_FALSE;
     }
-    invalid= false;
+    invalid = false;
+}
+
+void StateBuchi::MergeAtomics(bool cardinality) {
+    if(cardinality)
+        return;
+    for (int i=0;i<=vex_num;i++) {
+        if (vertics[i].id == -1 || vertics[i].label == "true")
+            continue;
+        for(int k=0;k<vertics[i].links.size();k++) {
+            atomic &am = vertics[i].links[k];
+            if(am.negation) {
+                //有取非符号
+                vector<unsigned int> &unfires = pAT->atomics[am.atomicmeta_link].fires;
+                vertics[i].unfires.insert(unfires.begin(),unfires.end());
+            }
+            else {
+                vector<unsigned int> &ff = pAT->atomics[am.atomicmeta_link].fires;
+                set<index_t> fires;
+                fires.insert(ff.begin(),ff.end());
+                vertics[i].fires.push_back(fires);
+            }
+        }
+
+        vector<set<index_t>>::iterator iterfires;
+        for(iterfires=vertics[i].fires.begin();iterfires!=vertics[i].fires.end();iterfires++) {
+            (*iterfires)-=vertics[i].unfires;
+            if(iterfires->empty()) {
+                vertics[i].label = "false";
+//                vertics[i].DelArc(vertics[i].firstarc);
+//                vertics[i].firstarc = NULL;
+                break;
+            }
+        }
+    }
 }

@@ -27,6 +27,7 @@ using namespace std;
 #define COMPUTE_P_INVAR_TIME 400
 #define MAXUINT32 4294967295
 #define MAXUNSHORT16 65535
+#define MAXUN18 1048575
 
 typedef unsigned int index_t;    //索引数据类型
 typedef unsigned short weight_t; //弧权重的数据类型
@@ -36,6 +37,7 @@ typedef unsigned int NUM_t;      //个数数据类型
 extern NUM_t FIELDCOUNT;   //占用bitfield个数，仅仅用于NUPN和SAFE网
 extern NUM_t MARKLEN;      //Petri网
 extern NUM_t placecount;   //Petri网库所个数
+extern NUM_t transitioncount;
 extern bool NUPN;          //当前Petri网是否有NUPN信息
 extern bool SAFE;          //当前Petri网是否为安全网
 extern bool PINVAR;        //当前Petri网是否使用P不变量编码
@@ -206,6 +208,7 @@ public:
     void undoPinvarSlicePlace();
     void undoSliceTrans();
 
+    void setGlobalPetriAttribute();
     void computeAccordWith();
     void destroyStubbornAidInfo();
     void unaccordWithReachable(index_t indexT,set<index_t> &reachable);
@@ -221,6 +224,7 @@ public:
     bool existIntersection(index_t t1, index_t t2, const vector<Small_Arc> &sa, const vector<Small_Arc> &sb);
     int computePinvariant();      //计算得到P不变量
     void computeBound();
+    void reComputeBound();
     void destroyPINVAR();
     void destroyAccordWithMatrix();
     void printPinvar();

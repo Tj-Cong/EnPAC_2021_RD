@@ -24,6 +24,7 @@ void print_info() {
 
 NUM_t FIELDCOUNT;
 NUM_t placecount;
+NUM_t transitioncount;
 NUM_t MARKLEN;
 bool NUPN = false;            //whether the checking process uses NUPN encoding
 bool SAFE = false;            //whether the checking process uses SAFE encoding
@@ -54,14 +55,14 @@ void CONSTRUCTPETRI() {
     double starttime,endtime;
     Petri *ptnet = new Petri;
     char filename[]="model.pnml";
-//    ptnet->getSize(filename);
-//    if(ptnet->NUPN) {
-//        ptnet->readNUPN(filename);
-//    }
-//    else {
-//        ptnet->readPNML(filename);
-//    }
-    PNMLParser::getInstance()->parse(ptnet);
+    ptnet->getSize(filename);
+    if(ptnet->NUPN) {
+        ptnet->readNUPN(filename);
+    }
+    else {
+        ptnet->readPNML(filename);
+    }
+//    PNMLParser::getInstance()->parse(ptnet);
     ptnet->constructMatrix();
     ptnet->judgeSAFE();
     ptnet->judgePINVAR();
@@ -71,6 +72,7 @@ void CONSTRUCTPETRI() {
 //    ptnet->printAccordWith();
 
     petri = ptnet;
+    petri->setGlobalPetriAttribute();
 //    if(NUPN)
 //        ptnet->printUnit();
 //    ptnet->printGraph();
@@ -80,82 +82,65 @@ void CONSTRUCTPETRI() {
     ptnet->checkarc();
 }
 void CHECKLTL(Petri *ptnet, bool cardinality) {
-    BitRG *bitgraph;
-    RG *graph;
+    BitRG *bitgraph;RG *graph;
     double starttime,endtime;
-
     ofstream outresult("boolresult.txt", ios::app);  //outresult export results to boolresult.txt
-    unsigned short ltlcount=0;
     unsigned short total_left_time=TOTALTOOLTIME;
 
-    int i;
     string propertyid;
     char ff[]="LTLFireability.xml";
     char cc[]="LTLCardinality.xml";
-    for(i=1;i<=16;++i)
+    Syntax_Tree *syntaxTree;
+    General *GBA;
+    Buchi *BA;
+    StateBuchi *SBA;
+    for(int i=1;i<=16;++i)
     {
         unsigned short each_run_time;
-        unsigned short each_used_time;
-        if(ltlcount<6)
+        if(i<=6)
             each_run_time=300;
         else{
-            each_run_time=total_left_time/(16-ltlcount);
+            each_run_time=total_left_time/(17-i);
         }
-        Syntax_Tree syntaxTree;
+
+        /************************!!set timer!!*************************/
+        starttime = get_time();
+        syntaxTree = new Syntax_Tree;
         if(cardinality) {
-            if(syntaxTree.ParseXML(cc,propertyid,i)==CONSISTENCY_ERROR) {
+            if(syntaxTree->ParseXML(cc,propertyid,i)==CONSISTENCY_ERROR) {
                 cout << "FORMULA " << propertyid << " CANNOT_COMPUTE"<<endl;
                 outresult << '?';
                 continue;
             }
         }
         else {
-            if(syntaxTree.ParseXML(ff,propertyid,i)==CONSISTENCY_ERROR) {
+            if(syntaxTree->ParseXML(ff,propertyid,i)==CONSISTENCY_ERROR) {
                 cout << "FORMULA " << propertyid << " CANNOT_COMPUTE"<<endl;
                 outresult << '?';
                 continue;
             }
         }
 
-        if(syntaxTree.root->groundtruth!=UNKNOW) {
-            cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
-            outresult << ((syntaxTree.root->groundtruth==TRUE)?'T':'F');
+        syntaxTree->Push_Negation(syntaxTree->root);
+        syntaxTree->SimplifyLTL();
+        syntaxTree->Evaluate(syntaxTree->root);
+        if(syntaxTree->root->groundtruth!=UNKNOW) {
+            cout << "FORMULA " << propertyid << " " << ((syntaxTree->root->groundtruth==TRUE)?"FALSE":"TRUE")<<endl;
+            outresult << ((syntaxTree->root->groundtruth==TRUE)?'F':'T');
             continue;
         }
-//        cout<<"original tree:"<<endl;
-//        syntaxTree.PrintTree();
-//        cout << "-----------------------------------" << endl;
-//        if (0) {
-//            //debug output (Atomicstable)
-//            cout << "***********************************" << endl;
-//            syntaxTree.PrintAT();
-//            cout << "***********************************" << endl;
-//            continue;
-//        }
-        syntaxTree.Push_Negation(syntaxTree.root);
-//        cout<<"after negation:"<<endl;
-//        syntaxTree.PrintTree();
-//        cout<<"-----------------------------------"<<endl;
-        syntaxTree.SimplifyLTL();
-//        cout<<"after simplification:"<<endl;
-//        syntaxTree.PrintTree();
-//        cout<<"-----------------------------------"<<endl;
-        syntaxTree.Universe(syntaxTree.root);
-//        cout<<"after universe"<<endl;
-//        syntaxTree.PrintTree();
-//        cout<<"-----------------------------------"<<endl;
+        syntaxTree->Universe(syntaxTree->root);
+        syntaxTree->Get_DNF(syntaxTree->root);
+        syntaxTree->Build_VWAA();
+        syntaxTree->VWAA_Simplify();
 
-        syntaxTree.Get_DNF(syntaxTree.root);
-        syntaxTree.Build_VWAA();
-        syntaxTree.VWAA_Simplify();
-
-        bool slice = syntaxTree.isNextFree();
+        bool slice = syntaxTree->isNextFree();
 //        SLICEPLACE = false;
         if(slice) {
             SLICEPLACE = SLICETRANSITION = true;
             //implement slice
-            syntaxTree.getVisibleIterms();
-            petri->implementSlice(syntaxTree.visibleIterms,cardinality);
+            syntaxTree->getVisibleIterms();
+            petri->implementSlice(syntaxTree->visibleIterms,cardinality);
             setGlobalValue(ptnet);
         }
         else {
@@ -165,39 +150,38 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             petri->undoSliceTrans();
             setGlobalValue(ptnet);
         }
-
 //        petri->printVisTransitions();
 
-        General GBA;
-        GBA.Build_GBA(syntaxTree);
-        GBA.Simplify();
-        GBA.self_check();
+        GBA = new General;
+        GBA->Build_GBA(*syntaxTree);
+        GBA->Simplify();
+        GBA->self_check();
 
-        Buchi BA;
-        BA.Build_BA(GBA);
-        BA.Simplify();
-        BA.self_check();
-        BA.Backward_chaining();
-//        BA.PrintBuchi("BA.dot");
+        BA = new Buchi;
+        BA->Build_BA(*GBA);
+        BA->Simplify();
+        BA->self_check();
+        BA->Backward_chaining();
+//        BA->PrintBuchi("BA->dot");
 
-        StateBuchi SBA;
-        SBA.Build_SBA(BA);
-        SBA.Simplify();
-        SBA.Tarjan();
-        SBA.Complete1();
-        SBA.Add_heuristic();
-        SBA.Complete2();
-        SBA.self_check();
-        SBA.PrintStateBuchi();
-        SBA.linkAtomics(syntaxTree.AT);
+        SBA = new StateBuchi;
+        SBA->Build_SBA(*BA);
+        SBA->Simplify();
+        SBA->Tarjan();
+        SBA->Complete1();
+        SBA->Add_heuristic();
+        SBA->Complete2();
+        SBA->self_check();
+//        SBA->PrintStateBuchi();
+        SBA->linkAtomics(syntaxTree->AT,cardinality);
 
         if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
-            bitgraph = new BitRG(ptnet, syntaxTree.AT);
+            bitgraph = new BitRG(ptnet, syntaxTree->AT);
 //            BitRGNode *initnode = bitgraph->RGinitialnode();
 //            bitgraph->Generate(initnode);
 //            cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
         } else {
-            graph = new RG(ptnet, syntaxTree.AT);
+            graph = new RG(ptnet, syntaxTree->AT);
 //            RGNode *initnode = graph->RGinitialnode();
 //            graph->Generate(initnode);
 //            cout<<"STATE SPACE:"<<graph->nodecount<<endl;
@@ -205,34 +189,45 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
 
         //cout << "begin:ON-THE-FLY" << endl;
         ready2exit = false;
+        string Techniques;
+        bool dataOverBound;
         if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
             Product_Automata<BitRGNode, BitRG> *product;
-            product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, &SBA);
+            product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, SBA);
 
-            starttime = get_time();
-            each_used_time=product->ModelChecker(propertyid,each_run_time);
+            product->ModelChecker(propertyid,each_run_time,Techniques);
             endtime = get_time();
-            cout<<" NODECOUNT "<<bitgraph->nodecount<<" TIME "<<(endtime-starttime)
-                <<" MEM "<<product->get_current_mem()<<endl;
-            int ret = product->getresult();
-            outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
+
+            if(product->data_flag) {
+                cout<<" NODECOUNT "<<bitgraph->nodecount<<" TIME "<<(endtime-starttime)
+                    <<" MEM "<<product->get_current_mem()<<Techniques<<endl;
+                int ret = product->getresult();
+                outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
+            }
+
+            dataOverBound = product->data_flag?false:true;
             delete product;
+
         } else {
             Product_Automata<RGNode, RG> *product;
-            product = new Product_Automata<RGNode, RG>(ptnet, graph, &SBA);
+            product = new Product_Automata<RGNode, RG>(ptnet, graph, SBA);
 
-            starttime = get_time();
-            each_used_time=product->ModelChecker(propertyid,each_run_time);
+            product->ModelChecker(propertyid,each_run_time,Techniques);
             endtime = get_time();
-            cout<<" NODECOUNT "<<graph->nodecount<<" TIME "<<(endtime-starttime)
-                <<" MEM "<<product->get_current_mem()<<endl;
-            int ret = product->getresult();
 
-            outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
+            if(product->data_flag) {
+                cout<<" NODECOUNT "<<graph->nodecount<<" TIME "<<(endtime-starttime)
+                    <<" MEM "<<product->get_current_mem()<<Techniques<<endl;
+                int ret = product->getresult();
+                outresult << (ret == -1 ? '?' : (ret == 0 ? 'F' : 'T'));
+            }
+
+            dataOverBound = product->data_flag?false:true;
             delete product;
         }
 
         //资源释放
+
         if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
             delete bitgraph;
         } else {
@@ -245,18 +240,25 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
             petri->undoSlicePlace();
         if(SLICETRANSITION)
             petri->undoSliceTrans();
+        delete syntaxTree;delete GBA;delete BA;delete SBA;
 
-        total_left_time-=each_used_time;
-        ltlcount++;
+        endtime = get_time();
+        total_left_time-=(unsigned short)(endtime-starttime);
         MallocExtension::instance()->ReleaseFreeMemory();
+
+        if(dataOverBound) {
+            LONGBITPLACE = true;
+            if(PINVAR)
+                petri->reComputeBound();
+            i--;
+            continue;
+        }
     }
     outresult<<endl;
 }
 
 void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
-    BitRG *bitgraph;
-    RG *graph;
-
+    BitRG *bitgraph;RG *graph;
     unsigned short each_run_time=300;
 
     string propertyid;
@@ -278,9 +280,6 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
 
     cout<<"original tree:"<<endl;
     syntaxTree.PrintTree();
-    if(syntaxTree.root->groundtruth!=UNKNOW) {
-        cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
-    }
     cout<<"-----------------------------------"<<endl;
     if (0){
         //debug output (Atomicstable)
@@ -295,6 +294,10 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     cout<<"-----------------------------------"<<endl;
     syntaxTree.SimplifyLTL();
     cout<<"after simplification:"<<endl;
+    syntaxTree.Evaluate(syntaxTree.root);
+    if(syntaxTree.root->groundtruth!=UNKNOW) {
+        cout << "FORMULA " << propertyid << " " << ((syntaxTree.root->groundtruth==TRUE)?"TRUE":"FALSE")<<endl;
+    }
     syntaxTree.PrintTree();
     cout<<"-----------------------------------"<<endl;
     syntaxTree.Universe(syntaxTree.root);
@@ -345,7 +348,7 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
     SBA.self_check();
     SBA.PrintStateBuchi();
     if (1){
-        SBA.linkAtomics(syntaxTree.AT);
+        SBA.linkAtomics(syntaxTree.AT,cardinality);
     }
 
     if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
@@ -362,26 +365,39 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
 
 
     ready2exit = false;
+    string Techniques;
+    bool dataOverBound;
     if (NUPN || SAFE || PINVAR || LONGBITPLACE) {
         Product_Automata<BitRGNode, BitRG> *product;
         product = new Product_Automata<BitRGNode, BitRG>(ptnet, bitgraph, &SBA);
-        product->ModelChecker(propertyid,each_run_time);
-        cout<<endl;
-        cout<<" "<<bitgraph->nodecount<<endl;
-        int ret = product->getresult();
-        //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
+
+        product->ModelChecker(propertyid,each_run_time,Techniques);
+
+        if(product->data_flag) {
+            cout<<" NODECOUNT "<<bitgraph->nodecount
+                <<" MEM "<<product->get_current_mem()<<Techniques<<endl;
+            int ret = product->getresult();
+        }
+
+        dataOverBound = product->data_flag?false:true;
         delete product;
+
     } else {
         Product_Automata<RGNode, RG> *product;
         product = new Product_Automata<RGNode, RG>(ptnet, graph, &SBA);
-        product->ModelChecker(propertyid,each_run_time);
-        cout<<endl;
-        cout<<" "<<graph->nodecount<<endl;
-        int ret = product->getresult();
 
-        //cout<<"CONFLICT_TIMES:"<<product->getConflictTimes()<<endl;
+        product->ModelChecker(propertyid,each_run_time,Techniques);
+
+        if(product->data_flag) {
+            cout<<" NODECOUNT "<<graph->nodecount
+                <<" MEM "<<product->get_current_mem()<<Techniques<<endl;
+            int ret = product->getresult();
+        }
+
+        dataOverBound = product->data_flag?false:true;
         delete product;
     }
+
 
     if(SLICEPLACE && PINVAR) {
         petri->undoPinvarSlicePlace();
@@ -395,6 +411,12 @@ void CHECKLTL(Petri *ptnet,bool cardinality,int num) {
         delete bitgraph;
     } else {
         delete graph;
+    }
+
+    if(dataOverBound) {
+        LONGBITPLACE = true;
+        if(PINVAR)
+            petri->reComputeBound();
     }
 }
 

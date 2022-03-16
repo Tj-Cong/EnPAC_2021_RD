@@ -165,7 +165,9 @@ typedef struct Vertex {
     bool trueaccpted = false;      /*indicate if this state (accepeted) could infinitely appear in a sequence*/
     string label;                  /*conjunction of propositions*/
     bool invalid = false;          /**/
-    vector<atomic> links;          /**/
+    vector<atomic> links;          /*the atomics carried by the state*/
+    set<index_t> unfires;
+    vector<set<index_t>> fires;
     double cost;                   /*the sum of heuristic information*/
     int mindistance = MAXINT;      /*minimum distance to a true accepted state*/
     int difficulty = 1;            /*the difficulty to satisfy this state's propositions*/
@@ -212,13 +214,14 @@ public:
     void Complete2();
     void self_check();
     void PrintStateBuchi();
-    void linkAtomics(atomictable &AT);
+    void linkAtomics(atomictable &AT,bool cardinality);
 private:
     void Simplify_state();
     void Merge_state(int s1,int s2);
     void Redirect_transitions(int removeid, int redirectid);
     void Tarjan(int stateid);
     void Backward(int stateid);
+    void MergeAtomics(bool cardinality);
     static void parseLabel(vector<atomic> &links, const string &label, const atomictable &AT);
     static void judgeInvalid(bool &invalid, const vector<atomic> &links);
 };
