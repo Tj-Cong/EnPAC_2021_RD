@@ -125,7 +125,7 @@ Petri::~Petri() {
         delete [] pinvarExtra;
         delete [] weightsum0;
      }
-//    delete incidenceMatrix;
+    delete incidenceMatrix;
 //    destroyAccordWithMatrix();
 }
 
@@ -810,11 +810,17 @@ void Petri::printTransition() {
         }
         outTransition<<endl;
 
-        outTransition<<"Increasing set: ";
-        set<index_t>::iterator increIter;
-        for(increIter=t.increasingSet.begin();increIter!=t.increasingSet.end();increIter++) {
-            outTransition << transition[*increIter].id <<" ";
-        }
+//        outTransition<<"Increasing set: ";
+//        set<index_t>::iterator increIter;
+//        for(increIter=t.increasingSet.begin();increIter!=t.increasingSet.end();increIter++) {
+//            outTransition << transition[*increIter].id <<" ";
+//        }
+//
+//        outTransition<<"Decreasing set: ";
+//        set<index_t>::iterator decreIter;
+//        for(decreIter=t.decreasingSet.begin();decreIter!=t.decreasingSet.end();decreIter++) {
+//            outTransition << transition[*decreIter].id <<" ";
+//        }
         outTransition << endl;
     }
 }
@@ -934,37 +940,42 @@ void Petri::printTransition2CSV() {
 //        }
 //    }
 //}
+//void Petri::computeDI_thread(int myrank) {
+//    for(int i=myrank; i<transitioncount; i+=4) {
+//        Transition &tt = transition[i];
+//        vector<SArc>::iterator preiter;
+//
+//        //计算decreasing set
+//        for(preiter=tt.producer.begin();preiter!=tt.producer.end();++preiter) {
+//            if(incidenceMatrix->getValue(i,preiter->idx)>=0)
+//                continue;
+//            Place &pp = place[preiter->idx];
+//            vector<SArc>::iterator iter;
+//            for(iter=pp.consumer.begin();iter!=pp.consumer.end();iter++)
+//                tt.decreasingSet.insert(iter->idx);
+//        }
+//
+//        vector<SArc>::iterator postiter;
+//        //计算increasing set
+//        for(postiter=tt.consumer.begin();postiter!=tt.consumer.end();++postiter) {
+//            if(incidenceMatrix->getValue(i,postiter->idx)<=0)
+//                continue;
+//            Place &pp = place[postiter->idx];
+//            vector<SArc>::iterator iter;
+//            for(iter=pp.consumer.begin();iter!=pp.consumer.end();iter++)
+//                tt.increasingSet.insert(iter->idx);
+//        }
+//    }
+//}
 
-void Petri::computeDI() {
-    for(int i=0;i<transitioncount;i++) {
-        Transition &tt = transition[i];
-        vector<SArc>::iterator preiter;
-        for(preiter=tt.producer.begin();preiter!=tt.producer.end();preiter++) {
-            Place &pp = place[preiter->idx];
-            //处理该库所的producer
-            vector<SArc>::iterator iter;
-            for(iter=pp.producer.begin();iter!=pp.producer.end();iter++) {
-                int value = incidenceMatrix->getValue(iter->idx,preiter->idx);
-                if(value > 0) {
-                    tt.increasingSet.insert(iter->idx);
-                }
-//                else if(value < 0) {
-//                    tt.decreasingSet.insert(iter->idx);
-//                }
-            }
-            //处理该库所的consumer
-            for(iter=pp.consumer.begin();iter!=pp.consumer.end();iter++) {
-                int value = incidenceMatrix->getValue(iter->idx,preiter->idx);
-                if(value > 0) {
-                    tt.increasingSet.insert(iter->idx);
-                }
-//                else if(value < 0) {
-//                    tt.decreasingSet.insert(iter->idx);
-//                }
-            }
-        }
-    }
-}
+//void Petri::computeDI() {
+//    for(int i=0;i<4;i++) {
+//        workers[i] = thread(&Petri::computeDI_thread,this,i);
+//    }
+//    for(int i=0;i<4;i++) {
+//        workers[i].join();
+//    }
+//}
 
 /* 计算得到P不变量 以及 重要库所
  * 得到关联矩阵
@@ -1306,6 +1317,7 @@ void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
             Transition &tt = transition[*transPointer];
             tt.significant = true;
             sliceTransitionCount++;
+            transitionOrder.push_back(*transPointer);
             vector<SArc>::iterator sarcIter;
             for(sarcIter=tt.producer.begin();sarcIter!=tt.producer.end();sarcIter++) {
                 if(sliceExtra[sarcIter->idx].significant)
@@ -1318,6 +1330,65 @@ void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
     if(double(sigPlaceCount)/(double)placecount>0.8) {
         SLICEPLACE = false;
     }
+}
+
+void Petri::computeOrder(const set<index_t> &vis, bool cardinality) {
+    transitionOrder.clear();
+    set<index_t> tranxnum;
+    for(index_t i=0;i<transitioncount;i++)
+        tranxnum.insert(i);
+
+    sliceExtra = new P_SLICE_extra [placecount];
+    set<index_t> significantPlaces,significantTrans;
+    if(cardinality) {
+        significantPlaces = vis;
+    }
+    else {
+        significantTrans = vis;
+    }
+
+    while(!significantTrans.empty() || !significantPlaces.empty()) {
+        set<index_t>::iterator placePointer,transPointer;
+        if(!significantPlaces.empty()) {
+            placePointer = significantPlaces.begin();
+            Place &pp = place[*placePointer];
+            sliceExtra[*placePointer].significant = true;
+            vector<SArc>::iterator sarcIter;
+            for(sarcIter=pp.producer.begin();sarcIter!=pp.producer.end();sarcIter++) {
+                if(transition[sarcIter->idx].significant)
+                    continue;
+                significantTrans.insert(sarcIter->idx);
+            }
+            for(sarcIter=pp.consumer.begin();sarcIter!=pp.consumer.end();sarcIter++) {
+                if(transition[sarcIter->idx].significant)
+                    continue;
+                significantTrans.insert(sarcIter->idx);
+            }
+            significantPlaces.erase(placePointer);
+        }
+
+        if(!significantTrans.empty()) {
+            transPointer = significantTrans.begin();
+            Transition &tt = transition[*transPointer];
+            tt.significant = true;
+            transitionOrder.push_back(*transPointer);
+            tranxnum.erase(*transPointer);
+            vector<SArc>::iterator sarcIter;
+            for(sarcIter=tt.producer.begin();sarcIter!=tt.producer.end();sarcIter++) {
+                if(sliceExtra[sarcIter->idx].significant)
+                    continue;
+                significantPlaces.insert(sarcIter->idx);
+            }
+            significantTrans.erase(transPointer);
+        }
+    }
+
+    set<index_t>::iterator iter;
+    for(iter=tranxnum.begin();iter!=tranxnum.end();iter++) {
+        transitionOrder.push_back(*iter);
+    }
+    delete [] sliceExtra;
+    sliceExtra=NULL;
 }
 //void Petri::computeVIS(const set<index_t> &vis, bool cardinality) {
 //    int viscount = 0;
@@ -1492,9 +1563,12 @@ void Petri::VISInitialize() {
         sliceExtra[i].project_idx = i;
         sliceExtra[i].significant = false;
     }
+
+    transitionOrder.clear();
     for(int i=0;i<transitioncount;i++) {
         transition[i].significant = false;
     }
+
     slicePlaceCount = placecount;
     sliceTransitionCount = 0;
 }

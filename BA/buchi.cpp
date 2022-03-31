@@ -1113,9 +1113,9 @@ void StateBuchi::linkAtomics(atomictable &AT,bool cardinality) {
 //    AT.linkPlace2atomictable();
 }
 
-void StateBuchi::parseLabel(vector<atomic> &links, const string &lable, const atomictable &AT) {
+void StateBuchi::parseLabel(vector<Atomic> &links, const string &lable, const atomictable &AT) {
     string::size_type pos = 0, end;
-    atomic temp;
+    Atomic temp;
     string substr;
     int i;
     while (true) {
@@ -1157,7 +1157,7 @@ void StateBuchi::parseLabel(vector<atomic> &links, const string &lable, const at
     }
 }
 
-void StateBuchi::judgeInvalid(bool &invalid, const vector<atomic> &links) {
+void StateBuchi::judgeInvalid(bool &invalid, const vector<Atomic> &links) {
     enum a_type{UNEXISTED=0,EXISTED_TRUE,EXISTED_FALSE};
     a_type table[51];
     int i;
@@ -1179,7 +1179,7 @@ void StateBuchi::MergeAtomics(bool cardinality) {
         if (vertics[i].id == -1 || vertics[i].label == "true")
             continue;
         for(int k=0;k<vertics[i].links.size();k++) {
-            atomic &am = vertics[i].links[k];
+            Atomic &am = vertics[i].links[k];
             if(am.negation) {
                 //有取非符号
                 vector<unsigned int> &unfires = pAT->atomics[am.atomicmeta_link].fires;

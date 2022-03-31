@@ -133,19 +133,19 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
         syntaxTree->Get_DNF(syntaxTree->root);
         syntaxTree->Build_VWAA();
         syntaxTree->VWAA_Simplify();
+        syntaxTree->getVisibleIterms();
 
         bool slice = syntaxTree->isNextFree();
-//        SLICEPLACE = false;
         if(slice) {
             SLICEPLACE = SLICETRANSITION = true;
             //implement slice
-            syntaxTree->getVisibleIterms();
             petri->implementSlice(syntaxTree->visibleIterms,cardinality);
             setGlobalValue(ptnet);
         }
         else {
             SLICEPLACE = SLICETRANSITION = false;
             //undoSlice
+            petri->computeOrder(syntaxTree->visibleIterms,cardinality);
             petri->undoSlicePlace();
             petri->undoSliceTrans();
             setGlobalValue(ptnet);
@@ -180,6 +180,7 @@ void CHECKLTL(Petri *ptnet, bool cardinality) {
 //            BitRGNode *initnode = bitgraph->RGinitialnode();
 //            bitgraph->Generate(initnode);
 //            cout<<"STATE SPACE:"<<bitgraph->nodecount<<endl;
+//            return;
         } else {
             graph = new RG(ptnet, syntaxTree->AT);
 //            RGNode *initnode = graph->RGinitialnode();

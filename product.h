@@ -73,40 +73,18 @@ Pstacknode<rgnode>::Pstacknode() {
 
 template<class rgnode>
 int Pstacknode<rgnode>::NEXTFIREABLE() {
-    if(fireptr==0) {
-//        if(STUBBORN && RGname_ptr->stubbornFlags==NULL) {
-//            RGname_ptr->computeStubbornSet();
-//        }
-        int beginpos = 0;
-        while(SLICETRANSITION && !petri->transition[beginpos].significant)
-            beginpos++;
-//        if(STUBBORN) {
-//            for(beginpos;beginpos<petri->transitioncount;beginpos++){
-//                if(RGname_ptr->stubbornFlags->test1(beginpos))
-//                    break;
-//            }
-//        }
-        if(RGname_ptr->isFirable(petri->transition[beginpos])) {
-            deadmark = false;
-            fireptr = beginpos;
-            return fireptr;
-        }
-        fireptr++;
+    int end;
+    if(SLICETRANSITION) {
+        end = petri->sliceTransitionCount;
     }
-
-    for(fireptr;fireptr<petri->transitioncount;++fireptr) {
-//        if(STUBBORN && RGname_ptr->stubbornFlags->test0(fireptr))
-//            continue;
-//        if(STUBBORN && RGname_ptr->fireableFlags->test1(fireptr)) {
-//            deadmark = false;
-//            return fireptr;
-//        }
-        if(SLICETRANSITION && !petri->transition[fireptr].significant) {
-            continue;
-        }
-        if(RGname_ptr->isFirable(petri->transition[fireptr])) {
+    else {
+        end = petri->transitioncount;
+    }
+    for(fireptr; fireptr<end; ++fireptr) {
+        int tranidx = petri->transitionOrder[fireptr];
+        if(RGname_ptr->isFirable(petri->transition[tranidx])) {
             deadmark = false;
-            return fireptr;
+            return tranidx;
         }
     }
     return -1;

@@ -3,7 +3,6 @@
 //
 #include "RG.h"
 
-
 /*********************Global Functions**********************/
 void DecToBinaryWithDigit(index_t DecNum, unsigned short *Binarystr, unsigned short digit) {
     int i = 0;
@@ -850,6 +849,11 @@ void BitSequence::set1(int position,int sequenceLength) {
     int offset = position%32;
     bitUnits[unitIndex].set(offset);
 }
+
+void BitSequence::duplicate(BitSequence *bitSequence,int sequenceLength) {
+    int unitnum = ceil((float)sequenceLength/32.0);
+    memcpy(this->bitUnits,bitSequence->bitUnits,sizeof(myuint)*unitnum);
+}
 /*****************************************************************/
 /*RGNode::RGNode(int marking_length)
  * function: 构造函数，为marking数组申请空间，申请大小为哈希表大小，
@@ -963,6 +967,10 @@ int RGNode::writePlace(int placeid, index_t tokencount) {
 //        cerr<<"非重要库所无法写入token值！"<<endl;
         return -1;
     }
+}
+
+bool RGNode::isFireable_by_flag(index_t tid) const {
+    return isFirable(petri->transition[tid]);
 }
 
 //void RGNode::computeStubbornSet() {
@@ -1095,6 +1103,9 @@ BitRGNode::BitRGNode() {
     marking = new myuint[FIELDCOUNT];
     memset(marking, 0, sizeof(myuint) * FIELDCOUNT);
     next = NULL;
+//    fireableFlags = new BitSequence(transitioncount);
+//    updateFlag = 0;
+//    incre = decre = false;
 //    stubbornFlags = NULL;
 //    fireableFlags = NULL;
 }
@@ -1156,9 +1167,13 @@ bool BitRGNode::isFirable(const Transition &t) const {
     }
 }
 
-bool BitRGNode::isFireable_by_flag(const Transition &t) const {
-    if(updateFlags->test1())
-}
+//bool BitRGNode::isFireable_by_flag(index_t tid) {
+////    if(updated()) {
+//        return fireableFlags->test1(tid,transitioncount);
+////    }
+////
+////    return isFirable(petri->transition[tid]);
+//}
 
 /*RGNode::~RGNode()
  * function： 析构函数，释放空间
@@ -1197,33 +1212,6 @@ void BitRGNode::printMarking(const int &len) {
 //    }
 //    cout << "]"<<endl;
 }
-
-//void BitRGNode::getFireSet(BitRGNode *lastnode, index_t lastfid) {
-//    this->fireset = lastnode->fireset;
-//    const Transition &t = petri->transition[lastfid];
-//    set<index_t>::iterator deiter,eniter;
-//    /*remove disabled transition*/
-//    for(deiter=t.decreasing.begin();deiter!=t.decreasing.end();++deiter) {
-//        set<index_t>::iterator it;
-//        it = fireset.find(*deiter);
-//        if(it!=fireset.end()) {
-//            /*check if it is disabled*/
-//            if(!isFirable(petri->transition[*deiter])) {
-//                fireset.erase(it);
-//            }
-//        }
-//    }
-//    /*add enabled transition*/
-//    for(eniter=t.increasing.begin();eniter!=t.increasing.end();++eniter) {
-//        set<index_t>::iterator it;
-//        it = fireset.find(*eniter);
-//        if(it == fireset.end()) {
-//            if(isFirable(petri->transition[*eniter])) {
-//                fireset.insert(*eniter);
-//            }
-//        }
-//    }
-//}
 
 //void BitRGNode::computeStubbornSet() {
 //    stubbornFlags = new BitSequence(petri->transitioncount);
@@ -1615,6 +1603,70 @@ int BitRGNode::writePlace(int placeid, index_t tokencount) {
     return 0;
 }
 
+//void BitRGNode::updateFlag_Incre() {
+//    mtx.lock();
+//    updateFlag++;
+//    mtx.unlock();
+//}
+//
+//bool BitRGNode::updated() {
+//    bool updated = false;
+//    mtx.lock();
+//    updated = updateFlag >= 2 ? true : false;
+//    mtx.unlock();
+//    return updated;
+//}
+
+//void BitRGNode::handle_increasing_set(index_t lastid) {
+//    Transition &tt = petri->transition[lastid];
+//    //计算increasing set并判断是否使能
+//    vector<SArc>::iterator postiter;
+//    for(postiter=tt.consumer.begin();postiter!=tt.consumer.end();++postiter) {
+//        if(petri->incidenceMatrix->getValue(lastid,postiter->idx)<=0)
+//            continue;
+//        Place &pp = petri->place[postiter->idx];
+//        vector<SArc>::iterator iter;
+//        for(iter=pp.consumer.begin();iter!=pp.consumer.end();iter++) {
+//            if(fireableFlags->test1(iter->idx,transitioncount))
+//                continue;
+//            if(isFirable(petri->transition[iter->idx]))
+//                fireableFlags->set1(iter->idx,transitioncount);
+//        }
+//    }
+////    incre = true;
+////    updateFlag_Incre();
+////    cout<<"increasing set finished"<<endl;
+//}
+//
+//void BitRGNode::handle_decreasing_set(index_t lastid) {
+//    Transition &tt = petri->transition[lastid];
+//    //计算decreasing set并判断是否使能
+//    vector<SArc>::iterator preiter;
+//    for(preiter=tt.producer.begin();preiter!=tt.producer.end();++preiter) {
+//        if(petri->incidenceMatrix->getValue(lastid,preiter->idx)>=0)
+//            continue;
+//        Place &pp = petri->place[preiter->idx];
+//        vector<SArc>::iterator iter;
+//        for(iter=pp.consumer.begin();iter!=pp.consumer.end();iter++) {
+//            if(fireableFlags->test0(iter->idx,transitioncount))
+//                continue;
+//            if(!isFirable(petri->transition[iter->idx]))
+//                fireableFlags->set0(iter->idx,transitioncount);
+//        }
+//    }
+////    decre = true;
+////    updateFlag_Incre();
+////    cout<<"decreasing set finished"<<endl;
+//}
+//
+//void BitRGNode::get_fireset(BitRGNode *lastnode, index_t lastfid) {
+//    fireableFlags->duplicate(lastnode->fireableFlags,transitioncount);
+//    thread worker0 = thread(&BitRGNode::handle_increasing_set,this,lastfid);
+//    thread worker1 = thread(&BitRGNode::handle_decreasing_set,this,lastfid);
+//    worker0.join();
+//    worker1.join();
+//}
+
 /****************************RG*****************************/
 /*构造函数*/
 RG::RG(Petri *pt, atomictable &argAT) : AT(argAT) {
@@ -1630,8 +1682,6 @@ RG::RG(Petri *pt, atomictable &argAT) : AT(argAT) {
     RGNodelength = ptnet->placecount;
 
     int transcount = ptnet->transitioncount;
-
-    outRG.open("ReachabilityGraph.txt", ios::out);
 }
 
 index_t RG::getHashIndex(RGNode *mark) {
@@ -1669,36 +1719,6 @@ void RG::addRGNode(RGNode *mark) {
 #endif
 
 }
-
-//void RG::getFireableTranx(RGNode *curnode, set<index_t> &fireset) {
-//    //计算当前状态的可发生变迁；
-//    bool firable;
-//    NUM_t tlength = ptnet->transitioncount;
-//    Transition *tranx;
-//
-//    //遍历每一个变迁
-//    for (index_t j = 0; j < tlength; j++) {
-//        //对于第j个变迁
-//        tranx = &ptnet->transition[j];
-//        firable = true;
-//
-//        //遍历第j个变迁的所有前继库所
-//        vector<SArc>::iterator iterpre = tranx->producer.begin();
-//        vector<SArc>::iterator preend = tranx->producer.end();
-//
-//        //遍历ptnet.transition[j]的所有前继库所，看其token值是否大于weight
-//        for (iterpre; iterpre != preend; iterpre++) {
-//            if (curnode->marking[iterpre->idx] < iterpre->weight) {
-//                firable = false;
-//                break;
-//            }
-//        }
-//
-//        //判断是否能发生，若能发生，加入当前状态的可发生数组中
-//        if (firable)
-//            fireset.insert(j);
-//    }
-//}
 
 //计算初始状态节点
 RGNode *RG::RGinitialnode() {
@@ -1984,8 +2004,6 @@ BitRG::BitRG(Petri *pt, atomictable &argAT) : AT(argAT) {
     }
 
     int transcount = ptnet->transitioncount;
-
-    outRG.open("ReachabilityGraph.txt", ios::out);
 }
 
 
@@ -2119,6 +2137,7 @@ BitRGNode *BitRG::RGinitialnode() {
 
     //将当前状态加入到rgnode哈希表中
     initnode = rg;
+//    get_init_fireset();
 //    getFireableTranx(initnode,initnode->fireset);
     addRGNode(rg);
     MallocExtension::instance()->ReleaseFreeMemory();
@@ -2131,7 +2150,6 @@ BitRGNode *BitRG::RGinitialnode() {
  * in:curnode,当前节点； tranxnum,transition表中第tranxnum个变迁
  * out:新加入节点的地址
  * */
-
 BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
 
     BitRGNode *newnode = new BitRGNode;
@@ -2143,6 +2161,7 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
     vector<SArc>::iterator iterpost = firingTanx->consumer.begin();
     vector<SArc>::iterator postend = firingTanx->consumer.end();
 
+    /*************************caculate new marking********************************/
     if (NUPN) {
         memcpy(newnode->marking, curnode->marking, sizeof(myuint) * FIELDCOUNT);
         for (iterpre; iterpre != preend; iterpre++) {
@@ -2152,36 +2171,6 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
         for (iterpost; iterpost != postend; iterpost++) {
             newnode->writePlace(iterpost->idx);
         }
-
-        //判断是否已经存在该节点
-        index_t hashvalue = getHashIndex(newnode);
-
-        bool repeated;
-        BitRGNode *p = rgnode[hashvalue];
-        while (p != NULL) {
-            repeated = true;
-            index_t i = 0;
-            for (i; i < FIELDCOUNT; i++) {
-                unsigned int equp;
-                unsigned int equnewnode;
-                memcpy(&equp, &p->marking[i], sizeof(unsigned int));
-                memcpy(&equnewnode, &newnode->marking[i], sizeof(unsigned int));
-                if (equp != equnewnode) {
-                    repeated = false;
-                    break;
-                }
-            }
-
-            if (repeated) {
-                exist = true;
-                delete newnode;
-                return p;
-            }
-            p = p->next;
-        }
-
-        //没有重复
-        addRGNode(newnode);
     }
     else if (SAFE) {
         memcpy(newnode->marking, curnode->marking, sizeof(myuint) * FIELDCOUNT);
@@ -2199,9 +2188,95 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
             offset = iterpost->idx % (sizeof(myuint) * 8);
             newnode->marking[unit].set(offset);
         }
+    }
+    else if(PINVAR && SLICEPLACE) {
+        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
+        for(iterpre;iterpre!=preend;++iterpre) {
+            if(ptnet->sliceExtra[iterpre->idx].significant) {
+                index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
+                newnode->writePlace(iterpre->idx,remain);
+            }
+        }
+        for(iterpost;iterpost!=postend;++iterpost) {
+            if(ptnet->sliceExtra[iterpost->idx].significant) {
+                index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
+                newnode->writePlace(iterpost->idx,newtoken);
+            }
+        }
+    }
+    else if (PINVAR) {
+        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
+        for(iterpre;iterpre!=preend;++iterpre) {
+            if(ptnet->pinvarExtra[iterpre->idx].significant) {
+                index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
+                newnode->writePlace(iterpre->idx,remain);
+            }
+        }
+        for(iterpost;iterpost!=postend;++iterpost) {
+            if(ptnet->pinvarExtra[iterpost->idx].significant) {
+                index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
+                newnode->writePlace(iterpost->idx,newtoken);
+            }
+        }
+    }
+    else if(LONGBITPLACE) {
+        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
+        for(iterpre;iterpre!=preend;++iterpre) {
+            index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
+            newnode->writePlace(iterpre->idx,remain);
+        }
+        for(iterpost;iterpost!=postend;++iterpost) {
+            index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
+            newnode->writePlace(iterpost->idx,newtoken);
+        }
+    }
 
+    /*************************check if repeated********************************/
+    ThreadArg threadArg;
+    threadArg.newnode = newnode;
+    check_repeated(&threadArg);
+//    thread worker = thread(&BitRG::check_repeated,this,&threadArg);
+    if(threadArg.exist) {
+        delete newnode;
+        return threadArg.oldnode;
+    }
+    else {
+        addRGNode(newnode);
+        return newnode;
+    }
+
+}
+
+void BitRG::check_repeated(ThreadArg *threadArg) {
+    BitRGNode *newnode = threadArg->newnode;
+    threadArg->exist = false;
+    if(NUPN) {
         index_t hashvalue = getHashIndex(newnode);
-
+        bool repeated;
+        BitRGNode *p = rgnode[hashvalue];
+        while (p != NULL) {
+            repeated = true;
+            index_t i = 0;
+            for (i; i < FIELDCOUNT; i++) {
+                unsigned int equp;
+                unsigned int equnewnode;
+                memcpy(&equp, &p->marking[i], sizeof(unsigned int));
+                memcpy(&equnewnode, &newnode->marking[i], sizeof(unsigned int));
+                if (equp != equnewnode) {
+                    repeated = false;
+                    break;
+                }
+            }
+            if (repeated) {
+                threadArg->oldnode = p;
+                threadArg->exist = true;
+                return;
+            }
+            p = p->next;
+        }
+    }
+    else if(SAFE) {
+        index_t hashvalue = getHashIndex(newnode);
         bool repeated;
         BitRGNode *p = rgnode[hashvalue];
         while (p != NULL) {
@@ -2219,33 +2294,15 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
             }
 
             if (repeated) {
-                exist = true;
-                delete newnode;
-                return p;
+                threadArg->oldnode = p;
+                threadArg->exist = true;
+                return;
             }
             p = p->next;
         }
-
-        //没有重复
-        addRGNode(newnode);
     }
     else if(PINVAR && SLICEPLACE) {
-        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
-        for(iterpre;iterpre!=preend;++iterpre) {
-            if(ptnet->sliceExtra[iterpre->idx].significant) {
-                index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
-                newnode->writePlace(iterpre->idx,remain);
-            }
-        }
-        for(iterpost;iterpost!=postend;++iterpost) {
-            if(ptnet->sliceExtra[iterpost->idx].significant) {
-                index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
-                newnode->writePlace(iterpost->idx,newtoken);
-            }
-        }
-
         index_t hashvalue = getHashIndex(newnode);
-
         bool repeated;
         BitRGNode *p = rgnode[hashvalue];
         while(p!=NULL) {
@@ -2262,31 +2319,15 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
                 }
             }
             if(repeated) {
-                exist = true;
-                delete newnode;
-                return p;
+                threadArg->oldnode = p;
+                threadArg->exist = true;
+                return;
             }
             p=p->next;
         }
-        addRGNode(newnode);
     }
-    else if (PINVAR) {
-        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
-        for(iterpre;iterpre!=preend;++iterpre) {
-            if(ptnet->pinvarExtra[iterpre->idx].significant) {
-                index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
-                newnode->writePlace(iterpre->idx,remain);
-            }
-        }
-        for(iterpost;iterpost!=postend;++iterpost) {
-            if(ptnet->pinvarExtra[iterpost->idx].significant) {
-                index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
-                newnode->writePlace(iterpost->idx,newtoken);
-            }
-        }
-
+    else if(PINVAR) {
         index_t hashvalue = getHashIndex(newnode);
-
         bool repeated;
         BitRGNode *p = rgnode[hashvalue];
         while(p!=NULL) {
@@ -2303,27 +2344,15 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
                 }
             }
             if(repeated) {
-                exist = true;
-                delete newnode;
-                return p;
+                threadArg->oldnode = p;
+                threadArg->exist = true;
+                return;
             }
             p=p->next;
         }
-        addRGNode(newnode);
     }
     else if(LONGBITPLACE) {
-        memcpy(newnode->marking,curnode->marking,sizeof(myuint)*FIELDCOUNT);
-        for(iterpre;iterpre!=preend;++iterpre) {
-            index_t remain = newnode->readPlace(iterpre->idx) - iterpre->weight;
-            newnode->writePlace(iterpre->idx,remain);
-        }
-        for(iterpost;iterpost!=postend;++iterpost) {
-            index_t newtoken = newnode->readPlace(iterpost->idx) + iterpost->weight;
-            newnode->writePlace(iterpost->idx,newtoken);
-        }
-
         index_t hashvalue = getHashIndex(newnode);
-
         bool repeated;
         BitRGNode *p = rgnode[hashvalue];
         while(p!=NULL) {
@@ -2340,41 +2369,15 @@ BitRGNode *BitRG::RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist) {
                 }
             }
             if(repeated) {
-                exist = true;
-                delete newnode;
-                return p;
+                threadArg->oldnode = p;
+                threadArg->exist = true;
+                return;
             }
             p=p->next;
         }
-        addRGNode(newnode);
     }
-    //  执行至此表明该node添加成功
-    //  更新值atomic check avaliable  不管是哪种类型的LTL公式都需要更新前继和后继
-//    if (false) {
-//        iterpre = firingTanx->producer.begin();
-//        iterpost = firingTanx->consumer.begin();
-//        vector<unsigned char>::iterator temp_it, temp_end;
-//        // producer
-//        for (; iterpre != preend; iterpre++) {
-//            temp_it = ptnet->place[iterpre->idx].atomicLinks.begin();
-//            temp_end = ptnet->place[iterpre->idx].atomicLinks.end();
-//            for (; temp_it != temp_end; temp_it++) {
-//                AT.atomics[*temp_it].last_check_avaliable = false;
-//            }
-//        }
-//        // consumer
-//        for (; iterpost != postend; iterpost++) {
-//            temp_it = ptnet->place[iterpost->idx].atomicLinks.begin();
-//            temp_end = ptnet->place[iterpost->idx].atomicLinks.end();
-//            for (; temp_it != temp_end; temp_it++) {
-//                AT.atomics[*temp_it].last_check_avaliable = false;
-//            }
-//        }
-//    }
-
-    MallocExtension::instance()->ReleaseFreeMemory();
-    return newnode;
 }
+
 
 BitRGNode *BitRG::RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist) {
 
@@ -2596,7 +2599,7 @@ BitRGNode *BitRG::RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist) {
 
 void BitRG::Generate(BitRGNode *node) {
     for(int i=0;i<ptnet->transitioncount;++i) {
-        if(node->isFirable(ptnet->transition[i])) {
+        if(node->isFirable(petri->transition[i])) {
             bool exist = false;
             BitRGNode *nextnode = RGcreatenode(node,i,exist);
             if(!exist) {
@@ -2651,3 +2654,23 @@ BitRG::~BitRG() {
     delete rgnode;
     MallocExtension::instance()->ReleaseFreeMemory();
 }
+
+//void BitRG::get_init_fireset_thread(int myrank) {
+//    for(int i=myrank;i<transitioncount;i+=4) {
+//        if(initnode->isFirable(petri->transition[i]))
+//            initnode->fireableFlags->set1(i,transitioncount);
+//        else
+//            initnode->fireableFlags->set0(i,transitioncount);
+//    }
+//}
+//
+//void BitRG::get_init_fireset() {
+//    thread threads[4];
+//    for(int i=0;i<4;i++) {
+//        threads[i] = thread(&BitRG::get_init_fireset_thread,this,i);
+//    }
+//    for(int i=0;i<4;i++) {
+//        threads[i].join();
+//    }
+//}
+

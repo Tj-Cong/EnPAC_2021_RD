@@ -20,6 +20,7 @@
 #include <map>
 #include <setjmp.h>
 #include <iomanip>
+#include <thread>
 
 using namespace std;
 
@@ -48,6 +49,7 @@ extern jmp_buf petrienv;
 struct Small_Arc;
 struct Transition;
 class IncidenceMatrix;
+class Petri;
 /****************Global Functions**************/
 unsigned int BKDRHash(string str);
 
@@ -59,6 +61,11 @@ int my_atoi(string str);
 
 
 /**********************************************/
+struct Para {
+    int myrank;
+    int thread_count;
+    Petri *petri;
+};
 
 struct Unit {        //每一个单元的信息
     string uid = "";
@@ -81,13 +88,9 @@ typedef struct Small_Arc {
 
 typedef struct Place {
     string id = "";
-//    bool significant = false;
-//    index_t project_idx;
     vector<SArc> producer;       //前继
     vector<SArc> consumer;       //后继
     unsigned int initialMarking = 0;  //初值token
-//    index_t myunit;              //该库所所在单元号
-//    index_t myoffset;            //该库所在单元中的偏移量
     vector<unsigned char> atomicLinks; //库所关联原子命题序列
 } *Place_P;
 
@@ -125,8 +128,6 @@ typedef struct Transition {
     bool significant = false;
     vector<SArc> producer;
     vector<SArc> consumer;
-    set<index_t> increasingSet;
-//    set<index_t> decreasingSet;
 } *Transition_P;
 
 typedef struct Arc {
@@ -155,6 +156,7 @@ public:
     Unit *unittable;            //单元表
 
     //辅助信息
+    vector<index_t> transitionOrder;
     Place_NUPN_info *nupnExtra;     //NUPN编码的额外信息
     P_SLICE_extra *sliceExtra;      //库所切片的辅助信息
     Place_PINVAR_info *pinvarExtra; //P不变量编码的额外信息(个数和placecount一样)
@@ -174,7 +176,6 @@ public:
     bool PINVAR;
     //stubborn set
     bool **accordWithMatrix;
-//    set<index_t> visTransition;
 
     //P不变量 矩阵和重要库所
     IncidenceMatrix *incidenceMatrix;
@@ -182,6 +183,8 @@ public:
     int *weightsum0;
     short int RankOfmatrix;             //关联矩阵的秩
     Equation_variables *eq_var;         //矩阵的变量（个数和placecount一样）
+
+    thread workers[4];
 public:
     Petri();
     void getSize(char *filename);                   //预处理，得到库所，变迁，弧个数，如果是NUPN,会调用preNUPN进行NUPN的预处理
@@ -199,9 +202,11 @@ public:
     void judgeSAFE();
     void judgePINVAR();
     void checkarc();
+
+    /*Petri net slice*/
     void VISInitialize();
     void computeVIS(const set<index_t> &vis,bool cardinality);
-//    void VISpread();
+    void computeOrder(const set<index_t> &vis,bool cardinality);
     void computeProjectIDX();
     void implementSlice(const set<index_t> &vis,bool cardinality);
     void undoSlicePlace();
@@ -212,6 +217,7 @@ public:
     void computeAccordWith();
     void destroyStubbornAidInfo();
     void unaccordWithReachable(index_t indexT,set<index_t> &reachable);
+    void computeDI_thread(int myrank);
     void computeDI();
     void printPlace();
     void printVisTransitions();
@@ -272,5 +278,6 @@ private:
 
     bool linkPetriNet();
 };
+
 
 #endif //ENPAC_2020_3_0_PETRI_NET_H

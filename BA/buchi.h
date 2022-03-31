@@ -165,7 +165,7 @@ typedef struct Vertex {
     bool trueaccpted = false;      /*indicate if this state (accepeted) could infinitely appear in a sequence*/
     string label;                  /*conjunction of propositions*/
     bool invalid = false;          /**/
-    vector<atomic> links;          /*the atomics carried by the state*/
+    vector<Atomic> links;          /*the atomics carried by the state*/
     set<index_t> unfires;
     vector<set<index_t>> fires;
     double cost;                   /*the sum of heuristic information*/
@@ -222,6 +222,6 @@ private:
     void Tarjan(int stateid);
     void Backward(int stateid);
     void MergeAtomics(bool cardinality);
-    static void parseLabel(vector<atomic> &links, const string &label, const atomictable &AT);
-    static void judgeInvalid(bool &invalid, const vector<atomic> &links);
+    static void parseLabel(vector<Atomic> &links, const string &label, const atomictable &AT);
+    static void judgeInvalid(bool &invalid, const vector<Atomic> &links);
 };

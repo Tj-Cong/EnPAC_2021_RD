@@ -6,6 +6,8 @@
 #define ENPAC_2020_3_0_RG_H
 
 #include "Petri_Net.h"
+#include <mutex>
+#include <thread>
 #include <bitset>
 #include <malloc.h>
 #include <gperftools/malloc_extension.h>
@@ -84,6 +86,9 @@ void BinaryToDec(index_t &DecNum, unsigned short *Binarystr, NUM_t marklen);
 typedef unsigned short Mark;
 typedef unsigned long ID;
 
+class RGNode;
+class BitRGNode;
+
 class BitSequence {
 private:
     myuint *bitUnits;
@@ -91,6 +96,7 @@ private:
 public:
     BitSequence(int length);
     ~BitSequence();
+    void duplicate(BitSequence *bitSequence,int sequenceLength);
     bool test0(int position,int sequenceLength);
     bool test1(int position,int sequenceLength);
     void set0(int position,int sequenceLength);
@@ -107,7 +113,7 @@ public:
     RGNode();
     RGNode(RGNode *oldnode);
     index_t Hash();
-    bool isFireable_by_flag(const Transition &t) const {return false;};
+    bool isFireable_by_flag(index_t tid) const;
     bool isFirable(const Transition &t) const;
     void computeStubbornSet();
 //    void getFireSet(RGNode *lastnode, index_t lastid);
@@ -125,30 +131,30 @@ public:
     myuint *marking;
     BitRGNode *next;
 //    BitSequence *stubbornFlags;
-    BitSequence *fireableFlags;
-    BitSequence *updateFlags;
-private:
-    bool fireable_test0(int position,int sequenceLength);
-    bool fireable_test1(int position,int sequenceLength);
-    void fireable_set0(int position,int sequenceLength);
-    void fireable_set1(int position,int sequenceLength);
-    bool update_test0(int position,int sequenceLength);
-    bool update_test1(int position,int sequenceLength);
-    void update_set0(int position,int sequenceLength);
-    void update_set1(int position,int sequenceLength);
+//    BitSequence *fireableFlags;
 public:
     BitRGNode();
     index_t Hash();
-    bool isFireable_by_flag(const Transition &t) const;
+    bool isFireable_by_flag(index_t tid);
     bool isFirable(const Transition &t) const;
     void computeStubbornSet();
-//    void getFireSet(BitRGNode *lastnode, index_t lastid);
+    void updateFlag_Incre();
+    bool updated() ;
+    void get_fireset(BitRGNode *lastnode, index_t lastid);
+    void handle_increasing_set(index_t lastid);
+    void handle_decreasing_set(index_t lastid);
     void printMarking(const int &len);
     ~BitRGNode();
     int readPlace(int placeid) const;
     void writePlace(int placeid);
     int writePlace(int placeid,index_t tokencount);
     void clearPlace(int placeid);
+};
+
+struct ThreadArg {
+    BitRGNode *newnode;
+    BitRGNode *oldnode;
+    bool exist;
 };
 
 class RG {
@@ -159,7 +165,6 @@ public:
     NUM_t RGNodelength;     //marking长度
     unsigned long nodecount;//状态个数
     int hash_conflict_times;//哈希冲突次数
-    ofstream outRG;
     atomictable &AT;
 public:
     RG(Petri *pt, atomictable &AT);
@@ -173,8 +178,6 @@ public:
     RGNode *RGcreatenode(RGNode *curnode, int tranxnum, bool &exist);
 
     RGNode *RGcreatenode2(RGNode *curnode, int tranxnum, bool &exist);
-
-//    void getFireableTranx(RGNode *curnode, set<index_t> &fireset);
 
     void Generate(RGNode *node);
 
@@ -191,7 +194,6 @@ public:
     NUM_t RGNodelength;
     unsigned long nodecount;
     int hash_conflict_times;
-    ofstream outRG;
     atomictable &AT;
 public:
     BitRG(Petri *pt, atomictable &AT);
@@ -202,11 +204,18 @@ public:
 
     BitRGNode *RGinitialnode();
 
+//    void get_init_fireset();
+//
+//    void get_init_fireset_thread(int myrank);
+
     BitRGNode *RGcreatenode(BitRGNode *curnode, int tranxnum, bool &exist);
 
     BitRGNode *RGcreatenode2(BitRGNode *curnode, int tranxnum, bool &exist);
 
-//    void getFireableTranx(BitRGNode *curnode,set<index_t> &fireset);
+    /*if repeated, return the repeated state, otherwise, return NULL*/
+    void check_repeated(ThreadArg *threadArg);
+
+//    void getFireableTranx(BitRGNode *lastnode,BitRGNode *curnode,index_t fireTranNum);
 
     void Generate(BitRGNode *node);
 
